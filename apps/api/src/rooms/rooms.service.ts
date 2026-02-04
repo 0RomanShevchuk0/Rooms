@@ -15,24 +15,24 @@ export class RoomsService {
     return this.prisma.room.create({
       data: {
         name: createRoomDto.name,
-        participants: {
+        players: {
           connect: partisipants,
         },
       },
       include: {
-        participants: true,
+        players: true,
       },
     });
   }
 
   queryRooms(): Promise<Room[]> {
-    return this.prisma.room.findMany({ include: { participants: true } });
+    return this.prisma.room.findMany({ include: { players: true } });
   }
 
   findRoom(id: string) {
     return this.prisma.room.findUnique({
       where: { id },
-      include: { participants: true },
+      include: { players: true },
     });
   }
 
@@ -40,7 +40,7 @@ export class RoomsService {
     return this.prisma.room.update({
       where: { id },
       data: updateRoomDto,
-      include: { participants: true },
+      include: { players: true },
     });
   }
 

@@ -1,4 +1,9 @@
 **/node_modules/**
+**/.pnp
+**/.pnp.*
+**/.yarn/**
+**/.cache/**
+**/.npm/**
 **/dist/**
 **/build/**
 **/.next/**
@@ -11,6 +16,7 @@
 **/.vscode/**
 **/.DS_Store
 **/*.tsbuildinfo
+**/*.min.*
 
 # generated / non-prettier-friendly
 **/generated/prisma/**

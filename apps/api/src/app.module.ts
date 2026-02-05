@@ -7,15 +7,15 @@ import { RoomsModule } from './rooms/rooms.module';
 import { EventsModule } from './eventsWs/events.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    UsersModule,
-    RoomsModule,
-    EventsModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		ConfigModule.forRoot({
+			isGlobal: true,
+		}),
+		UsersModule,
+		RoomsModule,
+		EventsModule,
+	],
+	controllers: [AppController],
+	providers: [AppService],
 })
 export class AppModule {}

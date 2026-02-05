@@ -1,8 +1,8 @@
 import type { User } from "@/entities/user";
 
 export interface Room {
-  id: string;
-  name: string;
+	id: string;
+	name: string;
 
-  players: User[];
+	players: User[];
 }

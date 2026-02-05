@@ -6,47 +6,47 @@ import { Room } from 'generated/prisma/client';
 
 @Injectable()
 export class RoomsService {
-  constructor(private prisma: PrismaService) {}
+	constructor(private prisma: PrismaService) {}
 
-  createRoom(createRoomDto: CreateRoomDto) {
-    const partisipants = (createRoomDto.participantIds || []).map(
-      (id: string) => ({ id }),
-    );
-    return this.prisma.room.create({
-      data: {
-        name: createRoomDto.name,
-        players: {
-          connect: partisipants,
-        },
-      },
-      include: {
-        players: true,
-      },
-    });
-  }
+	createRoom(createRoomDto: CreateRoomDto) {
+		const partisipants = (createRoomDto.participantIds || []).map(
+			(id: string) => ({ id }),
+		);
+		return this.prisma.room.create({
+			data: {
+				name: createRoomDto.name,
+				players: {
+					connect: partisipants,
+				},
+			},
+			include: {
+				players: true,
+			},
+		});
+	}
 
-  queryRooms(): Promise<Room[]> {
-    return this.prisma.room.findMany({ include: { players: true } });
-  }
+	queryRooms(): Promise<Room[]> {
+		return this.prisma.room.findMany({ include: { players: true } });
+	}
 
-  findRoom(id: string) {
-    return this.prisma.room.findUnique({
-      where: { id },
-      include: { players: true },
-    });
-  }
+	findRoom(id: string) {
+		return this.prisma.room.findUnique({
+			where: { id },
+			include: { players: true },
+		});
+	}
 
-  update(id: string, updateRoomDto: UpdateRoomDto) {
-    return this.prisma.room.update({
-      where: { id },
-      data: updateRoomDto,
-      include: { players: true },
-    });
-  }
+	update(id: string, updateRoomDto: UpdateRoomDto) {
+		return this.prisma.room.update({
+			where: { id },
+			data: updateRoomDto,
+			include: { players: true },
+		});
+	}
 
-  remove(id: string) {
-    return this.prisma.room.delete({
-      where: { id },
-    });
-  }
+	remove(id: string) {
+		return this.prisma.room.delete({
+			where: { id },
+		});
+	}
 }

@@ -1,0 +1,21 @@
+**/node_modules/**
+**/dist/**
+**/build/**
+**/.next/**
+**/out/**
+**/coverage/**
+**/.turbo/**
+**/.vercel/**
+
+**/.idea/**
+**/.vscode/**
+**/.DS_Store
+**/*.tsbuildinfo
+
+# generated / non-prettier-friendly
+**/generated/prisma/**
+**/prisma/migrations/**
+
+# lockfiles
+**/package-lock.json
+

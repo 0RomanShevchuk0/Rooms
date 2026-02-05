@@ -1,0 +1,12 @@
+{
+   "name": "rooms",
+   "private": true,
+   "packageManager": "npm@10.8.0",
+   "scripts": {
+      "format": "prettier --write .",
+      "format:check": "prettier --check ."
+   },
+   "devDependencies": {
+      "prettier": "^3.4.2"
+   }
+}

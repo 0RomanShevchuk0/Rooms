@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { RoomsModule } from './rooms/rooms.module';
+import { EventsModule } from './eventsWs/events.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RoomsModule } from './rooms/rooms.module';
     }),
     UsersModule,
     RoomsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

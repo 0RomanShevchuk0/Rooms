@@ -21,15 +21,9 @@ export default function Page() {
       console.log('Connected to server');
 
       socket.emit('events', { test: 'test' });
-      socket.emit('identity', 0, (response: any) =>
-        console.log('Identity:', response),
-      );
     });
 
     socket.on('events', function (data) {
-      console.log('event', data);
-    });
-    socket.on('exception', function (data) {
       console.log('event', data);
     });
     socket.on('disconnect', function () {

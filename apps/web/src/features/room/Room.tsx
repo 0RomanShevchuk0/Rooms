@@ -19,8 +19,6 @@ const players = [
   },
 ];
 
-const events = ["Player 1 is ready", "Player 2 joined", "Room created"];
-
 const Room: FC = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -51,7 +49,6 @@ const Room: FC = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-4">
-              
               {/* <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { label: "Mode", value: "Classic 2P" },
@@ -84,7 +81,9 @@ const Room: FC = () => {
                     className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`h-2.5 w-2.5 rounded-full ${player.color}`} />
+                      <div
+                        className={`h-2.5 w-2.5 rounded-full ${player.color}`}
+                      />
                       <div>
                         <p className="font-medium">{player.name}</p>
                         <p className="text-xs text-muted-foreground">

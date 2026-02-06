@@ -4,30 +4,8 @@ import Link from "next/link";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { io } from "socket.io-client";
-import { useEffect } from "react";
 
 export default function Page() {
-	useEffect(() => {
-		const socket = io("http://localhost:4000/events");
-		socket.on("connect", () => {
-			console.log("Connected to server");
-
-			socket.emit("events", { test: "test" });
-		});
-
-		socket.on("events", function (data) {
-			console.log("event", data);
-		});
-		socket.on("disconnect", function () {
-			console.log("Disconnected");
-		});
-
-		return () => {
-			socket.disconnect();
-		};
-	}, []);
-
 	return (
 		<main className="min-h-screen bg-background text-foreground">
 			<div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-12">

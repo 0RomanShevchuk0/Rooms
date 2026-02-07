@@ -5,7 +5,7 @@ export type EventsSocket = Socket;
 export function createEventsSocket(
 	options: Partial<ManagerOptions & SocketOptions> = {},
 ): EventsSocket {
-	const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+	const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 	return io(`${baseUrl}/events`, {
 		transports: ["websocket"],
 		...options,

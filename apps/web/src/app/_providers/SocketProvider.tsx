@@ -2,8 +2,7 @@
 
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import type { EventsSocket } from "@/shared/lib/realtime/eventsSocket";
-import { createEventsSocket } from "@/shared/lib/realtime/eventsSocket";
+import { createEventsSocket, type EventsSocket } from "@/shared/lib/realtime";
 
 type SocketContextValue = {
 	socket: EventsSocket;

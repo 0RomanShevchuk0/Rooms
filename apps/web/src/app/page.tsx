@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { RoomsList } from "@/widgets/rooms-list";
 
 export default function Page() {
 	return (
@@ -37,33 +38,44 @@ export default function Page() {
 						</div>
 					</div>
 
-					<Card className="border-border/60">
+					<Card className="h-fit border-border/60 lg:sticky lg:top-8">
 						<CardHeader className="space-y-2">
-							<div className="flex items-center justify-between">
-								<CardTitle>Room #A9K2</CardTitle>
-								<Badge variant="outline">Starts in 00:08</Badge>
+							<div className="flex items-center justify-between gap-3">
+								<CardTitle className="text-base">Quick start</CardTitle>
+								<Badge variant="outline">Realtime</Badge>
 							</div>
-							<CardDescription>Two-player Snake preview.</CardDescription>
+							<CardDescription>Everything you need to jump in.</CardDescription>
 						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="flex items-center justify-between text-sm">
-								<div className="flex items-center gap-2">
-									<span className="h-2 w-2 rounded-full bg-primary" />
-									<span>Player 1</span>
-								</div>
-								<span className="text-muted-foreground">Ready</span>
+						<CardContent className="space-y-3 text-sm">
+							<div className="flex gap-3">
+								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
+									1
+								</span>
+								<p>
+									Click <span className="font-medium">Create room</span> to get a link.
+								</p>
 							</div>
-							<div className="flex items-center justify-between text-sm">
-								<div className="flex items-center gap-2">
-									<span className="h-2 w-2 rounded-full bg-muted-foreground" />
-									<span>Player 2</span>
-								</div>
-								<span className="text-muted-foreground">Waiting</span>
+							<div className="flex gap-3">
+								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
+									2
+								</span>
+								<p>Share it with a friend and join together.</p>
 							</div>
-							<p className="text-xs text-muted-foreground">Controls: WASD / arrows.</p>
+							<div className="flex gap-3">
+								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
+									3
+								</span>
+								<p>When both players are ready, the game starts.</p>
+							</div>
+
+							<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+								Tip: keep this tab open — rooms update in real time.
+							</div>
 						</CardContent>
 					</Card>
 				</section>
+
+				<RoomsList />
 			</div>
 		</main>
 	);

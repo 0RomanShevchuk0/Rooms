@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from 'src/database/prisma/prisma.service';
 import { Room } from 'generated/prisma/client';
 
 @Injectable()
@@ -62,7 +62,11 @@ export class RoomsService {
 			where: { id },
 			include: {
 				players: true,
-				chat: true,
+				chat: {
+					include: {
+						messages: true,
+					},
+				},
 			},
 		});
 	}

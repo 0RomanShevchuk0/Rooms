@@ -2,11 +2,11 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { UsersModule } from './users/users.module';
-import { RoomsModule } from './rooms/rooms.module';
-import { EventsModule } from './eventsWs/events.module';
-import { ChatsModule } from './chats/chats.module';
-import { MessagesModule } from './messages/messages.module';
+import { UsersModule } from './modules/users/users.module';
+import { RoomsModule } from './modules/rooms/rooms.module';
+import { WsModule } from './realtime/ws/ws.module';
+import { ChatsModule } from './modules/chats/chats.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
 	imports: [
@@ -15,7 +15,7 @@ import { MessagesModule } from './messages/messages.module';
 		}),
 		UsersModule,
 		RoomsModule,
-		EventsModule,
+		WsModule,
 		ChatsModule,
 		MessagesModule,
 	],

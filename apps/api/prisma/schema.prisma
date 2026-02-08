@@ -5,24 +5,52 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider     = "prisma-client"
-  output       = "../generated/prisma"
-  moduleFormat = "cjs"
+   provider     = "prisma-client"
+   output       = "../generated/prisma"
+   moduleFormat = "cjs"
 }
 
 datasource db {
-  provider = "postgresql"
+   provider = "postgresql"
 }
 
 model User {
-  id    String  @id @default(uuid())
-  email String  @unique
-  name  String?
-  rooms Room[]
+   id    String  @id @default(uuid())
+   email String  @unique
+   name  String?
+   deletedAt DateTime?
+
+   rooms    Room[]    @relation("RoomPlayers")
+
+   messages Message[] @relation("MessageSender")
 }
 
 model Room {
-  id           String @id @default(uuid())
-  name         String
-  players User[]
+   id          String  @id @default(uuid())
+   name        String
+   description String?
+
+   players User[] @relation("RoomPlayers")
+
+   chat Chat? @relation("RoomChat")
+}
+
+model Chat {
+   id String @id @default(uuid())
+
+   roomId String? @unique
+   room   Room?   @relation("RoomChat", fields: [roomId], references: [id], onDelete: Cascade)
+
+   messages Message[] @relation("ChatMessages")
+}
+
+model Message {
+   id      String @id @default(uuid())
+   content String
+
+   chatId String
+   chat   Chat   @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
+
+   senderId String
+   sender User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
 }

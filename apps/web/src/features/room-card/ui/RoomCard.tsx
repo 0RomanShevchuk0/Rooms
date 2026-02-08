@@ -7,30 +7,27 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room }: RoomCardProps) {
+	const PlayersList = room.players.map((player) => (
+		<div key={player.id} className="flex items-center justify-between text-sm">
+			<div className="flex items-center gap-2">
+				<span className="h-2 w-2 rounded-full bg-primary" />
+				<span>{player.name}</span>
+			</div>
+			<span className="text-muted-foreground">Ready</span>
+		</div>
+	));
+
 	return (
-		<Card className="w-full border-border/60">
+		<Card className="w-full h-full border-border/60">
 			<CardHeader className="space-y-2">
 				<div className="flex items-center justify-between">
 					<CardTitle>{room.name}</CardTitle>
 					<Badge variant="outline">Starts in 00:08</Badge>
 				</div>
-				<CardDescription>Two-player Snake preview.</CardDescription>
+				<CardDescription>{room.description}</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-4">
-				<div className="flex items-center justify-between text-sm">
-					<div className="flex items-center gap-2">
-						<span className="h-2 w-2 rounded-full bg-primary" />
-						<span>Player 1</span>
-					</div>
-					<span className="text-muted-foreground">Ready</span>
-				</div>
-				<div className="flex items-center justify-between text-sm">
-					<div className="flex items-center gap-2">
-						<span className="h-2 w-2 rounded-full bg-muted-foreground" />
-						<span>Player 2</span>
-					</div>
-					<span className="text-muted-foreground">Waiting</span>
-				</div>
+			<CardContent className="h-full flex flex-col space-y-4">
+				<div className="grow space-y-2">{PlayersList}</div>
 				<p className="text-xs text-muted-foreground">Controls: WASD / arrows.</p>
 			</CardContent>
 		</Card>

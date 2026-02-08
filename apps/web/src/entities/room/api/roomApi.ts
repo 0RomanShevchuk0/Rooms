@@ -3,4 +3,5 @@ import type { RoomWithPlayers } from "@/entities/room";
 
 export const roomApi = {
 	getRooms: () => api.get<RoomWithPlayers[]>("/rooms"),
+	getRoom: (id: string) => api.get<RoomWithPlayers>(`/rooms/${id}`),
 };

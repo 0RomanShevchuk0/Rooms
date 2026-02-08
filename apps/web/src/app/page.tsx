@@ -67,10 +67,6 @@ export default function Page() {
 								</span>
 								<p>When both players are ready, the game starts.</p>
 							</div>
-
-							<div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-								Tip: keep this tab open — rooms update in real time.
-							</div>
 						</CardContent>
 					</Card>
 				</section>

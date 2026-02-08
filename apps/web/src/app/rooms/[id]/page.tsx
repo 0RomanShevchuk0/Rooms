@@ -1,5 +1,10 @@
+"use client";
+import { roomApi } from "@/entities/room/api";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 const players = [
 	{
@@ -17,6 +22,39 @@ const players = [
 ];
 
 export default function RoomPage() {
+	const roomId = useParams().id as string;
+	console.log("🚀 ~ RoomPage ~ roomId:", roomId);
+
+	const roomQuery = useQuery({
+		queryKey: ["room"],
+		queryFn: () => roomApi.getRoom(roomId),
+	});
+	const room = roomQuery.data;
+	console.log("🚀 ~ RoomPage ~ room:", room);
+
+	if (roomQuery.isLoading) return <FullscreenSpinnerLoader />;
+
+	if (!room) {
+		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;
+	}
+
+	const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500"];
+	const playersList = room.players.map((player, index) => (
+		<div
+			key={player.name}
+			className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-sm"
+		>
+			<div className="flex items-center gap-3">
+				<div className={`h-2.5 w-2.5 rounded-full ${playerColors[index]}`} />
+				<div>
+					<p className="font-medium">{player.name}</p>
+					<p className="text-xs text-muted-foreground">Waiting</p>
+				</div>
+			</div>
+			<span className="text-xs text-muted-foreground">10 ms</span>
+		</div>
+	));
+
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
@@ -50,21 +88,7 @@ export default function RoomPage() {
 								<CardTitle>Players</CardTitle>
 							</CardHeader>
 							<CardContent className="space-y-3">
-								{players.map((player) => (
-									<div
-										key={player.name}
-										className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-sm"
-									>
-										<div className="flex items-center gap-3">
-											<div className={`h-2.5 w-2.5 rounded-full ${player.color}`} />
-											<div>
-												<p className="font-medium">{player.name}</p>
-												<p className="text-xs text-muted-foreground">{player.status}</p>
-											</div>
-										</div>
-										<span className="text-xs text-muted-foreground">{player.ping}</span>
-									</div>
-								))}
+								{playersList}
 								<Button variant="outline" size="sm" className="w-full">
 									Copy room link
 								</Button>

@@ -14,7 +14,7 @@ import type { Server, Socket } from 'socket.io';
 		credentials: true,
 	},
 })
-export class EventsGateway {
+export class EventsWsGateway {
 	@WebSocketServer()
 	server!: Server;
 

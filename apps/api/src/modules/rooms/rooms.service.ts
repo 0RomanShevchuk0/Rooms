@@ -8,7 +8,7 @@ import { Room } from 'generated/prisma/client';
 export class RoomsService {
 	constructor(private prisma: PrismaService) {}
 
-	async createRoom(createRoomDto: CreateRoomDto) {
+	async create(createRoomDto: CreateRoomDto) {
 		const participantIds = Array.from(
 			new Set(createRoomDto.participantIds || []),
 		);
@@ -53,11 +53,11 @@ export class RoomsService {
 		});
 	}
 
-	queryRooms(): Promise<Room[]> {
+	findMany(): Promise<Room[]> {
 		return this.prisma.room.findMany({ include: { players: true } });
 	}
 
-	findRoom(id: string) {
+	findById(id: string) {
 		return this.prisma.room.findUnique({
 			where: { id },
 			include: {

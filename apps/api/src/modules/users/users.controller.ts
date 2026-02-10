@@ -17,26 +17,26 @@ export class UsersController {
 
 	@Get()
 	async fetchUsers() {
-		return this.usersService.queryUsers();
+		return this.usersService.findMany();
 	}
 
 	@Get(':id')
 	findUser(@Param('id') id: string) {
-		return this.usersService.findUser(id);
+		return this.usersService.findById(id);
 	}
 
 	@Post()
 	async createUser(@Body() body: CreateUserDto) {
-		return this.usersService.createUser(body);
+		return this.usersService.create(body);
 	}
 
 	@Patch(':id')
 	async updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
-		return this.usersService.updateUser(id, body);
+		return this.usersService.update(id, body);
 	}
 
 	@Delete(':id')
 	async deleteUser(@Param('id') id: string) {
-		return this.usersService.deleteUser(id);
+		return this.usersService.remove(id);
 	}
 }

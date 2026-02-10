@@ -7,6 +7,7 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { WsModule } from './realtime/ws/ws.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
 	imports: [
@@ -18,6 +19,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 		WsModule,
 		ChatsModule,
 		MessagesModule,
+		AuthModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

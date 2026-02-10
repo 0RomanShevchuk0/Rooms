@@ -1,22 +1,11 @@
-import {
-	IsArray,
-	IsEmail,
-	IsOptional,
-	IsString,
-	IsUUID,
-	MinLength,
-} from 'class-validator';
+import { IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {
-	@IsEmail()
-	email: string;
+	@IsString()
+	@MinLength(4)
+	username: string;
 
 	@IsString()
 	@MinLength(4)
-	name?: string;
-
-	@IsArray()
-	@IsOptional()
-	@IsUUID('4', { each: true })
-	roomsIds?: string[];
+	password: string;
 }

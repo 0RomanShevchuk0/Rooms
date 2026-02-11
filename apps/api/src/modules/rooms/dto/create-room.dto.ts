@@ -1,10 +1,11 @@
-import { ArrayNotEmpty, IsArray, IsString, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateRoomDto {
 	@IsString()
 	name: string;
 
 	@IsString()
+	@IsOptional()
 	description?: string;
 
 	@IsArray()

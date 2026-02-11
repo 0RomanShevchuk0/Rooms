@@ -1,4 +1,6 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Res, Req } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
@@ -7,22 +9,94 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) {}
+	constructor(
+		private readonly authService: AuthService,
+		private readonly configService: ConfigService,
+	) {}
+
+	private setAuthCookies(
+		res: Response,
+		tokens: { access_token: string; refresh_token: string },
+	) {
+		const isProd = this.configService.get('NODE_ENV') === 'production';
+
+		res.cookie('refresh_token', tokens.refresh_token, {
+			httpOnly: true,
+			secure: isProd,
+			sameSite: 'lax',
+			path: '/api/auth/refresh-tokens',
+			maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+		});
+	}
+
+	private getCookie(req: Request, name: string): string | undefined {
+		const cookieHeader = req.headers.cookie;
+		if (!cookieHeader) return undefined;
+
+		const parts = cookieHeader.split(';');
+		for (const part of parts) {
+			const [k, ...rest] = part.trim().split('=');
+			if (k === name) {
+				return decodeURIComponent(rest.join('='));
+			}
+		}
+		return undefined;
+	}
 
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
-	login(@CurrentUser() user: AuthUser, @Body() authDto: AuthDto) {
+	async login(
+		@CurrentUser() user: AuthUser,
+		@Body() authDto: AuthDto,
+		@Res({ passthrough: true }) res: Response,
+	) {
 		void authDto;
-		return this.authService.login(user);
+		const tokens = await this.authService.login(user);
+		this.setAuthCookies(res, tokens);
+		return { access_token: tokens.access_token };
 	}
 
 	@Post('register')
-	register(@Body() authDto: AuthDto) {
-		return this.authService.register(authDto);
+	async register(
+		@Body() authDto: AuthDto,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const tokens = await this.authService.register(authDto);
+		this.setAuthCookies(res, tokens);
+		return { access_token: tokens.access_token };
 	}
 
 	@Post('logout')
-	logout() {
+	logout(@Res({ passthrough: true }) res: Response) {
+		const isProd = this.configService.get('NODE_ENV') === 'production';
+
+		res.clearCookie('refresh_token', {
+			httpOnly: true,
+			secure: isProd,
+			sameSite: 'lax',
+			path: '/api/auth/refresh-tokens',
+		});
+
 		return this.authService.logout();
+	}
+
+	@Post('refresh-tokens')
+	async refreshTokens(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const refreshToken = this.getCookie(req, 'refresh_token');
+
+		if (!refreshToken) {
+			return { error: 'Missing refresh token' };
+		}
+
+		const tokens = await this.authService.refreshTokens(refreshToken);
+		if (!tokens) {
+			return { error: 'Invalid refresh token' };
+		}
+
+		this.setAuthCookies(res, tokens);
+		return { access_token: tokens.access_token };
 	}
 }

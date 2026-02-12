@@ -69,10 +69,6 @@ export class AuthService {
 		return { access_token, refresh_token };
 	}
 
-	logout() {
-		return 'This action logs out the user';
-	}
-
 	async validateUser(
 		username: string,
 		password: string,

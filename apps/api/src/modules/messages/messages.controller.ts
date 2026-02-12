@@ -6,20 +6,26 @@ import {
 	Patch,
 	Param,
 	Delete,
+	UseGuards,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { type AuthUser } from '../auth/types/auth-user.type';
 
+@UseGuards(JwtAuthGuard)
 @Controller('messages')
 export class MessagesController {
 	constructor(private readonly messagesService: MessagesService) {}
 
 	@Post()
-	create(@Body() createMessageDto: CreateMessageDto) {
-		// todo: get user from auth
-		const senderId = createMessageDto.senderId;
-		return this.messagesService.create(senderId, createMessageDto);
+	create(
+		@CurrentUser() user: AuthUser,
+		@Body() createMessageDto: CreateMessageDto,
+	) {
+		return this.messagesService.create(user.id, createMessageDto);
 	}
 
 	@Get()

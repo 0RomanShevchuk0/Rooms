@@ -13,6 +13,7 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+@UseGuards(JwtAuthGuard)
 @Controller('rooms')
 export class RoomsController {
 	constructor(private readonly roomsService: RoomsService) {}
@@ -22,7 +23,6 @@ export class RoomsController {
 		return this.roomsService.create(createRoomDto);
 	}
 
-	@UseGuards(JwtAuthGuard)
 	@Get()
 	findAll() {
 		return this.roomsService.findMany();

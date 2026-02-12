@@ -63,7 +63,7 @@ export class AuthController {
 			path: '/api/auth/refresh-tokens',
 		});
 
-		return this.authService.logout();
+		return { message: 'Logged out successfully' };
 	}
 
 	@Post('refresh-tokens')

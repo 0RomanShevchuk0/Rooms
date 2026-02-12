@@ -29,20 +29,6 @@ export class AuthController {
 		});
 	}
 
-	private getCookie(req: Request, name: string): string | undefined {
-		const cookieHeader = req.headers.cookie;
-		if (!cookieHeader) return undefined;
-
-		const parts = cookieHeader.split(';');
-		for (const part of parts) {
-			const [k, ...rest] = part.trim().split('=');
-			if (k === name) {
-				return decodeURIComponent(rest.join('='));
-			}
-		}
-		return undefined;
-	}
-
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
 	async login(
@@ -85,7 +71,7 @@ export class AuthController {
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
 	) {
-		const refreshToken = this.getCookie(req, 'refresh_token');
+		const refreshToken = req.cookies.refresh_token as string | undefined;
 
 		if (!refreshToken) {
 			return { error: 'Missing refresh token' };

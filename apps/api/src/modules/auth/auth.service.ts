@@ -115,7 +115,10 @@ export class AuthService {
 			return null;
 		}
 
-		const { access_token, refresh_token } = await this.createTokens(payload);
+		const { access_token, refresh_token } = await this.createTokens({
+			sub: payload.sub,
+			username: payload.username,
+		});
 
 		return { access_token, refresh_token };
 	}

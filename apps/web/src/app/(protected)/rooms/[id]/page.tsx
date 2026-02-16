@@ -6,21 +6,6 @@ import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 
-const players = [
-	{
-		name: "Player 1",
-		status: "Ready",
-		ping: "12 ms",
-		color: "bg-primary",
-	},
-	{
-		name: "Player 2",
-		status: "Connecting",
-		ping: "—",
-		color: "bg-muted-foreground",
-	},
-];
-
 export default function RoomPage() {
 	const roomId = useParams().id as string;
 	console.log("🚀 ~ RoomPage ~ roomId:", roomId);
@@ -32,7 +17,7 @@ export default function RoomPage() {
 	const room = roomQuery.data;
 	console.log("🚀 ~ RoomPage ~ room:", room);
 
-	if (roomQuery.isLoading) return <FullscreenSpinnerLoader />;
+	if (roomQuery.isPending) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
 		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;

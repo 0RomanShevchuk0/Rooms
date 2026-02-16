@@ -17,7 +17,8 @@ export function RoomsList() {
 	));
 	console.log("🚀 ~ rooms:", roomsQuery.data);
 
-	if(roomsQuery.isLoading) return <FullWidthSpinnerLoader />;
+	if (roomsQuery.isPending) return <FullWidthSpinnerLoader />;
+	if (roomsQuery.isError) return <div className="w-full text-center text-red-500">Error loading rooms</div>;
 
 	return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{roomCards}</div>;
 }

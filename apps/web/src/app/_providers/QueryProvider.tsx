@@ -4,6 +4,12 @@ import type { PropsWithChildren } from "react";
 import { useState } from "react";
 
 export function QueryProvider({ children }: PropsWithChildren) {
-	const [queryClient] = useState(() => new QueryClient());
+	const [queryClient] = useState(() => new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: false,
+			}
+		}
+	}));
 	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 };

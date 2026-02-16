@@ -5,6 +5,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { RoomsList } from "@/widgets/rooms-list";
+import { ROUTES } from "@/shared/routes";
 
 export default function Page() {
 	return (
@@ -30,10 +31,10 @@ export default function Page() {
 						</p>
 						<div className="flex flex-wrap gap-3">
 							<Button asChild>
-								<Link href="/room">Create room</Link>
+								<Link href={ROUTES.rooms.list}>Create room</Link>
 							</Button>
 							<Button variant="outline" asChild>
-								<Link href="/room">Join with code</Link>
+								<Link href={ROUTES.rooms.list}>Join with code</Link>
 							</Button>
 						</div>
 					</div>

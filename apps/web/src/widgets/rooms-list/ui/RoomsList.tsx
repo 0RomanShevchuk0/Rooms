@@ -1,17 +1,19 @@
 import { roomApi } from "@/entities/room/api";
 import { RoomCard } from "@/features/room-card";
+import { queryKeys } from "@/shared/react-query";
 import { FullWidthSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { ROUTES } from "@/shared/routes";
 
 export function RoomsList() {
 	const roomsQuery = useQuery({
-		queryKey: ["rooms"],
+		queryKey: queryKeys.rooms.all(),
 		queryFn: roomApi.getRooms,
 	});
 
 	const roomCards = roomsQuery.data?.map((room) => (
-		<Link key={room.id} href={`/rooms/${room.id}`}>
+		<Link key={room.id} href={ROUTES.rooms.room(room.id)}>
 			<RoomCard room={room} />
 		</Link>
 	));

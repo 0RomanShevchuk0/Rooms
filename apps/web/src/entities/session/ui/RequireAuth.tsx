@@ -2,6 +2,7 @@
 import { PropsWithChildren, useEffect } from "react";
 import { useSession } from "../model/session.store";
 import { useRouter } from "next/navigation";
+import { ROUTES } from "@/shared/routes";
 
 export function RequireAuth({ children }: PropsWithChildren) {
 	const router = useRouter();
@@ -9,7 +10,7 @@ export function RequireAuth({ children }: PropsWithChildren) {
 
 	useEffect(() => {
 		if (!accessToken) {
-			router.push("/auth/login");
+			router.push(ROUTES.auth.login);
 		}
 	}, [accessToken, router]);
 

@@ -10,6 +10,7 @@ import { useId, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 import type { AuthCredentials, AuthFormType } from "../model/types";
+import { ROUTES } from "@/shared/routes";
 
 const AUTH_FORM_CONTENT: Record<
 	AuthFormType,
@@ -29,7 +30,7 @@ const AUTH_FORM_CONTENT: Record<
 		submitLabel: "Sign in",
 		passwordAutocomplete: "current-password",
 		switchText: "Don't have an account?",
-		switchHref: "/auth/register",
+		switchHref: ROUTES.auth.register,
 		switchLinkLabel: "Create one",
 	},
 	register: {
@@ -37,7 +38,7 @@ const AUTH_FORM_CONTENT: Record<
 		submitLabel: "Create account",
 		passwordAutocomplete: "new-password",
 		switchText: "Already have an account?",
-		switchHref: "/auth/login",
+		switchHref: ROUTES.auth.login,
 		switchLinkLabel: "Sign in",
 	},
 };

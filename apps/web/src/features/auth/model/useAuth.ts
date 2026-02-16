@@ -7,6 +7,8 @@ import axios from "axios";
 import { useState } from "react";
 import { useSession } from "@/entities/session";
 import { useRouter } from "next/navigation";
+import { ROUTES } from "@/shared/routes";
+import { mutationKeys } from "@/shared/react-query";
 
 interface UseAuthProps {
 	type: AuthFormType;
@@ -33,6 +35,7 @@ export function useAuth({ type }: UseAuthProps) {
 	};
 
 	const mutation = useMutation({
+		mutationKey: type === "login" ? mutationKeys.auth.login() : mutationKeys.auth.register(),
 		mutationFn: async (data: AuthCredentials) => {
 			const result = await mutationFn(data);
 			if (!result.access_token) {
@@ -47,7 +50,7 @@ export function useAuth({ type }: UseAuthProps) {
 			setFormError(null);
 			setAccessToken(data.access_token);
 			toast.success(successMessage);
-			router.replace("/");
+			router.replace(ROUTES.home);
 		},
 		onError: (error) => {
 			const { message, isExpected } = getErrorMessage(error);

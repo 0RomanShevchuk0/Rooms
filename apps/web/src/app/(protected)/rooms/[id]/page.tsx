@@ -5,13 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { queryKeys } from "@/shared/react-query";
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
-	console.log("🚀 ~ RoomPage ~ roomId:", roomId);
 
 	const roomQuery = useQuery({
-		queryKey: ["room"],
+		queryKey: queryKeys.rooms.byId(roomId),
 		queryFn: () => roomApi.getRoom(roomId),
 	});
 	const room = roomQuery.data;

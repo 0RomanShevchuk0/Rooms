@@ -1,9 +1,10 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosHeaders, AxiosInstance } from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 class ApiInstance {
 	private axiosClient: AxiosInstance;
+	private accessToken: string | null = null;
 
 	constructor() {
 		this.axiosClient = axios.create({
@@ -13,6 +14,19 @@ class ApiInstance {
 			},
 			withCredentials: true,
 		});
+
+		this.axiosClient.interceptors.request.use((config) => {
+			if (this.accessToken) {
+				const headers = AxiosHeaders.from(config.headers);
+				headers.set("Authorization", `Bearer ${this.accessToken}`);
+				config.headers = headers;
+			}
+			return config;
+		});
+	}
+
+	setAccessToken(token: string | null) {
+		this.accessToken = token;
 	}
 
 	async get<T>(url: string): Promise<T> {

@@ -1,3 +1,4 @@
+import { api } from "@/shared/api";
 import { create } from "zustand";
 
 interface SessionState {
@@ -8,6 +9,12 @@ interface SessionState {
 
 export const useSession = create<SessionState>((set) => ({
 	accessToken: null,
-	setAccessToken: (accessToken) => set({ accessToken }),
-	clearSession: () => set({ accessToken: null }),
+	setAccessToken: (accessToken) => {
+		set({ accessToken });
+		api.setAccessToken(accessToken);
+	},
+	clearSession: () => {
+		set({ accessToken: null });
+		api.setAccessToken(null);
+	},
 }));

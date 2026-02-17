@@ -26,13 +26,13 @@ export default function RoomPage() {
 	const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500"];
 	const playersList = room.players.map((player, index) => (
 		<div
-			key={player.name}
+			key={player.id}
 			className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-sm"
 		>
 			<div className="flex items-center gap-3">
 				<div className={`h-2.5 w-2.5 rounded-full ${playerColors[index]}`} />
 				<div>
-					<p className="font-medium">{player.name}</p>
+					<p className="font-medium">{player.username}</p>
 					<p className="text-xs text-muted-foreground">Waiting</p>
 				</div>
 			</div>

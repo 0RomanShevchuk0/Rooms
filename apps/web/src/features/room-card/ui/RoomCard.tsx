@@ -11,7 +11,7 @@ export function RoomCard({ room }: RoomCardProps) {
 		<div key={player.id} className="flex items-center justify-between text-sm">
 			<div className="flex items-center gap-2">
 				<span className="h-2 w-2 rounded-full bg-primary" />
-				<span>{player.name}</span>
+				<span>{player.username}</span>
 			</div>
 			<span className="text-muted-foreground">Ready</span>
 		</div>

@@ -21,30 +21,40 @@ async function main() {
 		prisma.user.create({
 			data: {
 				username: 'Aliceqwerty',
+				email: 'alice@example.com',
+				name: 'Alice',
 				password: 'Q2!fweR7',
 			},
 		}),
 		prisma.user.create({
 			data: {
 				username: 'bob2-123',
+				email: 'bob@example.com',
+				name: 'Bob',
 				password: 'B0bSecure!',
 			},
 		}),
 		prisma.user.create({
 			data: {
 				username: 'charlie_456',
+				email: 'charlie@example.com',
+				name: 'Charlie',
 				password: 'Ch@rlie123',
 			},
 		}),
 		prisma.user.create({
 			data: {
 				username: 'diana789',
+				email: 'diana@example.com',
+				name: 'Diana',
 				password: 'D!anaPass',
 			},
 		}),
 		prisma.user.create({
 			data: {
 				username: 'eve-007',
+				email: 'eve@example.com',
+				name: 'Eve',
 				password: 'Ev3Secret!',
 			},
 		}),

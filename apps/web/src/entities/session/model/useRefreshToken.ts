@@ -17,11 +17,14 @@ export function useRefreshToken() {
 
 	useEffect(() => {
 		const refreshToken = async () => {
-			const data = await refreshTokenMutation.mutateAsync();
-			if (data?.access_token) {
-				setAccessToken(data.access_token);
+			try {
+				const data = await refreshTokenMutation.mutateAsync();
+				if (data?.access_token) {
+					setAccessToken(data.access_token);
+				}
+			} finally {
+				setIsInitialized(true);
 			}
-			setIsInitialized(true);
 		};
 
 		if (!isInitialized && !accessToken) {

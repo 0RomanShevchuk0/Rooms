@@ -5,21 +5,23 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { RoomsList } from "@/widgets/rooms-list";
+import { UserMenu } from "@/widgets/user-menu";
 import { ROUTES } from "@/shared/routes";
 
 export default function Page() {
 	return (
 		<main className="min-h-screen bg-background text-foreground">
 			<div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-12">
-				<header className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
-						<div className="h-10 w-10 rounded-2xl border border-border bg-primary/10" />
-						<div>
-							<p className="text-sm font-semibold">Rooms</p>
-							<p className="text-xs text-muted-foreground">Real-time rooms</p>
-						</div>
+			<header className="flex items-center justify-between">
+				<div className="flex items-center gap-3">
+					<div className="h-10 w-10 rounded-2xl border border-border bg-primary/10" />
+					<div>
+						<p className="text-sm font-semibold">Rooms</p>
+						<p className="text-xs text-muted-foreground">Real-time rooms</p>
 					</div>
-				</header>
+				</div>
+				<UserMenu />
+			</header>
 
 				<section className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
 					<div className="flex flex-col gap-4">

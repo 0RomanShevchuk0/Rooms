@@ -7,6 +7,7 @@ import {
 	Param,
 	Delete,
 	UseGuards,
+	NotFoundException,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -29,8 +30,12 @@ export class RoomsController {
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: string) {
-		return this.roomsService.findById(id);
+	async findOne(@Param('id') id: string) {
+		const room = await this.roomsService.findById(id);
+		if (!room) {
+			throw new NotFoundException(`Room "${id}" not found`);
+		}
+		return room;
 	}
 
 	@Patch(':id')

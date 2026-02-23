@@ -7,6 +7,7 @@ import {
 	Param,
 	Delete,
 	UseGuards,
+	NotFoundException,
 } from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -29,8 +30,12 @@ export class ChatsController {
 	}
 
 	@Get(':id')
-	findOne(@Param('id') id: string) {
-		return this.chatsService.findOne(id);
+	async findOne(@Param('id') id: string) {
+		const chat = await this.chatsService.findOne(id);
+		if (!chat) {
+			throw new NotFoundException(`Chat "${id}" not found`);
+		}
+		return chat;
 	}
 
 	@Patch(':id')

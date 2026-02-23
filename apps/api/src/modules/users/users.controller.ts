@@ -12,6 +12,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { type AuthUser } from '../auth/types/auth-user.type';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -26,6 +28,11 @@ export class UsersController {
 	@Get(':id')
 	findUser(@Param('id') id: string) {
 		return this.usersService.findById(id);
+	}
+
+	@Get('me')
+	async getMe(@CurrentUser() user: AuthUser) {
+		return this.usersService.findById(user.id);
 	}
 
 	@Post()

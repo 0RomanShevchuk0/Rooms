@@ -27,7 +27,9 @@ export function SocketProvider({ children }: PropsWithChildren) {
 		return () => {
 			socket.off("connect", handleConnect);
 			socket.off("disconnect", handleDisconnect);
-			socket.disconnect();
+			if (socket.connected) {
+				socket.disconnect();
+			}
 		};
 	}, [socket]);
 
@@ -43,4 +45,3 @@ export function useSocket() {
 	}
 	return ctx;
 }
-

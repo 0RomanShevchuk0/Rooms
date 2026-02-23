@@ -3,10 +3,13 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
+import { ApiSocketIoAdapter } from './realtime/ws/api-socket-io.adapter';
+
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
 
 	app.setGlobalPrefix('api');
+	app.useWebSocketAdapter(new ApiSocketIoAdapter(app));
 
 	const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 	app.enableCors({

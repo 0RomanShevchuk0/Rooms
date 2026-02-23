@@ -6,6 +6,9 @@ import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { queryKeys } from "@/shared/react-query";
+import { useSocket } from "@/app/_providers/SocketProvider";
+import { SOCKET_EVENTS } from "@/shared/lib/realtime/socket-events";
+import { useEffect } from "react";
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
@@ -15,7 +18,20 @@ export default function RoomPage() {
 		queryFn: () => roomApi.getRoom(roomId),
 	});
 	const room = roomQuery.data;
-	console.log("🚀 ~ RoomPage ~ room:", room);
+
+	const { socket } = useSocket();
+
+	useEffect(() => {
+		socket.emit(SOCKET_EVENTS.ROOM_JOIN, { roomId });
+		console.log("Room joined:", roomId);
+		socket.on(SOCKET_EVENTS.ROOM_JOIN, (data) => {
+			console.log("Room joined event received:", data);
+		});
+		return () => {
+			socket.emit(SOCKET_EVENTS.ROOM_LEAVE, { roomId });
+			console.log("Room left:", roomId);
+		};
+	}, [socket, roomId]);
 
 	if (roomQuery.isPending) return <FullscreenSpinnerLoader />;
 

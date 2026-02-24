@@ -32,7 +32,6 @@ export function UserMenu() {
 		enabled: !!accessToken,
 		staleTime: 1000 * 60 * 5,
 	});
-	console.log("🚀 ~ UserMenu ~ user:", user);
 
 	const logoutMutation = useMutation({
 		mutationKey: mutationKeys.auth.logout(),
@@ -48,6 +47,8 @@ export function UserMenu() {
 		logoutMutation.mutate();
 	};
 
+	if (!user) return null;
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -58,11 +59,7 @@ export function UserMenu() {
 					<span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-semibold text-primary">
 						{user ? getInitial(user.username) : <User className="size-3" />}
 					</span>
-					{user && (
-						<span className="max-w-[120px] truncate font-medium text-foreground">
-							{user.username}
-						</span>
-					)}
+					{user && <span className="max-w-[120px] truncate font-medium text-foreground">{user.username}</span>}
 					<ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 group-aria-expanded:rotate-180" />
 				</button>
 			</DropdownMenuTrigger>
@@ -71,9 +68,7 @@ export function UserMenu() {
 					<>
 						<DropdownMenuLabel className="flex flex-col gap-0.5 px-2 py-2">
 							<span className="text-sm font-semibold text-foreground">{user.username}</span>
-							{user.email && (
-								<span className="text-xs font-normal text-muted-foreground">{user.email}</span>
-							)}
+							{user.email && <span className="text-xs font-normal text-muted-foreground">{user.email}</span>}
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 					</>

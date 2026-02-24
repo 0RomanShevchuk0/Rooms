@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './modules/users/users.module';
 import { RoomsModule } from './modules/rooms/rooms.module';
-import { WsModule } from './realtime/ws/ws.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -16,7 +15,6 @@ import { AuthModule } from './modules/auth/auth.module';
 		}),
 		UsersModule,
 		RoomsModule,
-		WsModule,
 		ChatsModule,
 		MessagesModule,
 		AuthModule,

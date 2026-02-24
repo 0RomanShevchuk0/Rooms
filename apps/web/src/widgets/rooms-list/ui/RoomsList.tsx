@@ -8,8 +8,8 @@ import { ROUTES } from "@/shared/routes";
 
 export function RoomsList() {
 	const roomsQuery = useQuery({
-		queryKey: queryKeys.rooms.all(),
-		queryFn: roomApi.getRooms,
+		queryKey: queryKeys.rooms.my(),
+		queryFn: roomApi.getMyRooms,
 	});
 
 	const roomCards = roomsQuery.data?.map((room) => (

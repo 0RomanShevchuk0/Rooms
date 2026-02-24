@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
@@ -7,6 +11,31 @@ import { Room } from 'generated/prisma/client';
 @Injectable()
 export class RoomsService {
 	constructor(private prisma: PrismaService) {}
+
+	findMany(filters?: { userId?: string }): Promise<Room[]> {
+		return this.prisma.room.findMany({
+			where: {
+				...(filters?.userId && {
+					players: { some: { id: filters.userId } },
+				}),
+			},
+			include: { players: true },
+		});
+	}
+
+	findById(id: string) {
+		return this.prisma.room.findUnique({
+			where: { id },
+			include: {
+				players: true,
+				chat: {
+					include: {
+						messages: true,
+					},
+				},
+			},
+		});
+	}
 
 	async create(createRoomDto: CreateRoomDto) {
 		const participantIds = Array.from(
@@ -53,21 +82,35 @@ export class RoomsService {
 		});
 	}
 
-	findMany(): Promise<Room[]> {
-		return this.prisma.room.findMany({ include: { players: true } });
+	async addMember(id: string, userId: string) {
+		const [room, user] = await Promise.all([
+			this.prisma.room.findUnique({ where: { id } }),
+			this.prisma.user.findUnique({ where: { id: userId } }),
+		]);
+
+		if (!room) throw new NotFoundException(`Room "${id}" not found`);
+		if (!user) throw new NotFoundException(`User "${userId}" not found`);
+
+		return this.prisma.room.update({
+			where: { id },
+			data: { players: { connect: { id: userId } } },
+			include: { players: true },
+		});
 	}
 
-	findById(id: string) {
-		return this.prisma.room.findUnique({
+	async removeMember(id: string, userId: string) {
+		const [room, user] = await Promise.all([
+			this.prisma.room.findUnique({ where: { id } }),
+			this.prisma.user.findUnique({ where: { id: userId } }),
+		]);
+
+		if (!room) throw new NotFoundException(`Room "${id}" not found`);
+		if (!user) throw new NotFoundException(`User "${userId}" not found`);
+
+		return this.prisma.room.update({
 			where: { id },
-			include: {
-				players: true,
-				chat: {
-					include: {
-						messages: true,
-					},
-				},
-			},
+			data: { players: { disconnect: { id: userId } } },
+			include: { players: true },
 		});
 	}
 

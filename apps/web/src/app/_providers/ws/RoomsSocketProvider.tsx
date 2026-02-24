@@ -2,17 +2,17 @@
 
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { createEventsSocket, type EventsSocket } from "@/shared/lib/realtime";
+import { createSocket, type AppSocket, SOCKET_NAMESPACES } from "@/shared/lib/realtime";
 
 type SocketContextValue = {
-	socket: EventsSocket;
+	socket: AppSocket;
 	connected: boolean;
 };
 
-const SocketContext = createContext<SocketContextValue | null>(null);
+const RoomsSocketContext = createContext<SocketContextValue | null>(null);
 
-export function SocketProvider({ children }: PropsWithChildren) {
-	const [socket] = useState(() => createEventsSocket({ autoConnect: false }));
+export function RoomsSocketProvider({ children }: PropsWithChildren) {
+	const [socket] = useState(() => createSocket(SOCKET_NAMESPACES.ROOMS, { autoConnect: false }));
 	const [connected, setConnected] = useState(false);
 
 	useEffect(() => {
@@ -35,13 +35,13 @@ export function SocketProvider({ children }: PropsWithChildren) {
 
 	const value = useMemo(() => ({ socket, connected }), [socket, connected]);
 
-	return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
+	return <RoomsSocketContext.Provider value={value}>{children}</RoomsSocketContext.Provider>;
 }
 
-export function useSocket() {
-	const ctx = useContext(SocketContext);
+export function useRoomsSocket() {
+	const ctx = useContext(RoomsSocketContext);
 	if (!ctx) {
-		throw new Error("useSocket must be used within SocketProvider");
+		throw new Error("useRoomsSocket must be used within RoomsSocketProvider");
 	}
 	return ctx;
 }

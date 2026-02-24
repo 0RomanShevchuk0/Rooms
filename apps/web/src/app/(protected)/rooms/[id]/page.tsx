@@ -6,8 +6,8 @@ import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { queryKeys } from "@/shared/react-query";
-import { useSocket } from "@/app/_providers/SocketProvider";
-import { SOCKET_EVENTS } from "@/shared/lib/realtime/socket-events";
+import { useRoomsSocket } from "@/app/_providers/ws";
+import { ROOM_SOCKET_EVENTS } from "@/entities/room";
 import { useEffect } from "react";
 
 export default function RoomPage() {
@@ -19,17 +19,28 @@ export default function RoomPage() {
 	});
 	const room = roomQuery.data;
 
-	const { socket } = useSocket();
+	const { socket } = useRoomsSocket();
 
 	useEffect(() => {
-		socket.emit(SOCKET_EVENTS.ROOM_JOIN, { roomId });
-		console.log("Room joined:", roomId);
-		socket.on(SOCKET_EVENTS.ROOM_JOIN, (data) => {
+		socket.emit(ROOM_SOCKET_EVENTS.JOIN, { roomId });
+		
+		socket.on(ROOM_SOCKET_EVENTS.JOIN, (data: unknown) => {
 			console.log("Room joined event received:", data);
 		});
+
+		socket.on(ROOM_SOCKET_EVENTS.LEAVE, (data: unknown) => {
+			console.log("Room left event received:", data);
+		});
+
 		return () => {
-			socket.emit(SOCKET_EVENTS.ROOM_LEAVE, { roomId });
-			console.log("Room left:", roomId);
+			socket.emit(ROOM_SOCKET_EVENTS.LEAVE, { roomId });
+
+			socket.off(ROOM_SOCKET_EVENTS.JOIN, (data: unknown) => {
+				console.log("Room joined event received:", data);
+			});
+			socket.off(ROOM_SOCKET_EVENTS.LEAVE, (data: unknown) => {
+				console.log("Room left event received:", data);
+			});
 		};
 	}, [socket, roomId]);
 

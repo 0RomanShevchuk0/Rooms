@@ -1,1 +1,2 @@
-export { createEventsSocket, type EventsSocket } from "./eventsSocket";
+export { createSocket, type AppSocket } from "./createSocket";
+export { SOCKET_NAMESPACES } from "./socket-namespaces";

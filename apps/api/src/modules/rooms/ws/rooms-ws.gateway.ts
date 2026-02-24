@@ -6,44 +6,34 @@ import {
 	WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { SOCKET_EVENTS } from './socket-events';
+import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 
 @WebSocketGateway({
-	namespace: '/events',
+	namespace: '/rooms',
 	cors: {
 		origin: '*',
 		credentials: true,
 	},
 })
-export class EventsWsGateway {
+export class RoomsWsGateway {
 	@WebSocketServer()
 	server!: Server;
 
-	handleConnection(client: Socket) {
-		console.log('WS Client connected', client.id);
-	}
-
-	handleDisconnect(client: Socket) {
-		console.log('WS Client disconnected', client.id);
-	}
-
-	@SubscribeMessage(SOCKET_EVENTS.ROOM_JOIN)
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_JOIN)
 	async joinRoom(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: { roomId: string },
 	) {
 		await client.join(body.roomId);
-		console.log(`Client ${client.id} joined room ${body.roomId}`);
 		return { ok: true };
 	}
 
-	@SubscribeMessage(SOCKET_EVENTS.ROOM_LEAVE)
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_LEAVE)
 	async leaveRoom(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: { roomId: string },
 	) {
 		await client.leave(body.roomId);
-		console.log(`Client ${client.id} left room ${body.roomId}`);
 		return { ok: true };
 	}
 }

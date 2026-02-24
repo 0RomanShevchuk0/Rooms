@@ -2,15 +2,15 @@
 import type { PropsWithChildren } from "react";
 import { QueryProvider } from "./QueryProvider";
 import { SessionProvider } from "./SessionProvider";
-import { SocketProvider } from "./SocketProvider";
 import { ToasterProvider } from "./ToasterProvider";
+import { SocketsProvider } from "./ws";
 
 export function Providers({ children }: PropsWithChildren) {
 	return (
 		<QueryProvider>
 			<SessionProvider>
 				<ToasterProvider />
-				<SocketProvider>{children}</SocketProvider>
+				<SocketsProvider>{children}</SocketsProvider>
 			</SessionProvider>
 		</QueryProvider>
 	);

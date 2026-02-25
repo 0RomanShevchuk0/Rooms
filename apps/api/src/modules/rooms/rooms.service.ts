@@ -82,7 +82,7 @@ export class RoomsService {
 		});
 	}
 
-	async addMember(id: string, userId: string) {
+	async join(id: string, userId: string) {
 		const [room, user] = await Promise.all([
 			this.prisma.room.findUnique({ where: { id } }),
 			this.prisma.user.findUnique({ where: { id: userId } }),
@@ -98,7 +98,7 @@ export class RoomsService {
 		});
 	}
 
-	async removeMember(id: string, userId: string) {
+	async leave(id: string, userId: string) {
 		const [room, user] = await Promise.all([
 			this.prisma.room.findUnique({ where: { id } }),
 			this.prisma.user.findUnique({ where: { id: userId } }),

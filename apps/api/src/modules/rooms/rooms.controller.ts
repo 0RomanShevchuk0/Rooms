@@ -46,8 +46,8 @@ export class RoomsController {
 	}
 
 	@Post(':id/members')
-	addMember(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		return this.roomsService.addMember(id, user.id);
+	join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+		return this.roomsService.join(id, user.id);
 	}
 
 	@Patch(':id')
@@ -61,7 +61,7 @@ export class RoomsController {
 	}
 
 	@Delete(':id/members')
-	removeMember(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		return this.roomsService.removeMember(id, user.id);
+	leave(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+		return this.roomsService.leave(id, user.id);
 	}
 }

@@ -22,25 +22,10 @@ export default function RoomPage() {
 	const { socket } = useRoomsSocket();
 
 	useEffect(() => {
-		socket.emit(ROOM_SOCKET_EVENTS.JOIN, { roomId });
-		
-		socket.on(ROOM_SOCKET_EVENTS.JOIN, (data: unknown) => {
-			console.log("Room joined event received:", data);
-		});
-
-		socket.on(ROOM_SOCKET_EVENTS.LEAVE, (data: unknown) => {
-			console.log("Room left event received:", data);
-		});
+		socket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId });
 
 		return () => {
-			socket.emit(ROOM_SOCKET_EVENTS.LEAVE, { roomId });
-
-			socket.off(ROOM_SOCKET_EVENTS.JOIN, (data: unknown) => {
-				console.log("Room joined event received:", data);
-			});
-			socket.off(ROOM_SOCKET_EVENTS.LEAVE, (data: unknown) => {
-				console.log("Room left event received:", data);
-			});
+			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT, { roomId });
 		};
 	}, [socket, roomId]);
 

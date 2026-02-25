@@ -19,8 +19,8 @@ export class RoomsWsGateway {
 	@WebSocketServer()
 	server!: Server;
 
-	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_JOIN)
-	async joinRoom(
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_CONNECT)
+	async connectToRoom(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: { roomId: string },
 	) {
@@ -28,8 +28,8 @@ export class RoomsWsGateway {
 		return { ok: true };
 	}
 
-	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_LEAVE)
-	async leaveRoom(
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.ROOM_DISCONNECT)
+	async disconnectFromRoom(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: { roomId: string },
 	) {

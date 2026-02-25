@@ -1,4 +1,4 @@
 export const ROOM_SOCKET_EVENTS = {
-	ROOM_JOIN: 'room:join',
-	ROOM_LEAVE: 'room:leave',
+	ROOM_CONNECT: 'room:connect',
+	ROOM_DISCONNECT: 'room:disconnect',
 } as const;

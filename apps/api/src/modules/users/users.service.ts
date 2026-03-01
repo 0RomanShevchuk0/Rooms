@@ -5,6 +5,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordsService } from '../auth/passwords.service';
 import { PublicUserDto } from './dto/public-user.dto';
 import { UserForAuth } from './types/user-for-auth.type';
+import { publicUserSelect } from './users.select';
 
 @Injectable()
 export class UsersService {
@@ -13,32 +14,24 @@ export class UsersService {
 		private passwordsService: PasswordsService,
 	) {}
 
-	private userSelect = {
-		id: true,
-		name: true,
-		email: true,
-		username: true,
-		deletedAt: true,
-	};
-
 	async findById(id: string): Promise<PublicUserDto | null> {
 		return this.prisma.user.findUnique({
 			where: { id },
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
 	async findByUsername(username: string): Promise<PublicUserDto | null> {
 		return this.prisma.user.findUnique({
 			where: { username },
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
 	async findByEmail(email: string): Promise<PublicUserDto | null> {
 		return this.prisma.user.findUnique({
 			where: { email },
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
@@ -55,7 +48,7 @@ export class UsersService {
 
 	async findMany(): Promise<PublicUserDto[]> {
 		return this.prisma.user.findMany({
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
@@ -74,7 +67,7 @@ export class UsersService {
 				username: createUserDto.username,
 				password: passwordHash,
 			},
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
@@ -88,7 +81,7 @@ export class UsersService {
 				email: updateUserDto.email,
 				name: updateUserDto.name,
 			},
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 
@@ -98,7 +91,7 @@ export class UsersService {
 			data: {
 				deletedAt: new Date(),
 			},
-			select: this.userSelect,
+			select: publicUserSelect,
 		});
 	}
 }

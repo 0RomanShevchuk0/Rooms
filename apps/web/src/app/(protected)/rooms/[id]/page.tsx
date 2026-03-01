@@ -2,16 +2,25 @@
 import { roomApi } from "@/entities/room/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { queryKeys } from "@/shared/react-query";
 import { useRoomsSocket } from "@/app/_providers/ws";
-import { ROOM_SOCKET_EVENTS } from "@/entities/room";
-import { useEffect } from "react";
+import { ROOM_SOCKET_EVENTS, type RoomWithPlayers } from "@/entities/room";
+import { useEffect, useRef } from "react";
 import { RoomHeader } from "@/widgets/room-header";
+import { type User } from "@/entities/user";
+import { useMeQuery } from "@/entities/user/model/useMeQuery";
+
+const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500", "bg-orange-500"];
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
+
+	const queryClient = useQueryClient();
+	const { socket } = useRoomsSocket();
+
+	const { user } = useMeQuery();
 
 	const roomQuery = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
@@ -19,15 +28,39 @@ export default function RoomPage() {
 	});
 	const room = roomQuery.data;
 
-	const { socket } = useRoomsSocket();
+	const onlinePlayerIds = useRef(new Set<string>());
 
 	useEffect(() => {
-		socket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId });
+		const onJoined = (data: { player: User }) => {
+			queryClient.setQueryData<RoomWithPlayers>(queryKeys.rooms.byId(roomId), (old) => {
+				if (!old) return old;
+				if (old.players.some((p) => p.id === data.player.id)) return old;
+				return { ...old, players: [...old.players, data.player] };
+			});
+			onlinePlayerIds.current.add(data.player.id);
+		};
+
+		const onLeft = (data: { player: User }) => {
+			queryClient.setQueryData<RoomWithPlayers>(queryKeys.rooms.byId(roomId), (old) => {
+				if (!old) return old;
+				if (!old.players.some((p) => p.id === data.player.id)) return old;
+				return { ...old, players: old.players.filter((p) => p.id !== data.player.id) };
+			});
+			onlinePlayerIds.current.delete(data.player.id);
+		};
+
+		socket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId, playerId: user?.id });
+
+		socket.on(ROOM_SOCKET_EVENTS.PLAYER_JOINED, onJoined);
+
+		socket.on(ROOM_SOCKET_EVENTS.PLAYER_LEFT, onLeft);
 
 		return () => {
-			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT, { roomId });
+			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT, { roomId, playerId: user?.id });
+			socket.off(ROOM_SOCKET_EVENTS.PLAYER_JOINED, onJoined);
+			socket.off(ROOM_SOCKET_EVENTS.PLAYER_LEFT, onLeft);
 		};
-	}, [socket, roomId]);
+	}, [socket, roomId, queryClient, user?.id]);
 
 	if (roomQuery.isPending) return <FullscreenSpinnerLoader />;
 
@@ -35,7 +68,6 @@ export default function RoomPage() {
 		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;
 	}
 
-	const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500", "bg-orange-500"];
 	const playersList = room.players.map((player, index) => (
 		<div
 			key={player.id}
@@ -73,9 +105,7 @@ export default function RoomPage() {
 							<CardHeader>
 								<CardTitle>Players</CardTitle>
 							</CardHeader>
-							<CardContent className="space-y-3">
-								{playersList}
-							</CardContent>
+							<CardContent className="space-y-3">{playersList}</CardContent>
 						</Card>
 
 						<Card className="border-border/60">

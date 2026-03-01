@@ -7,27 +7,29 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { Room } from 'generated/prisma/client';
+import { publicUserSelect } from '../users/users.select';
+import { RoomJoinLeaveResult, RoomWithPlayers } from './rooms.types';
 
 @Injectable()
 export class RoomsService {
 	constructor(private prisma: PrismaService) {}
 
-	findMany(filters?: { userId?: string }): Promise<Room[]> {
+	findMany(filters?: { userId?: string }): Promise<RoomWithPlayers[]> {
 		return this.prisma.room.findMany({
 			where: {
 				...(filters?.userId && {
 					players: { some: { id: filters.userId } },
 				}),
 			},
-			include: { players: true },
+			include: { players: { select: publicUserSelect } },
 		});
 	}
 
-	findById(id: string) {
+	findById(id: string): Promise<RoomWithPlayers | null> {
 		return this.prisma.room.findUnique({
 			where: { id },
 			include: {
-				players: true,
+				players: { select: publicUserSelect },
 				chat: {
 					include: {
 						messages: true,
@@ -37,7 +39,7 @@ export class RoomsService {
 		});
 	}
 
-	async create(createRoomDto: CreateRoomDto) {
+	async create(createRoomDto: CreateRoomDto): Promise<RoomWithPlayers> {
 		const participantIds = Array.from(
 			new Set(createRoomDto.participantIds || []),
 		);
@@ -76,53 +78,63 @@ export class RoomsService {
 				},
 			},
 			include: {
-				players: true,
+				players: { select: publicUserSelect },
 				chat: true,
 			},
 		});
 	}
 
-	async join(id: string, userId: string) {
+	async join(id: string, userId: string): Promise<RoomJoinLeaveResult> {
 		const [room, user] = await Promise.all([
 			this.prisma.room.findUnique({ where: { id } }),
-			this.prisma.user.findUnique({ where: { id: userId } }),
+			this.prisma.user.findUnique({
+				where: { id: userId },
+				select: publicUserSelect,
+			}),
 		]);
 
 		if (!room) throw new NotFoundException(`Room "${id}" not found`);
 		if (!user) throw new NotFoundException(`User "${userId}" not found`);
 
-		return this.prisma.room.update({
+		const updatedRoom = await this.prisma.room.update({
 			where: { id },
 			data: { players: { connect: { id: userId } } },
-			include: { players: true },
+			include: { players: { select: publicUserSelect } },
 		});
+
+		return { room: updatedRoom, player: user };
 	}
 
-	async leave(id: string, userId: string) {
+	async leave(id: string, userId: string): Promise<RoomJoinLeaveResult> {
 		const [room, user] = await Promise.all([
 			this.prisma.room.findUnique({ where: { id } }),
-			this.prisma.user.findUnique({ where: { id: userId } }),
+			this.prisma.user.findUnique({
+				where: { id: userId },
+				select: publicUserSelect,
+			}),
 		]);
 
 		if (!room) throw new NotFoundException(`Room "${id}" not found`);
 		if (!user) throw new NotFoundException(`User "${userId}" not found`);
 
-		return this.prisma.room.update({
+		const updatedRoom = await this.prisma.room.update({
 			where: { id },
 			data: { players: { disconnect: { id: userId } } },
-			include: { players: true },
+			include: { players: { select: publicUserSelect } },
 		});
+
+		return { room: updatedRoom, player: user };
 	}
 
-	update(id: string, updateRoomDto: UpdateRoomDto) {
+	update(id: string, updateRoomDto: UpdateRoomDto): Promise<RoomWithPlayers> {
 		return this.prisma.room.update({
 			where: { id },
 			data: updateRoomDto,
-			include: { players: true },
+			include: { players: { select: publicUserSelect } },
 		});
 	}
 
-	remove(id: string) {
+	remove(id: string): Promise<Room> {
 		return this.prisma.room.delete({
 			where: { id },
 		});

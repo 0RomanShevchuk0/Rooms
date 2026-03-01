@@ -1,12 +1,11 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LogOut, User } from "lucide-react";
 
 import { useSession, logout } from "@/entities/session";
-import { getMe } from "@/entities/user";
-import { queryKeys, mutationKeys } from "@/shared/react-query";
+import { mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 import {
 	DropdownMenu,
@@ -16,6 +15,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { useMeQuery } from "@/entities/user/model/useMeQuery";
 
 function getInitial(username: string): string {
 	return username.charAt(0).toUpperCase();
@@ -26,12 +26,7 @@ export function UserMenu() {
 	const queryClient = useQueryClient();
 	const { clearSession, accessToken } = useSession();
 
-	const { data: user } = useQuery({
-		queryKey: queryKeys.user.me(),
-		queryFn: getMe,
-		enabled: !!accessToken,
-		staleTime: 1000 * 60 * 5,
-	});
+	const { user } = useMeQuery({ enabled: !!accessToken });
 
 	const logoutMutation = useMutation({
 		mutationKey: mutationKeys.auth.logout(),

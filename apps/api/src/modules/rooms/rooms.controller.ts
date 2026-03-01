@@ -15,11 +15,15 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type AuthUser } from '../auth/types/auth-user.type';
+import { RoomsWsGateway } from './ws/rooms-ws.gateway';
 
 @UseGuards(JwtAuthGuard)
 @Controller('rooms')
 export class RoomsController {
-	constructor(private readonly roomsService: RoomsService) {}
+	constructor(
+		private readonly roomsService: RoomsService,
+		private readonly roomsWsGateway: RoomsWsGateway,
+	) {}
 
 	@Get()
 	findAll() {
@@ -46,8 +50,10 @@ export class RoomsController {
 	}
 
 	@Post(':id/members')
-	join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		return this.roomsService.join(id, user.id);
+	async join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+		const { room, player } = await this.roomsService.join(id, user.id);
+		this.roomsWsGateway.notifyPlayerJoined(id, player);
+		return room;
 	}
 
 	@Patch(':id')
@@ -61,7 +67,9 @@ export class RoomsController {
 	}
 
 	@Delete(':id/members')
-	leave(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		return this.roomsService.leave(id, user.id);
+	async leave(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+		const { room, player } = await this.roomsService.leave(id, user.id);
+		this.roomsWsGateway.notifyPlayerLeft(id, player);
+		return room;
 	}
 }

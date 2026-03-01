@@ -1,6 +1,5 @@
 "use client";
 import { roomApi } from "@/entities/room/api";
-import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery } from "@tanstack/react-query";
@@ -36,7 +35,7 @@ export default function RoomPage() {
 		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;
 	}
 
-	const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500"];
+	const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500", "bg-orange-500"];
 	const playersList = room.players.map((player, index) => (
 		<div
 			key={player.id}
@@ -76,9 +75,6 @@ export default function RoomPage() {
 							</CardHeader>
 							<CardContent className="space-y-3">
 								{playersList}
-								<Button variant="outline" size="sm" className="w-full">
-									Copy room link
-								</Button>
 							</CardContent>
 						</Card>
 

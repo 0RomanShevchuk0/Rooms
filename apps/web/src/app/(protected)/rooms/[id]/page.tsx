@@ -3,18 +3,16 @@ import { roomApi } from "@/entities/room/api";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 import { queryKeys } from "@/shared/react-query";
 import { useRoomsSocket } from "@/app/_providers/ws";
 import { ROOM_SOCKET_EVENTS } from "@/entities/room";
 import { useEffect } from "react";
-import { ArrowLeft, LogOut } from "lucide-react";
-import { LeaveRoomDialog } from "@/features/leave-room";
+import { RoomHeader } from "@/widgets/room-header";
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
-	const router = useRouter();
 
 	const roomQuery = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
@@ -58,28 +56,7 @@ export default function RoomPage() {
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 py-12">
-				<header className="flex flex-wrap items-center justify-between gap-4">
-					<div>
-						<p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Room</p>
-						<h1 className="text-2xl font-semibold">#A9K2 — Snake 2P</h1>
-					</div>
-					<div className="flex items-center gap-2">
-						<Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => router.push("/")}>
-							<ArrowLeft className="size-4" />
-							Back
-						</Button>
-						<Button variant="outline" size="sm">
-							Invite
-						</Button>
-						<Button size="sm">Ready</Button>
-						<LeaveRoomDialog roomId={roomId}>
-							<Button variant="destructive" size="sm">
-								<LogOut className="size-4" />
-								Leave room
-							</Button>
-						</LeaveRoomDialog>
-					</div>
-				</header>
+				<RoomHeader roomId={roomId} roomName={room.name} />
 
 				<div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
 					<Card className="border-border/60">

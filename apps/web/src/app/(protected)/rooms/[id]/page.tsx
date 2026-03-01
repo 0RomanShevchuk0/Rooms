@@ -3,15 +3,18 @@ import { roomApi } from "@/entities/room/api";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
 import { queryKeys } from "@/shared/react-query";
 import { useRoomsSocket } from "@/app/_providers/ws";
 import { ROOM_SOCKET_EVENTS } from "@/entities/room";
 import { useEffect } from "react";
+import { ArrowLeft, LogOut } from "lucide-react";
+import { LeaveRoomDialog } from "@/features/leave-room";
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
+	const router = useRouter();
 
 	const roomQuery = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
@@ -61,10 +64,20 @@ export default function RoomPage() {
 						<h1 className="text-2xl font-semibold">#A9K2 — Snake 2P</h1>
 					</div>
 					<div className="flex items-center gap-2">
+						<Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => router.push("/")}>
+							<ArrowLeft className="size-4" />
+							Back
+						</Button>
 						<Button variant="outline" size="sm">
 							Invite
 						</Button>
 						<Button size="sm">Ready</Button>
+						<LeaveRoomDialog roomId={roomId}>
+							<Button variant="destructive" size="sm">
+								<LogOut className="size-4" />
+								Leave room
+							</Button>
+						</LeaveRoomDialog>
 					</div>
 				</header>
 

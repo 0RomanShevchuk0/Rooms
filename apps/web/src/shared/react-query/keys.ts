@@ -21,5 +21,6 @@ export const mutationKeys = {
 	rooms: {
 		create: () => ["rooms", "create"] as const,
 		join: () => ["rooms", "join"] as const,
+		leave: () => ["rooms", "leave"] as const,
 	},
 } as const;

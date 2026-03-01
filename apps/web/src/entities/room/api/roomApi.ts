@@ -13,4 +13,5 @@ export const roomApi = {
 	getMyRooms: () => api.get<RoomWithPlayers[]>("/rooms/my"),
 	createRoom: (payload: CreateRoomPayload) => api.post<RoomWithPlayers>("/rooms", payload),
 	joinRoom: (id: string) => api.post<RoomWithPlayers>(`/rooms/${id}/members`),
+	leaveRoom: (id: string) => api.delete<RoomWithPlayers>(`/rooms/${id}/members`),
 };

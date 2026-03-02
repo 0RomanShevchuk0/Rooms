@@ -19,7 +19,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Field, FieldContent, FieldTitle, FieldError } from "@/shared/ui/field";
-import { roomApi } from "@/entities/room/api";
+import { joinRoom } from "@/entities/room/api";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 
@@ -46,7 +46,7 @@ export function JoinRoomDialog({ children }: JoinRoomDialogProps) {
 
 	const joinMutation = useMutation({
 		mutationKey: mutationKeys.rooms.join(),
-		mutationFn: (roomId: string) => roomApi.joinRoom(roomId),
+		mutationFn: (roomId: string) => joinRoom(roomId),
 		onSuccess: (_, roomId) => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.rooms.my() });
 			setOpen(false);

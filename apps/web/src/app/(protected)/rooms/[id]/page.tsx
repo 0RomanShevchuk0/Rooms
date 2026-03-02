@@ -1,5 +1,5 @@
 "use client";
-import { roomApi } from "@/entities/room/api";
+import { getRoom } from "@/entities/room/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,11 +22,10 @@ export default function RoomPage() {
 
 	const { user } = useMeQuery();
 
-	const roomQuery = useQuery({
+	const { data: room, isPending } = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
-		queryFn: () => roomApi.getRoom(roomId),
+		queryFn: () => getRoom(roomId),
 	});
-	const room = roomQuery.data;
 
 	const onlinePlayerIds = useRef(new Set<string>());
 
@@ -62,7 +61,7 @@ export default function RoomPage() {
 		};
 	}, [socket, roomId, queryClient, user?.id]);
 
-	if (roomQuery.isPending) return <FullscreenSpinnerLoader />;
+	if (isPending) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
 		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;

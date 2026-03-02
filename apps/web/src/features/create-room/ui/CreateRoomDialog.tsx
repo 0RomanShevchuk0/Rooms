@@ -19,7 +19,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import { Field, FieldContent, FieldTitle, FieldError, FieldGroup } from "@/shared/ui/field";
-import { roomApi } from "@/entities/room/api";
+import { createRoom } from "@/entities/room/api";
 import { getMe } from "@/entities/user";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
@@ -55,7 +55,7 @@ export function CreateRoomDialog({ children }: CreateRoomDialogProps) {
 	const createMutation = useMutation({
 		mutationKey: mutationKeys.rooms.create(),
 		mutationFn: ({ name, description }: CreateRoomForm) =>
-			roomApi.createRoom({
+			createRoom({
 				name,
 				description: description || undefined,
 				participantIds: [me!.id],

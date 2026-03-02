@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
@@ -15,7 +14,7 @@ import {
 	AlertDialogTrigger,
 	AlertDialogAction,
 } from "@/shared/ui/alert-dialog";
-import { roomApi } from "@/entities/room/api";
+import { leaveRoom } from "@/entities/room/api";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 
@@ -30,7 +29,7 @@ export function LeaveRoomDialog({ roomId, children }: LeaveRoomDialogProps) {
 
 	const leaveMutation = useMutation({
 		mutationKey: mutationKeys.rooms.leave(),
-		mutationFn: () => roomApi.leaveRoom(roomId),
+		mutationFn: () => leaveRoom(roomId),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.rooms.my() });
 			router.push(ROUTES.home);

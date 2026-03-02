@@ -4,10 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useParams } from "next/navigation";
 import { RoomHeader } from "@/widgets/room-header";
+import { RoomPlayersList } from "@/widgets/room-players-list";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { useRoomPresence } from "@/features/room-presence";
-
-const playerColors = ["bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-pink-500", "bg-cyan-500", "bg-orange-500"];
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
@@ -15,29 +14,13 @@ export default function RoomPage() {
 	const { user } = useMeQuery();
 
 	const { room, isPending } = useRoomByIdQuery({ roomId });
-	useRoomPresence({ roomId, userId: user?.id });
+	const { onlinePlayerIds } = useRoomPresence({ roomId, userId: user?.id });
 
 	if (isPending) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
 		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;
 	}
-
-	const playersList = room.players.map((player, index) => (
-		<div
-			key={player.id}
-			className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-4 py-3 text-sm"
-		>
-			<div className="flex items-center gap-3">
-				<div className={`h-2.5 w-2.5 rounded-full ${playerColors[index]}`} />
-				<div>
-					<p className="font-medium">{player.username}</p>
-					<p className="text-xs text-muted-foreground">Waiting</p>
-				</div>
-			</div>
-			<span className="text-xs text-muted-foreground">10 ms</span>
-		</div>
-	));
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
@@ -56,12 +39,7 @@ export default function RoomPage() {
 					</Card>
 
 					<aside className="flex flex-col gap-4">
-						<Card className="border-border/60">
-							<CardHeader>
-								<CardTitle>Players</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-3">{playersList}</CardContent>
-						</Card>
+						<RoomPlayersList players={room.players} onlinePlayerIds={onlinePlayerIds} />
 
 						<Card className="border-border/60">
 							<CardHeader>

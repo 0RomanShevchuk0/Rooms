@@ -16,6 +16,7 @@ export class ApiSocketIoAdapter extends IoAdapter {
 		return super.createIOServer(port, {
 			...(options ?? {}),
 			path: SOCKET_IO_PATH,
+			addTrailingSlash: false,
 		});
 	}
 }

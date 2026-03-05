@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosHeaders, AxiosInstance, InternalAxiosRequestConfig } from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+// const API_URL = "/api"; // for ngrok
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 

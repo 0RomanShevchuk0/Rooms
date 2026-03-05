@@ -1,6 +1,8 @@
 import {
 	ConnectedSocket,
 	MessageBody,
+	OnGatewayConnection,
+	OnGatewayDisconnect,
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer,
@@ -8,6 +10,15 @@ import {
 import type { Server, Socket } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import type { PublicUser } from '../../users/users.select';
+import type {
+	RoomsSocket,
+	RoomConnectPayload,
+	RoomDisconnectPayload,
+	RoomPresencePayload,
+	RoomPlayerJoinedPayload,
+	RoomPlayerLeftPayload,
+	RoomsSocketData,
+} from './rooms-ws.types';
 
 @WebSocketGateway({
 	namespace: '/rooms',
@@ -16,43 +27,119 @@ import type { PublicUser } from '../../users/users.select';
 		credentials: true,
 	},
 })
-export class RoomsWsGateway {
+export class RoomsWsGateway
+	implements OnGatewayConnection, OnGatewayDisconnect
+{
 	@WebSocketServer()
 	server!: Server;
 
-	notifyPlayerJoined(roomId: string, player: PublicUser) {
-		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_JOINED, { player });
+	private roomPlayers = new Map<string, Set<string>>();
+
+	handleConnection(client: Socket) {
+		void client;
 	}
 
-	notifyPlayerLeft(roomId: string, player: PublicUser) {
-		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_LEFT, { player });
+	handleDisconnect(client: RoomsSocket) {
+		if (!this.hasRoomContext(client)) {
+			return;
+		}
+
+		this.removePlayerFromRoom(client.data.roomId, client.data.playerId);
+
+		const payload: RoomPresencePayload = {
+			playerId: client.data.playerId,
+			onlinePlayerIds: this.getOnlinePlayerIds(client.data.roomId),
+		};
+		this.server
+			.to(client.data.roomId)
+			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
 	async connectToRoom(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() body: { roomId: string; playerId: string },
+		@ConnectedSocket() client: RoomsSocket,
+		@MessageBody() body: RoomConnectPayload,
 	) {
+		client.data = {
+			playerId: body.playerId,
+			roomId: body.roomId,
+		};
+
+		this.addPlayerToRoom(body.roomId, body.playerId);
 		await client.join(body.roomId);
-		client.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, {
-			player: {
-				id: body.playerId,
-			},
-		});
+
+		const payload: RoomPresencePayload = {
+			playerId: body.playerId,
+			onlinePlayerIds: this.getOnlinePlayerIds(body.roomId),
+		};
+
+		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, payload);
+
 		return { ok: true };
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromRoom(
-		@ConnectedSocket() client: Socket,
-		@MessageBody() body: { roomId: string; playerId: string },
+		@ConnectedSocket() client: RoomsSocket,
+		@MessageBody() body: RoomDisconnectPayload,
 	) {
+		this.removePlayerFromRoom(body.roomId, body.playerId);
 		await client.leave(body.roomId);
-		client.to(body.roomId).emit(ROOM_SOCKET_EVENTS.DISCONNECT, {
-			player: {
-				id: body.playerId,
-			},
-		});
+
+		const payload: RoomPresencePayload = {
+			playerId: body.playerId,
+			onlinePlayerIds: this.getOnlinePlayerIds(body.roomId),
+		};
+
+		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
+
+		delete client.data.roomId;
+		delete client.data.playerId;
+
 		return { ok: true };
+	}
+
+	public notifyPlayerJoined(roomId: string, player: PublicUser) {
+		const payload: RoomPlayerJoinedPayload = {
+			playerId: player.id,
+			onlinePlayerIds: this.getOnlinePlayerIds(roomId),
+			player,
+		};
+		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_JOINED, payload);
+	}
+
+	public notifyPlayerLeft(roomId: string, player: PublicUser) {
+		const payload: RoomPlayerLeftPayload = {
+			playerId: player.id,
+			onlinePlayerIds: this.getOnlinePlayerIds(roomId),
+		};
+		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_LEFT, payload);
+	}
+
+	public getOnlinePlayerIds(roomId: string): string[] {
+		return Array.from(this.roomPlayers.get(roomId) ?? []);
+	}
+
+	private hasRoomContext(
+		client: RoomsSocket,
+	): client is RoomsSocket & { data: RoomsSocketData } {
+		return Boolean(client.data.playerId && client.data.roomId);
+	}
+
+	private addPlayerToRoom(roomId: string, playerId: string) {
+		if (!this.roomPlayers.has(roomId)) {
+			this.roomPlayers.set(roomId, new Set());
+		}
+		this.roomPlayers.get(roomId)!.add(playerId);
+	}
+
+	private removePlayerFromRoom(roomId: string, playerId: string) {
+		const room = this.roomPlayers.get(roomId);
+		if (!room) return;
+
+		room.delete(playerId);
+		if (room?.size === 0) {
+			this.roomPlayers.delete(roomId);
+		}
 	}
 }

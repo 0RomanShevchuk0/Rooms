@@ -13,7 +13,6 @@ import type { PublicUser } from '../../users/users.select';
 import type {
 	RoomsSocket,
 	RoomConnectPayload,
-	RoomDisconnectPayload,
 	RoomPresencePayload,
 	RoomPlayerJoinedPayload,
 	RoomPlayerLeftPayload,
@@ -34,24 +33,30 @@ export class RoomsWsGateway
 	server!: Server;
 
 	private roomPlayers = new Map<string, Set<string>>();
+	private socketContexts = new Map<string, RoomsSocketData>();
 
 	handleConnection(client: Socket) {
 		void client;
 	}
 
 	handleDisconnect(client: RoomsSocket) {
-		if (!this.hasRoomContext(client)) {
+		const context = this.socketContexts.get(client.id);
+		if (!context) {
 			return;
 		}
 
-		this.removePlayerFromRoom(client.data.roomId, client.data.playerId);
+		this.removePlayerFromRoom(context.roomId, context.playerId);
+		this.clearSocketContextIfSessionMatches(
+			client.id,
+			context.sessionVersion,
+		);
 
 		const payload: RoomPresencePayload = {
-			playerId: client.data.playerId,
-			onlinePlayerIds: this.getOnlinePlayerIds(client.data.roomId),
+			playerId: context.playerId,
+			onlinePlayerIds: this.getOnlinePlayerIds(context.roomId),
 		};
 		this.server
-			.to(client.data.roomId)
+			.to(context.roomId)
 			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 	}
 
@@ -60,10 +65,13 @@ export class RoomsWsGateway
 		@ConnectedSocket() client: RoomsSocket,
 		@MessageBody() body: RoomConnectPayload,
 	) {
-		client.data = {
+		const sessionVersion = this.getNextSessionVersion(client.id);
+		const context: RoomsSocketData = {
 			playerId: body.playerId,
 			roomId: body.roomId,
+			sessionVersion,
 		};
+		this.socketContexts.set(client.id, context);
 
 		this.addPlayerToRoom(body.roomId, body.playerId);
 		await client.join(body.roomId);
@@ -79,22 +87,28 @@ export class RoomsWsGateway
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.DISCONNECT)
-	async disconnectFromRoom(
-		@ConnectedSocket() client: RoomsSocket,
-		@MessageBody() body: RoomDisconnectPayload,
-	) {
-		this.removePlayerFromRoom(body.roomId, body.playerId);
-		await client.leave(body.roomId);
+	async disconnectFromRoom(@ConnectedSocket() client: RoomsSocket) {
+		const context = this.socketContexts.get(client.id);
+		if (!context) {
+			console.log('disconnectFromRoom: no context');
+			return { ok: true };
+		}
+
+		this.removePlayerFromRoom(context.roomId, context.playerId);
+		await client.leave(context.roomId);
+		this.clearSocketContextIfSessionMatches(
+			client.id,
+			context.sessionVersion,
+		);
 
 		const payload: RoomPresencePayload = {
-			playerId: body.playerId,
-			onlinePlayerIds: this.getOnlinePlayerIds(body.roomId),
+			playerId: context.playerId,
+			onlinePlayerIds: this.getOnlinePlayerIds(context.roomId),
 		};
 
-		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
-
-		delete client.data.roomId;
-		delete client.data.playerId;
+		this.server
+			.to(context.roomId)
+			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 
 		return { ok: true };
 	}
@@ -120,12 +134,6 @@ export class RoomsWsGateway
 		return Array.from(this.roomPlayers.get(roomId) ?? []);
 	}
 
-	private hasRoomContext(
-		client: RoomsSocket,
-	): client is RoomsSocket & { data: RoomsSocketData } {
-		return Boolean(client.data.playerId && client.data.roomId);
-	}
-
 	private addPlayerToRoom(roomId: string, playerId: string) {
 		if (!this.roomPlayers.has(roomId)) {
 			this.roomPlayers.set(roomId, new Set());
@@ -140,6 +148,20 @@ export class RoomsWsGateway
 		room.delete(playerId);
 		if (room?.size === 0) {
 			this.roomPlayers.delete(roomId);
+		}
+	}
+
+	private getNextSessionVersion(clientId: string): number {
+		return (this.socketContexts.get(clientId)?.sessionVersion ?? 0) + 1;
+	}
+
+	private clearSocketContextIfSessionMatches(
+		clientId: string,
+		sessionVersion: number,
+	) {
+		const currentContext = this.socketContexts.get(clientId);
+		if (currentContext?.sessionVersion === sessionVersion) {
+			this.socketContexts.delete(clientId);
 		}
 	}
 }

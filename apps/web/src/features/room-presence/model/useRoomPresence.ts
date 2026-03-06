@@ -54,7 +54,7 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 		socket.on(ROOM_SOCKET_EVENTS.PLAYER_LEFT, onLeft);
 
 		return () => {
-			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT, { roomId, playerId: userId });
+			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT);
 
 			socket.off(ROOM_SOCKET_EVENTS.CONNECT, onConnected);
 			socket.off(ROOM_SOCKET_EVENTS.DISCONNECT, onDisconnected);

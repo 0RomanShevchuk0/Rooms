@@ -4,6 +4,7 @@ import type { PublicUser } from 'src/modules/users/users.select';
 export interface RoomsSocketData {
 	roomId: string;
 	playerId: string;
+	sessionVersion: number;
 }
 
 export type RoomsSocket = Socket<
@@ -19,8 +20,6 @@ export interface RoomParticipantPayload {
 }
 
 export type RoomConnectPayload = RoomParticipantPayload;
-export type RoomDisconnectPayload = RoomParticipantPayload;
-
 export interface RoomPresencePayload {
 	playerId: string;
 	onlinePlayerIds: string[];

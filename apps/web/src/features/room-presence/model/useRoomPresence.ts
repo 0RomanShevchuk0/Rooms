@@ -69,7 +69,7 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 
 			setOnlineParticipantIds(new Set());
 		};
-	}, [socket, roomId, queryClient, participantId]);
+	}, [socket, roomId, queryClient, participantId, userId]);
 
 	return { onlineParticipantIds };
 }

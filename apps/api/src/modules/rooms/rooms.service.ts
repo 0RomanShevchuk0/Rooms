@@ -92,27 +92,25 @@ export class RoomsService {
 	}
 
 	async join(id: string, userId: string): Promise<RoomJoinLeaveResult> {
-		const room = await this.prisma.room.findUnique({ where: { id } });
-
-		if (!room) throw new NotFoundException(`Room "${id}" not found`);
+		await this.findByIdOrThrow(id);
 
 		const participant = await this.participantsService.create({
 			roomId: id,
 			userId,
 		});
 
-		const updatedRoom = await this.findById(id);
-		if (!updatedRoom) throw new NotFoundException(`Room "${id}" not found`);
+		const updatedRoom = await this.findByIdOrThrow(id);
 
 		return { room: updatedRoom, participant };
 	}
 
 	async leave(id: string, userId: string): Promise<RoomJoinLeaveResult> {
+		await this.findByIdOrThrow(id);
+
 		const deletedParticipant =
 			await this.participantsService.removeByRoomAndUser(id, userId);
 
-		const updatedRoom = await this.findById(id);
-		if (!updatedRoom) throw new NotFoundException(`Room "${id}" not found`);
+		const updatedRoom = await this.findByIdOrThrow(id);
 
 		return { room: updatedRoom, participant: deletedParticipant };
 	}
@@ -132,5 +130,13 @@ export class RoomsService {
 		return this.prisma.room.delete({
 			where: { id },
 		});
+	}
+
+	private async findByIdOrThrow(id: string): Promise<RoomWithPartisipants> {
+		const room = await this.findById(id);
+		if (!room) {
+			throw new NotFoundException(`Room "${id}" not found`);
+		}
+		return room;
 	}
 }

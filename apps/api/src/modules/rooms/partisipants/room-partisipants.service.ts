@@ -2,41 +2,49 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { CreateRoomPartisipantDto } from './dto/create-room-partisipant.dto';
 import { UpdateRoomPartisipantDto } from './dto/update-room-partisipant.dto';
-import { publicUserSelect } from 'src/modules/users/users.select';
+import {
+	RoomPartisipantWithUser,
+	roomPartisipantWithUserSelect,
+} from './room-partisipants.select';
 
 @Injectable()
 export class RoomPartisipantsService {
 	constructor(private prisma: PrismaService) {}
 
-	create(createRoomPartisipantDto: CreateRoomPartisipantDto) {
+	create(
+		createRoomPartisipantDto: CreateRoomPartisipantDto,
+	): Promise<RoomPartisipantWithUser> {
 		return this.prisma.roomParticipant.create({
 			data: {
 				roomId: createRoomPartisipantDto.roomId,
 				userId: createRoomPartisipantDto.userId,
 				isReady: createRoomPartisipantDto.isReady ?? false,
 			},
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
-	findAll() {
+	findAll(): Promise<RoomPartisipantWithUser[]> {
 		return this.prisma.roomParticipant.findMany({
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
-	findOne(id: string) {
+	findOne(id: string): Promise<RoomPartisipantWithUser | null> {
 		return this.prisma.roomParticipant.findUnique({
 			where: { id },
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
-	update(id: string, updateRoomPartisipantDto: UpdateRoomPartisipantDto) {
+	update(
+		id: string,
+		updateRoomPartisipantDto: UpdateRoomPartisipantDto,
+	): Promise<RoomPartisipantWithUser> {
 		return this.prisma.roomParticipant.update({
 			where: { id },
 			data: updateRoomPartisipantDto,
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
@@ -46,21 +54,31 @@ export class RoomPartisipantsService {
 		});
 	}
 
-	removeByRoomAndUser(roomId: string, userId: string) {
+	removeByRoomAndUser(
+		roomId: string,
+		userId: string,
+	): Promise<RoomPartisipantWithUser> {
 		return this.prisma.roomParticipant.delete({
 			where: { roomId_userId: { roomId, userId } },
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
-	findByRoomAndUser(roomId: string, userId: string) {
+	findByRoomAndUser(
+		roomId: string,
+		userId: string,
+	): Promise<RoomPartisipantWithUser | null> {
 		return this.prisma.roomParticipant.findUnique({
 			where: { roomId_userId: { roomId, userId } },
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 
-	setReady(roomId: string, userId: string, isReady: boolean) {
+	setReady(
+		roomId: string,
+		userId: string,
+		isReady: boolean,
+	): Promise<RoomPartisipantWithUser> {
 		return this.prisma.roomParticipant.update({
 			where: {
 				roomId_userId: {
@@ -69,7 +87,7 @@ export class RoomPartisipantsService {
 				},
 			},
 			data: { isReady },
-			include: { user: { select: publicUserSelect } },
+			select: roomPartisipantWithUserSelect,
 		});
 	}
 }

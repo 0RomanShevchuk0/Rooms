@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useParams } from "next/navigation";
 import { RoomHeader } from "@/widgets/room-header";
-import { RoomPlayersList } from "@/widgets/room-players-list";
+import { RoomParticipantsList } from "@/widgets/room-participants-list";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { useRoomPresence } from "@/features/room-presence";
 
@@ -14,7 +14,7 @@ export default function RoomPage() {
 	const { user } = useMeQuery();
 
 	const { room, isPending } = useRoomByIdQuery({ roomId });
-	const { onlinePlayerIds } = useRoomPresence({ roomId, userId: user?.id });
+	const { onlineParticipantIds } = useRoomPresence({ roomId, userId: user?.id });
 
 	if (isPending) return <FullscreenSpinnerLoader />;
 
@@ -39,7 +39,7 @@ export default function RoomPage() {
 					</Card>
 
 					<aside className="flex flex-col gap-4">
-						<RoomPlayersList players={room.players} onlinePlayerIds={onlinePlayerIds} />
+						<RoomParticipantsList participants={room.participants} onlineParticipantIds={onlineParticipantIds} />
 
 						<Card className="border-border/60">
 							<CardHeader>

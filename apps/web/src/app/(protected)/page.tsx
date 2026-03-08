@@ -67,7 +67,7 @@ export default function Page() {
 								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
 									3
 								</span>
-								<p>When both players are ready, the game starts.</p>
+								<p>When both participants are ready, the game starts.</p>
 							</div>
 						</CardContent>
 					</Card>

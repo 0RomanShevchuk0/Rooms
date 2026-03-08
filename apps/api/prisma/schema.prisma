@@ -15,14 +15,14 @@ datasource db {
 }
 
 model User {
-   id    String  @id @default(uuid())
-   email String?  @unique
-   name  String?
-   username String  @unique
-   password String
+   id        String    @id @default(uuid())
+   email     String?   @unique
+   name      String?
+   username  String    @unique
+   password  String
    deletedAt DateTime?
 
-   rooms    Room[]    @relation("RoomPlayers")
+   participants RoomParticipant[] @relation("UserParticipants")
 
    messages Message[] @relation("MessageSender")
 }
@@ -32,9 +32,24 @@ model Room {
    name        String
    description String?
 
-   players User[] @relation("RoomPlayers")
+   participants RoomParticipant[] @relation("RoomParticipants")
 
    chat Chat? @relation("RoomChat")
+}
+
+model RoomParticipant {
+   id      String  @id @default(uuid())
+   isReady Boolean @default(false)
+
+   @@unique([roomId, userId])
+   @@index([roomId])
+   @@index([userId])
+
+   userId String
+   user   User   @relation("UserParticipants", fields: [userId], references: [id])
+
+   roomId String
+   room   Room   @relation("RoomParticipants", fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 model Chat {
@@ -54,5 +69,5 @@ model Message {
    chat   Chat   @relation("ChatMessages", fields: [chatId], references: [id], onDelete: Cascade)
 
    senderId String
-   sender User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+   sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
 }

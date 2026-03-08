@@ -6,6 +6,20 @@ export interface Room {
 	description?: string;
 }
 
-export interface RoomWithPlayers extends Room {
-	players: User[];
+export interface Participant {
+	id: string;
+}
+
+export interface ParticipantWithUser extends Participant {
+	userId: string;
+	user: User;
+}
+
+export interface ParticipantWithRoomAndUser extends ParticipantWithUser {
+	roomId: string;
+	room: Room;
+}
+
+export interface RoomWithParticipants extends Room {
+	participants: ParticipantWithUser[];
 }

@@ -1,11 +1,14 @@
-import { publicUserSelect, type PublicUser } from '../users/users.select';
-import { Prisma } from 'generated/prisma/browser';
+import {
+	RoomPartisipantWithUser,
+	roomPartisipantWithUserSelect,
+} from './partisipants/room-partisipants.select';
+import { Prisma } from 'generated/prisma/client';
 
-export type RoomWithPlayers = Prisma.RoomGetPayload<{
-	include: { players: { select: typeof publicUserSelect } };
+export type RoomWithPartisipants = Prisma.RoomGetPayload<{
+	include: { participants: { select: typeof roomPartisipantWithUserSelect } };
 }>;
 
 export type RoomJoinLeaveResult = {
-	room: RoomWithPlayers;
-	player: PublicUser;
+	room: RoomWithPartisipants;
+	participant: RoomPartisipantWithUser;
 };

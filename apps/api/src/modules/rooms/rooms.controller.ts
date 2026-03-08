@@ -49,10 +49,10 @@ export class RoomsController {
 		return this.roomsService.create(createRoomDto);
 	}
 
-	@Post(':id/members')
+	@Post(':id/participants')
 	async join(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		const { room, player } = await this.roomsService.join(id, user.id);
-		this.roomsWsGateway.notifyPlayerJoined(id, player);
+		const { room, participant } = await this.roomsService.join(id, user.id);
+		this.roomsWsGateway.notifyParticipantJoined(id, participant);
 		return room;
 	}
 
@@ -66,10 +66,10 @@ export class RoomsController {
 		return this.roomsService.remove(id);
 	}
 
-	@Delete(':id/members')
+	@Delete(':id/participants')
 	async leave(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		const { room, player } = await this.roomsService.leave(id, user.id);
-		this.roomsWsGateway.notifyPlayerLeft(id, player);
+		const { room, participant } = await this.roomsService.leave(id, user.id);
+		this.roomsWsGateway.notifyParticipantLeft(id, participant);
 		return room;
 	}
 }

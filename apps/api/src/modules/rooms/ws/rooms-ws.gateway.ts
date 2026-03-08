@@ -9,15 +9,15 @@ import {
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
-import type { PublicUser } from '../../users/users.select';
 import type {
 	RoomsSocket,
 	RoomConnectPayload,
 	RoomPresencePayload,
-	RoomPlayerJoinedPayload,
-	RoomPlayerLeftPayload,
+	RoomParticipantJoinedPayload,
+	RoomParticipantLeftPayload,
 	RoomsSocketData,
 } from './rooms-ws.types';
+import { RoomPartisipantWithUser } from '../partisipants/room-partisipants.select';
 
 @WebSocketGateway({
 	namespace: '/rooms',
@@ -32,7 +32,7 @@ export class RoomsWsGateway
 	@WebSocketServer()
 	server!: Server;
 
-	private roomPlayers = new Map<string, Set<string>>();
+	private roomParticipants = new Map<string, Set<string>>();
 	private socketContexts = new Map<string, RoomsSocketData>();
 
 	handleConnection(client: Socket) {
@@ -45,15 +45,15 @@ export class RoomsWsGateway
 			return;
 		}
 
-		this.removePlayerFromRoom(context.roomId, context.playerId);
+		this.removeParticipantFromRoom(context.roomId, context.participantId);
 		this.clearSocketContextIfSessionMatches(
 			client.id,
 			context.sessionVersion,
 		);
 
 		const payload: RoomPresencePayload = {
-			playerId: context.playerId,
-			onlinePlayerIds: this.getOnlinePlayerIds(context.roomId),
+			participantId: context.participantId,
+			onlineParticipantIds: this.getOnlineParticipantIds(context.roomId),
 		};
 		this.server
 			.to(context.roomId)
@@ -67,18 +67,18 @@ export class RoomsWsGateway
 	) {
 		const sessionVersion = this.getNextSessionVersion(client.id);
 		const context: RoomsSocketData = {
-			playerId: body.playerId,
+			participantId: body.participantId,
 			roomId: body.roomId,
 			sessionVersion,
 		};
 		this.socketContexts.set(client.id, context);
 
-		this.addPlayerToRoom(body.roomId, body.playerId);
+		this.addParticipantToRoom(body.roomId, body.participantId);
 		await client.join(body.roomId);
 
 		const payload: RoomPresencePayload = {
-			playerId: body.playerId,
-			onlinePlayerIds: this.getOnlinePlayerIds(body.roomId),
+			participantId: body.participantId,
+			onlineParticipantIds: this.getOnlineParticipantIds(body.roomId),
 		};
 
 		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, payload);
@@ -94,7 +94,7 @@ export class RoomsWsGateway
 			return { ok: true };
 		}
 
-		this.removePlayerFromRoom(context.roomId, context.playerId);
+		this.removeParticipantFromRoom(context.roomId, context.participantId);
 		await client.leave(context.roomId);
 		this.clearSocketContextIfSessionMatches(
 			client.id,
@@ -102,8 +102,8 @@ export class RoomsWsGateway
 		);
 
 		const payload: RoomPresencePayload = {
-			playerId: context.playerId,
-			onlinePlayerIds: this.getOnlinePlayerIds(context.roomId),
+			participantId: context.participantId,
+			onlineParticipantIds: this.getOnlineParticipantIds(context.roomId),
 		};
 
 		this.server
@@ -113,41 +113,49 @@ export class RoomsWsGateway
 		return { ok: true };
 	}
 
-	public notifyPlayerJoined(roomId: string, player: PublicUser) {
-		const payload: RoomPlayerJoinedPayload = {
-			playerId: player.id,
-			onlinePlayerIds: this.getOnlinePlayerIds(roomId),
-			player,
+	public notifyParticipantJoined(
+		roomId: string,
+		participant: RoomPartisipantWithUser,
+	) {
+		const payload: RoomParticipantJoinedPayload = {
+			participantId: participant.id,
+			onlineParticipantIds: this.getOnlineParticipantIds(roomId),
+			participant,
 		};
-		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_JOINED, payload);
+		this.server
+			.to(roomId)
+			.emit(ROOM_SOCKET_EVENTS.PARTICIPANT_JOINED, payload);
 	}
 
-	public notifyPlayerLeft(roomId: string, player: PublicUser) {
-		const payload: RoomPlayerLeftPayload = {
-			playerId: player.id,
-			onlinePlayerIds: this.getOnlinePlayerIds(roomId),
+	public notifyParticipantLeft(
+		roomId: string,
+		participant: RoomPartisipantWithUser,
+	) {
+		const payload: RoomParticipantLeftPayload = {
+			participantId: participant.id,
+			onlineParticipantIds: this.getOnlineParticipantIds(roomId),
 		};
-		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PLAYER_LEFT, payload);
+		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PARTICIPANT_LEFT, payload);
 	}
 
-	public getOnlinePlayerIds(roomId: string): string[] {
-		return Array.from(this.roomPlayers.get(roomId) ?? []);
+	public getOnlineParticipantIds(roomId: string): string[] {
+		return Array.from(this.roomParticipants.get(roomId) ?? []);
 	}
 
-	private addPlayerToRoom(roomId: string, playerId: string) {
-		if (!this.roomPlayers.has(roomId)) {
-			this.roomPlayers.set(roomId, new Set());
+	private addParticipantToRoom(roomId: string, participantId: string) {
+		if (!this.roomParticipants.has(roomId)) {
+			this.roomParticipants.set(roomId, new Set());
 		}
-		this.roomPlayers.get(roomId)!.add(playerId);
+		this.roomParticipants.get(roomId)!.add(participantId);
 	}
 
-	private removePlayerFromRoom(roomId: string, playerId: string) {
-		const room = this.roomPlayers.get(roomId);
+	private removeParticipantFromRoom(roomId: string, participantId: string) {
+		const room = this.roomParticipants.get(roomId);
 		if (!room) return;
 
-		room.delete(playerId);
+		room.delete(participantId);
 		if (room?.size === 0) {
-			this.roomPlayers.delete(roomId);
+			this.roomParticipants.delete(roomId);
 		}
 	}
 

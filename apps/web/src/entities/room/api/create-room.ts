@@ -1,12 +1,12 @@
-import type { RoomWithPlayers } from "@/entities/room";
+import type { RoomWithParticipants } from "@/entities/room";
 import { api } from "@/shared/api";
 
 export interface CreateRoomPayload {
 	name: string;
 	description?: string;
-	participantIds: string[];
+	userIds: string[];
 }
 
 export function createRoom(payload: CreateRoomPayload) {
-	return api.post<RoomWithPlayers>("/rooms", payload);
+	return api.post<RoomWithParticipants>("/rooms", payload);
 }

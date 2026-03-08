@@ -1,10 +1,10 @@
-import type { User } from "@/entities/user";
+import { ParticipantWithUser } from "@/entities/room/model/types";
 
 export interface RoomPresenceData {
-	playerId: string;
-	onlinePlayerIds: string[];
+	participantId: string;
+	onlineParticipantIds: string[];
 }
 
-export interface RoomPlayerJoinedData extends RoomPresenceData {
-	player: User;
+export interface RoomParticipantJoinedData extends RoomPresenceData {
+	participant: ParticipantWithUser;
 }

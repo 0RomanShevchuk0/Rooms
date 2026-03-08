@@ -1,4 +1,10 @@
-import { ArrayNotEmpty, IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+	ArrayNotEmpty,
+	IsArray,
+	IsOptional,
+	IsString,
+	IsUUID,
+} from 'class-validator';
 
 export class CreateRoomDto {
 	@IsString()
@@ -11,5 +17,5 @@ export class CreateRoomDto {
 	@IsArray()
 	@ArrayNotEmpty()
 	@IsUUID('4', { each: true })
-	participantIds: string[];
+	userIds: string[];
 }

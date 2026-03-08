@@ -1,9 +1,9 @@
 import type { Socket } from 'socket.io';
-import type { PublicUser } from 'src/modules/users/users.select';
+import { RoomPartisipantWithUser } from '../partisipants/room-partisipants.select';
 
 export interface RoomsSocketData {
 	roomId: string;
-	playerId: string;
+	participantId: string;
 	sessionVersion: number;
 }
 
@@ -16,17 +16,17 @@ export type RoomsSocket = Socket<
 
 export interface RoomParticipantPayload {
 	roomId: string;
-	playerId: string;
+	participantId: string;
 }
 
 export type RoomConnectPayload = RoomParticipantPayload;
 export interface RoomPresencePayload {
-	playerId: string;
-	onlinePlayerIds: string[];
+	participantId: string;
+	onlineParticipantIds: string[];
 }
 
-export interface RoomPlayerJoinedPayload extends RoomPresencePayload {
-	player: PublicUser;
+export interface RoomParticipantJoinedPayload extends RoomPresencePayload {
+	participant: RoomPartisipantWithUser;
 }
 
-export type RoomPlayerLeftPayload = RoomPresencePayload;
+export type RoomParticipantLeftPayload = RoomPresencePayload;

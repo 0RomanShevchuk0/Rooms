@@ -1,6 +1,6 @@
-import type { RoomWithPlayers } from "@/entities/room";
+import type { RoomWithParticipants } from "@/entities/room";
 import { api } from "@/shared/api";
 
 export function getRoom(id: string) {
-	return api.get<RoomWithPlayers>(`/rooms/${id}`);
+	return api.get<RoomWithParticipants>(`/rooms/${id}`);
 }

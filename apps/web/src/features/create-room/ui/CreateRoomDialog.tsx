@@ -58,7 +58,7 @@ export function CreateRoomDialog({ children }: CreateRoomDialogProps) {
 			createRoom({
 				name,
 				description: description || undefined,
-				participantIds: [me!.id],
+				userIds: [me!.id],
 			}),
 		onSuccess: (room) => {
 			queryClient.invalidateQueries({ queryKey: queryKeys.rooms.my() });
@@ -92,7 +92,7 @@ export function CreateRoomDialog({ children }: CreateRoomDialogProps) {
 				<AlertDialogHeader>
 					<AlertDialogTitle>Create a room</AlertDialogTitle>
 					<AlertDialogDescription>
-						{"Set up your room. You'll be added as a player automatically."}
+						{"Set up your room. You'll be added as a participant automatically."}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 

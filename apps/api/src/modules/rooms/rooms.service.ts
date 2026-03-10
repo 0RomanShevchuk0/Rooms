@@ -34,11 +34,7 @@ export class RoomsService {
 			where: { id },
 			include: {
 				participants: { select: roomPartisipantWithUserSelect },
-				chat: {
-					include: {
-						messages: true,
-					},
-				},
+				chat: true,
 			},
 		});
 	}

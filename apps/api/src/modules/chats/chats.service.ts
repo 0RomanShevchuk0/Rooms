@@ -18,19 +18,18 @@ export class ChatsService {
 	}
 
 	findAll() {
-		return this.prisma.chat.findMany({
-			include: {
-				messages: true,
-			},
-		});
+		return this.prisma.chat.findMany();
 	}
 
 	findOne(id: string) {
 		return this.prisma.chat.findUnique({
 			where: { id },
-			include: {
-				messages: true,
-			},
+		});
+	}
+
+	findOneByRoomId(roomId: string) {
+		return this.prisma.chat.findFirst({
+			where: { roomId },
 		});
 	}
 

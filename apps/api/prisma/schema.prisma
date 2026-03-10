@@ -55,6 +55,7 @@ model RoomParticipant {
 model Chat {
    id String @id @default(uuid())
 
+   //todo: make required
    roomId String? @unique
    room   Room?   @relation("RoomChat", fields: [roomId], references: [id], onDelete: Cascade)
 
@@ -70,4 +71,5 @@ model Message {
 
    senderId String
    sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
+   //todo: add createdAt
 }

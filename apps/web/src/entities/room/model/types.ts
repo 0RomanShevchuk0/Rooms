@@ -1,4 +1,5 @@
 import type { User } from "@/entities/user";
+import type { Chat } from "@/entities/chat";
 
 export interface Room {
 	id: string;
@@ -22,4 +23,7 @@ export interface ParticipantWithRoomAndUser extends ParticipantWithUser {
 
 export interface RoomWithParticipants extends Room {
 	participants: ParticipantWithUser[];
+}
+export interface RoomWithParticipantsAndChat extends RoomWithParticipants {
+	chat: Chat;
 }

@@ -25,6 +25,8 @@ model User {
    participants RoomParticipant[] @relation("UserParticipants")
 
    messages Message[] @relation("MessageSender")
+
+   createdAt DateTime @default(now())
 }
 
 model Room {
@@ -35,6 +37,8 @@ model Room {
    participants RoomParticipant[] @relation("RoomParticipants")
 
    chat Chat? @relation("RoomChat")
+
+   createdAt DateTime @default(now())
 }
 
 model RoomParticipant {
@@ -50,16 +54,19 @@ model RoomParticipant {
 
    roomId String
    room   Room   @relation("RoomParticipants", fields: [roomId], references: [id], onDelete: Cascade)
+
+   createdAt DateTime @default(now())
 }
 
 model Chat {
    id String @id @default(uuid())
 
-   //todo: make required
-   roomId String? @unique
-   room   Room?   @relation("RoomChat", fields: [roomId], references: [id], onDelete: Cascade)
+   roomId String @unique
+   room   Room   @relation("RoomChat", fields: [roomId], references: [id], onDelete: Cascade)
 
    messages Message[] @relation("ChatMessages")
+
+   createdAt DateTime @default(now())
 }
 
 model Message {
@@ -71,5 +78,6 @@ model Message {
 
    senderId String
    sender   User   @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
-   //todo: add createdAt
+
+   createdAt DateTime @default(now())
 }

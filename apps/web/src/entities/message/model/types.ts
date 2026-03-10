@@ -5,7 +5,7 @@ export interface Message {
 	content: string;
 	chatId: string;
 	senderId: string;
-	createdAt?: string;
+	createdAt: string;
 }
 
 export interface MessageWithSender extends Message {

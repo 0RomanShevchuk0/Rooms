@@ -17,11 +17,6 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 	const { socket } = useRoomsSocket();
 	const [onlineParticipantIds, setOnlineParticipantIds] = useState<Set<string>>(new Set());
 
-	// todo: получать партисипанта через ендпоинт
-	const participantId = queryClient
-		.getQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId))
-		?.participants.find((p) => p.userId === userId)?.id;
-
 	useEffect(() => {
 		if (!userId) return;
 
@@ -51,17 +46,12 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 
-		if (!participantId) return;
-		socket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId, participantId });
-
 		socket.on(ROOM_SOCKET_EVENTS.CONNECT, onConnected);
 		socket.on(ROOM_SOCKET_EVENTS.DISCONNECT, onDisconnected);
 		socket.on(ROOM_SOCKET_EVENTS.PARTICIPANT_JOINED, onJoined);
 		socket.on(ROOM_SOCKET_EVENTS.PARTICIPANT_LEFT, onLeft);
 
 		return () => {
-			socket.emit(ROOM_SOCKET_EVENTS.DISCONNECT);
-
 			socket.off(ROOM_SOCKET_EVENTS.CONNECT, onConnected);
 			socket.off(ROOM_SOCKET_EVENTS.DISCONNECT, onDisconnected);
 			socket.off(ROOM_SOCKET_EVENTS.PARTICIPANT_JOINED, onJoined);
@@ -69,7 +59,7 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 
 			setOnlineParticipantIds(new Set());
 		};
-	}, [socket, roomId, queryClient, participantId, userId]);
+	}, [socket, roomId, queryClient, userId]);
 
 	return { onlineParticipantIds };
 }

@@ -39,6 +39,11 @@ export class RoomsService {
 		});
 	}
 
+	async findMyParticipant(roomId: string, userId: string) {
+		await this.findByIdOrThrow(roomId);
+		return this.participantsService.findByRoomAndUser(roomId, userId);
+	}
+
 	async create(createRoomDto: CreateRoomDto): Promise<RoomWithPartisipants> {
 		const userIds = Array.from(new Set(createRoomDto.userIds || []));
 

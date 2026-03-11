@@ -1,13 +1,12 @@
 import {
 	ConnectedSocket,
 	MessageBody,
-	OnGatewayConnection,
 	OnGatewayDisconnect,
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer,
 } from '@nestjs/websockets';
-import type { Server, Socket } from 'socket.io';
+import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import type {
 	RoomsSocket,
@@ -26,18 +25,12 @@ import { RoomPartisipantWithUser } from '../partisipants/room-partisipants.selec
 		credentials: true,
 	},
 })
-export class RoomsWsGateway
-	implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class RoomsWsGateway implements OnGatewayDisconnect {
 	@WebSocketServer()
 	server!: Server;
 
 	private roomParticipants = new Map<string, Set<string>>();
 	private socketContexts = new Map<string, RoomsSocketData>();
-
-	handleConnection(client: Socket) {
-		void client;
-	}
 
 	handleDisconnect(client: RoomsSocket) {
 		const context = this.socketContexts.get(client.id);

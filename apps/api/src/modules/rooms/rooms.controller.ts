@@ -44,6 +44,11 @@ export class RoomsController {
 		return room;
 	}
 
+	@Get(':id/participants/me')
+	findMyParticipant(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+		return this.roomsService.findMyParticipant(id, user.id);
+	}
+
 	@Post()
 	create(@Body() createRoomDto: CreateRoomDto) {
 		return this.roomsService.create(createRoomDto);

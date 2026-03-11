@@ -3,6 +3,10 @@ export const queryKeys = {
 		all: () => ["rooms"] as const,
 		byId: (id: string) => ["rooms", id] as const,
 		my: () => ["rooms", "my"] as const,
+		meRoomParticipant: (id: string) => ["rooms", id, "me-room-participant"] as const,
+	},
+	chats: {
+		byId: (id: string) => ["chats", id] as const,
 	},
 	user: {
 		me: () => ["user", "me"] as const,

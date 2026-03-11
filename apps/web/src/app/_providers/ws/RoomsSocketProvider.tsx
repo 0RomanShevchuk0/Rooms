@@ -1,8 +1,10 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { createSocket, type AppSocket, SOCKET_NAMESPACES } from "@/shared/lib/realtime";
+import { createContext, useContext } from "react";
+import type { AppSocket } from "@/shared/lib/realtime";
+import { SOCKET_NAMESPACES } from "@/shared/lib/realtime";
+import { useSocketConnection } from "./useSocketConnection";
 
 type SocketContextValue = {
 	socket: AppSocket;
@@ -12,28 +14,7 @@ type SocketContextValue = {
 const RoomsSocketContext = createContext<SocketContextValue | null>(null);
 
 export function RoomsSocketProvider({ children }: PropsWithChildren) {
-	const [socket] = useState(() => createSocket(SOCKET_NAMESPACES.ROOMS, { autoConnect: false }));
-	const [connected, setConnected] = useState(false);
-
-	useEffect(() => {
-		const handleConnect = () => setConnected(true);
-		const handleDisconnect = () => setConnected(false);
-
-		socket.on("connect", handleConnect);
-		socket.on("disconnect", handleDisconnect);
-
-		socket.connect();
-
-		return () => {
-			socket.off("connect", handleConnect);
-			socket.off("disconnect", handleDisconnect);
-			if (socket.connected) {
-				socket.disconnect();
-			}
-		};
-	}, [socket]);
-
-	const value = useMemo(() => ({ socket, connected }), [socket, connected]);
+	const value = useSocketConnection(SOCKET_NAMESPACES.ROOMS);
 
 	return <RoomsSocketContext.Provider value={value}>{children}</RoomsSocketContext.Provider>;
 }

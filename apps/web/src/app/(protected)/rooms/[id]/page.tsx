@@ -5,7 +5,7 @@ import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { useParams } from "next/navigation";
 import { RoomHeader } from "@/widgets/room-header";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
-import { useRoomPresence } from "@/features/room-presence";
+import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presence";
 import { RoomSidebar } from "@/widgets/room-sidebar";
 
 export default function RoomPage() {
@@ -13,6 +13,7 @@ export default function RoomPage() {
 	const { user } = useMeQuery();
 
 	const { room, isPending } = useRoomByIdQuery({ roomId });
+	useRoomRealtimeChannels({ roomId, chatId: room?.chat.id, userId: user?.id });
 	const { onlineParticipantIds } = useRoomPresence({ roomId, userId: user?.id });
 
 	if (isPending) return <FullscreenSpinnerLoader />;

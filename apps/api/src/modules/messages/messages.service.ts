@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
+import { publicUserSelect } from '../users/users.select';
 
 @Injectable()
 export class MessagesService {
@@ -20,6 +21,11 @@ export class MessagesService {
 					connect: {
 						id: createMessageDto.chatId,
 					},
+				},
+			},
+			include: {
+				sender: {
+					select: publicUserSelect,
 				},
 			},
 		});

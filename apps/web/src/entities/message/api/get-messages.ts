@@ -1,4 +1,4 @@
-import type { GetMessagesParams, GetMessagesResponse } from "@/entities/message/model/types";
+import type { GetMessagesParams, MessageWithSender } from "@/entities/message/model/types";
 import { api } from "@/shared/api";
 
 export async function getMessages({ chatId, cursor, limit = 30 }: GetMessagesParams) {
@@ -9,9 +9,10 @@ export async function getMessages({ chatId, cursor, limit = 30 }: GetMessagesPar
 		searchParams.set("cursor", cursor);
 	}
 
-	const messages = await api.get<GetMessagesResponse>(`/messages?${searchParams.toString()}`);
-	return {
-		items: messages.items ?? [],
-		nextCursor: messages.nextCursor,
-	}
+	const messages = await api.get<MessageWithSender[]>(`/messages?${searchParams.toString()}`);
+	return messages;
+	// return {
+	// 	items: messages.items ?? [],
+	// 	nextCursor: messages.nextCursor,
+	// }
 }

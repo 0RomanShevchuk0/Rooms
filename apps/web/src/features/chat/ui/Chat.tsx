@@ -1,78 +1,75 @@
-import type { MessageWithSender } from "@/entities/message";
-import { getMessages } from "@/entities/message";
+import { getMessages, MessageWithSender } from "@/entities/message";
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SendHorizonal } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
+import { useChatSocket } from "@/app/_providers/ws";
+import { useCallback, useEffect, useState } from "react";
+import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
+import { useMeQuery } from "@/entities/user/model/useMeQuery";
+import { queryKeys } from "@/shared/react-query";
 
 interface ChatProps {
 	chatId: string;
 }
 
 export function Chat({ chatId }: ChatProps) {
+	const queryClient = useQueryClient();
+	const { user } = useMeQuery();
+
+	const chatKey = queryKeys.chats.byId(chatId);
 	const { data: messages } = useQuery({
-		queryKey: ["chat", chatId],
+		queryKey: chatKey,
 		queryFn: () => getMessages({ chatId }),
 	});
 
-	const now = new Date();
-	const todayDate = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
-	const yesterdayDate = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-	const threeDaysAgoDate = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
-	const twoWeeksAgoDate = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+	const [message, setMessage] = useState("");
 
-	const mockMessages: MessageWithSender[] = [
-		{
-			id: "1",
-			chatId,
-			senderId: "1",
-			content: "Hello, how are you?",
-			sender: {
-				id: "1",
-				username: "test",
-			},
-			createdAt: twoWeeksAgoDate,
-		},
-		{
-			id: "2",
-			chatId,
-			senderId: "2",
-			content: "I'm good, thank you!",
-			sender: {
-				id: "36bd2fc8-a721-43f7-9c8f-bd36cd6fb891",
-				username: "qwerty",
-			},
-			createdAt: threeDaysAgoDate,
-		},
-		{
-			id: "3",
-			chatId,
-			senderId: "1",
-			content: "What are you doing?",
-			sender: {
-				id: "1",
-				username: "test",
-			},
-			createdAt: yesterdayDate,
-		},
-		{
-			id: "4",
-			chatId,
-			senderId: "2",
-			content: "I'm just working on a project.",
-			sender: {
-				id: "36bd2fc8-a721-43f7-9c8f-bd36cd6fb891",
-				username: "qwerty",
-			},
-			createdAt: todayDate,
-		},
-	];
+	const { socket } = useChatSocket();
 
-	const messagesToRender = messages?.items?.length ? messages.items : mockMessages;
+	const pushMessageToCache = useCallback(
+		(newMessage: MessageWithSender) => {
+			queryClient.setQueryData<MessageWithSender[] | undefined>(chatKey, (old) => {
+				const prev = old ?? [];
+				if (prev.some((m) => m.id === newMessage.id)) return prev;
+				return [...prev, newMessage];
+			});
+		},
+		[chatKey, queryClient],
+	);
 
-	const Messages = messagesToRender.map((message) => {
+	useEffect(() => {
+		const onMessage = (incoming: MessageWithSender) => {
+			pushMessageToCache(incoming);
+		};
+
+		socket.on(CHAT_SOCKET_EVENTS.MESSAGE, onMessage);
+
+		return () => {
+			socket.off(CHAT_SOCKET_EVENTS.MESSAGE, onMessage);
+		};
+	}, [socket, pushMessageToCache]);
+
+	const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		if (!user?.id) return;
+		const content = message.trim();
+		if (!content) return;
+
+		socket.emit(
+			CHAT_SOCKET_EVENTS.MESSAGE,
+			{ chatId, senderId: user.id, content },
+			(response: MessageWithSender) => {
+				pushMessageToCache(response);
+			},
+		);
+
+		setMessage("");
+	};
+
+	const Messages = messages?.map((message) => {
 		const messageDate = message.createdAt ? new Date(message.createdAt) : new Date();
 
 		const getFromattedDate = () => {
@@ -100,7 +97,7 @@ export function Chat({ chatId }: ChatProps) {
 	return (
 		<div className="h-full flex flex-col content-between gap-2">
 			<div className="min-h-0 flex-1 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground overflow-auto">
-				{messagesToRender.length ? (
+				{messages?.length ? (
 					<div className="flex flex-col gap-2">{Messages}</div>
 				) : (
 					<div className="w-full h-full flex items-center justify-center text-center text-sm text-muted-foreground">
@@ -108,12 +105,17 @@ export function Chat({ chatId }: ChatProps) {
 					</div>
 				)}
 			</div>
-			<div className="flex gap-1">
-				<Input type="text" placeholder="Type your message here..." />
+			<form className="flex gap-1" onSubmit={handleSendMessage}>
+				<Input
+					type="text"
+					placeholder="Type your message here..."
+					value={message}
+					onChange={(e) => setMessage(e.target.value)}
+				/>
 				<Button type="submit">
 					<SendHorizonal />
 				</Button>
-			</div>
+			</form>
 		</div>
 	);
 }

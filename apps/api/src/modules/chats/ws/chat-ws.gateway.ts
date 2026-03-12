@@ -55,7 +55,6 @@ export class ChatWsGateway {
 			body.senderId,
 			body.content,
 		);
-		console.log('🚀 ~ ChatWsGateway ~ sendMessage ~ message:', message);
 
 		client.to(body.chatId).emit(CHAT_SOCKET_EVENTS.MESSAGE, message);
 

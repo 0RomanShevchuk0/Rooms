@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+	Injectable,
+	ForbiddenException,
+	NotFoundException,
+} from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
@@ -48,6 +52,36 @@ export class ChatsService {
 		return this.prisma.chat.delete({
 			where: { id },
 		});
+	}
+
+	async getMessages(
+		chatId: string,
+		userId: string,
+		cursor?: string,
+		limit = 20,
+	) {
+		const chat = await this.prisma.chat.findUnique({
+			where: { id: chatId },
+			include: {
+				room: {
+					include: {
+						participants: {
+							where: { userId },
+						},
+					},
+				},
+			},
+		});
+
+		if (!chat) {
+			throw new NotFoundException(`Chat "${chatId}" not found`);
+		}
+
+		if (chat.room.participants.length === 0) {
+			throw new ForbiddenException('You are not a participant of this room');
+		}
+
+		return this.messagesService.findByChatId(chatId, cursor, limit);
 	}
 
 	async sendMessage(chatId: string, senderId: string, content: string) {

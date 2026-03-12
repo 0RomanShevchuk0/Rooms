@@ -1,4 +1,5 @@
-import { getMessages, MessageWithSender } from "@/entities/message";
+import { getMessages, type MessageWithSender, type GetMessagesResponse } from "@/entities/message";
+
 import { cn } from "@/shared/lib";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -20,10 +21,12 @@ export function Chat({ chatId }: ChatProps) {
 	const { user } = useMeQuery();
 
 	const chatKey = queryKeys.chats.byId(chatId);
-	const { data: messages } = useQuery({
+	const { data } = useQuery({
 		queryKey: chatKey,
 		queryFn: () => getMessages({ chatId }),
 	});
+	console.log("🚀 ~ Chat message ~ data:", data);
+	const messages = data?.items;
 
 	const [message, setMessage] = useState("");
 
@@ -31,10 +34,13 @@ export function Chat({ chatId }: ChatProps) {
 
 	const pushMessageToCache = useCallback(
 		(newMessage: MessageWithSender) => {
-			queryClient.setQueryData<MessageWithSender[] | undefined>(chatKey, (old) => {
-				const prev = old ?? [];
-				if (prev.some((m) => m.id === newMessage.id)) return prev;
-				return [...prev, newMessage];
+			queryClient.setQueryData<GetMessagesResponse | undefined>(chatKey, (old) => {
+				const prev = old?.items ?? [];
+				if (prev.some((m) => m.id === newMessage.id)) return old;
+				return {
+					items: [...prev, newMessage],
+					nextCursor: old?.nextCursor ?? null,
+				};
 			});
 		},
 		[chatKey, queryClient],

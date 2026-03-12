@@ -53,7 +53,7 @@ export function RoomSidebar({ room, onlineParticipantIds }: RoomSidebarProps) {
 					</Card>
 				</>
 			) : (
-				<Card className="border-border/60 lg:h-[min(72vh,780px)]">
+				<Card className="flex flex-col border-border/60 h-[min(72vh,780px)]">
 					<CardHeader className="space-y-2">
 						<CardTitle>Chat</CardTitle>
 						<p className="text-sm text-muted-foreground">Room discussion appears here.</p>

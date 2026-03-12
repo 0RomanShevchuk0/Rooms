@@ -7,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SendHorizonal } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useChatSocket } from "@/app/_providers/ws";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { queryKeys } from "@/shared/react-query";
@@ -25,10 +25,12 @@ export function Chat({ chatId }: ChatProps) {
 		queryKey: chatKey,
 		queryFn: () => getMessages({ chatId }),
 	});
-	console.log("🚀 ~ Chat message ~ data:", data);
+
 	const messages = data?.items;
 
 	const [message, setMessage] = useState("");
+	const shouldScrollToBottom = useRef(true);
+	const chatContainerRef = useRef<HTMLDivElement>(null);
 
 	const { socket } = useChatSocket();
 
@@ -38,7 +40,7 @@ export function Chat({ chatId }: ChatProps) {
 				const prev = old?.items ?? [];
 				if (prev.some((m) => m.id === newMessage.id)) return old;
 				return {
-					items: [...prev, newMessage],
+					items: [newMessage, ...prev],
 					nextCursor: old?.nextCursor ?? null,
 				};
 			});
@@ -64,16 +66,30 @@ export function Chat({ chatId }: ChatProps) {
 		const content = message.trim();
 		if (!content) return;
 
-		socket.emit(
-			CHAT_SOCKET_EVENTS.MESSAGE,
-			{ chatId, senderId: user.id, content },
-			(response: MessageWithSender) => {
-				pushMessageToCache(response);
-			},
-		);
+		socket.emit(CHAT_SOCKET_EVENTS.MESSAGE, { chatId, senderId: user.id, content }, (response: MessageWithSender) => {
+			shouldScrollToBottom.current = true;
+			pushMessageToCache(response);
+		});
 
 		setMessage("");
 	};
+
+	useLayoutEffect(() => {
+		if (!chatContainerRef.current) return;
+
+		const SCROLL_THRESHOLD = 100;
+
+		const isAtBottom =
+			chatContainerRef.current.scrollHeight -
+				chatContainerRef.current.scrollTop -
+				chatContainerRef.current.clientHeight <
+			SCROLL_THRESHOLD;
+
+		if (messages && (isAtBottom || shouldScrollToBottom.current)) {
+			chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight });
+			shouldScrollToBottom.current = false;
+		}
+	}, [messages]);
 
 	const Messages = messages?.map((message) => {
 		const messageDate = message.createdAt ? new Date(message.createdAt) : new Date();
@@ -102,9 +118,12 @@ export function Chat({ chatId }: ChatProps) {
 
 	return (
 		<div className="h-full flex flex-col content-between gap-2">
-			<div className="min-h-0 flex-1 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground overflow-auto">
+			<div
+				ref={chatContainerRef}
+				className="min-h-0 flex-1 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground overflow-auto"
+			>
 				{messages?.length ? (
-					<div className="flex flex-col gap-2">{Messages}</div>
+					<div className="flex flex-col-reverse gap-2">{Messages}</div>
 				) : (
 					<div className="w-full h-full flex items-center justify-center text-center text-sm text-muted-foreground">
 						No messages yet

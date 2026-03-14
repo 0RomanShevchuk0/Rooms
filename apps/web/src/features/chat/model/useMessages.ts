@@ -16,22 +16,27 @@ export function useMessagesQuery({ chatId }: UseMessagesQueryProps) {
 		queryFn: () => getMessages({ chatId }),
 	});
 
-	const pushMessageToCache = useCallback(
-		(newMessage: MessageWithSender) => {
+	const pushMessagesToCache = useCallback(
+		(newMessages: MessageWithSender[]) => {
 			queryClient.setQueryData<GetMessagesResponse | undefined>(chatKey, (old) => {
 				const prev = old?.items ?? [];
-				if (prev.some((m) => m.id === newMessage.id)) return old;
+				const existingIds = new Set(prev.map((m) => m.id));
+
+				const newUnique = newMessages.filter((m) => !existingIds.has(m.id));
+				if (newUnique.length === 0) return old;
+
 				return {
-					items: [newMessage, ...prev],
+					items: [...newUnique, ...prev],
 					nextCursor: old?.nextCursor ?? null,
 				};
 			});
 		},
 		[chatKey, queryClient],
 	);
+
 	return {
 		messages: data?.items ?? [],
 		cursor: data?.nextCursor ?? null,
-		pushMessageToCache,
+		pushMessagesToCache,
 	};
 }

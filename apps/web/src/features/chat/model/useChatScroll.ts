@@ -19,7 +19,7 @@ export function useChatScroll({ messages, chatContainerRef, shouldScrollToBottom
 				chatContainerRef.current.clientHeight <
 			SCROLL_THRESHOLD;
 
-		if (messages && (isAtBottom || shouldScrollToBottomRef.current)) {
+		if (messages.length > 0 && (isAtBottom || shouldScrollToBottomRef.current)) {
 			chatContainerRef.current.scrollTo({ top: chatContainerRef.current.scrollHeight });
 			shouldScrollToBottomRef.current = false;
 		}

@@ -27,8 +27,8 @@ export function Chat({ chatId }: ChatProps) {
 
 	const { socket } = useChatSocket();
 
-	const { messages, pushMessageToCache } = useMessagesQuery({ chatId });
-	useMessagesSocket({ onMessage: pushMessageToCache });
+	const { messages, pushMessagesToCache } = useMessagesQuery({ chatId });
+	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
 	useChatScroll({ messages, chatContainerRef, shouldScrollToBottomRef });
 
 	const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
@@ -39,7 +39,7 @@ export function Chat({ chatId }: ChatProps) {
 
 		socket.emit(CHAT_SOCKET_EVENTS.MESSAGE, { chatId, senderId: user.id, content }, (response: MessageWithSender) => {
 			shouldScrollToBottomRef.current = true;
-			pushMessageToCache(response);
+			pushMessagesToCache([response]);
 		});
 
 		setMessage("");

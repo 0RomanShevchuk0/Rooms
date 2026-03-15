@@ -11,12 +11,11 @@ import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";
 import { useMessagesQuery } from "../model/useMessages";
 import { useChatScroll } from "../model/useChatScroll";
+import { useChatScrollPagination } from "../model/useChatScrollPagination";
 
 interface ChatProps {
 	chatId: string;
 }
-
-// todo: add infinite scroll for messages
 
 export function Chat({ chatId }: ChatProps) {
 	const { user } = useMeQuery();
@@ -24,14 +23,18 @@ export function Chat({ chatId }: ChatProps) {
 	const [message, setMessage] = useState("");
 	const shouldScrollToBottomRef = useRef(true);
 	const chatContainerRef = useRef<HTMLDivElement | null>(null);
+	const [sentinel, setSentinel] = useState<HTMLDivElement | null>(null);
 
 	const { socket } = useChatSocket();
 
-	const { messages, pushMessagesToCache } = useMessagesQuery({ chatId });
+	const { messages, hasNextPage, isFetchingNextPage, pushMessagesToCache, fetchNextPage } = useMessagesQuery({
+		chatId,
+	});
 	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
 	useChatScroll({ messages, chatContainerRef, shouldScrollToBottomRef });
+	useChatScrollPagination({ hasNextPage, isFetchingNextPage, fetchNextPage, chatContainerRef, sentinel });
 
-	const handleSendMessage = (e: React.FormEvent<HTMLFormElement>) => {
+	const handleSendMessage = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		if (!user?.id) return;
 		const content = message.trim();
@@ -56,6 +59,7 @@ export function Chat({ chatId }: ChatProps) {
 						{messages.map((message) => (
 							<Message key={message.id} message={message} />
 						))}
+						<div ref={setSentinel} />
 					</div>
 				) : (
 					<div className="w-full h-full flex items-center justify-center text-center text-sm text-muted-foreground">

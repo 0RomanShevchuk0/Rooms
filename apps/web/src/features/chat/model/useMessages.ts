@@ -1,13 +1,15 @@
 import { getMessages, GetMessagesResponse, MessageWithSender } from "@/entities/message";
 import { queryKeys } from "@/shared/react-query";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 interface UseMessagesQueryProps {
 	chatId: string;
 }
 
-const MESSAGES_LIMIT = 20;
+type InfiniteMessagesData = InfiniteData<GetMessagesResponse, string | undefined>;
+
+const MESSAGES_LIMIT = 30;
 
 export function useMessagesQuery({ chatId }: UseMessagesQueryProps) {
 	const queryClient = useQueryClient();
@@ -25,17 +27,25 @@ export function useMessagesQuery({ chatId }: UseMessagesQueryProps) {
 
 	const pushMessagesToCache = useCallback(
 		(newMessages: MessageWithSender[]) => {
-			queryClient.setQueryData<GetMessagesResponse | undefined>(chatKey, (old) => {
-				const prev = old?.items ?? [];
-				const existingIds = new Set(prev.map((m) => m.id));
+			queryClient.setQueryData<InfiniteMessagesData>(chatKey, (old) => {
+				const oldPages = old?.pages ?? [];
+				const existingIds = new Set(oldPages.flatMap((m) => m.items.map((msg) => msg.id)));
 
 				const newUnique = newMessages.filter((m) => !existingIds.has(m.id));
 				if (newUnique.length === 0) return old;
 
+				const newPages = oldPages.map((page, index) => {
+					if (index !== 0) return page;
+					return {
+						...page,
+						items: [...newUnique, ...page.items],
+					};
+				});
+
 				return {
-					items: [...newUnique, ...prev],
-					nextCursor: old?.nextCursor ?? null,
-				};
+					pages: newPages,
+					pageParams: old?.pageParams ?? [],
+				} satisfies InfiniteMessagesData;
 			});
 		},
 		[chatKey, queryClient],

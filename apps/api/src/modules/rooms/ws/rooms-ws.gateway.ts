@@ -16,7 +16,7 @@ import type {
 	RoomParticipantLeftPayload,
 	RoomsSocketData,
 } from './rooms-ws.types';
-import { RoomPartisipantWithUser } from '../partisipants/room-partisipants.select';
+import { RoomParticipantWithUser } from '../participants/room-participants.select';
 
 @WebSocketGateway({
 	namespace: '/rooms',
@@ -108,7 +108,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 
 	public notifyParticipantJoined(
 		roomId: string,
-		participant: RoomPartisipantWithUser,
+		participant: RoomParticipantWithUser,
 	) {
 		const payload: RoomParticipantJoinedPayload = {
 			participantId: participant.id,
@@ -122,7 +122,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 
 	public notifyParticipantLeft(
 		roomId: string,
-		participant: RoomPartisipantWithUser,
+		participant: RoomParticipantWithUser,
 	) {
 		const payload: RoomParticipantLeftPayload = {
 			participantId: participant.id,

@@ -1,5 +1,5 @@
 import type { Socket } from 'socket.io';
-import { RoomPartisipantWithUser } from '../partisipants/room-partisipants.select';
+import { RoomParticipantWithUser } from '../participants/room-participants.select';
 
 export interface RoomsSocketData {
 	roomId: string;
@@ -26,7 +26,7 @@ export interface RoomPresencePayload {
 }
 
 export interface RoomParticipantJoinedPayload extends RoomPresencePayload {
-	participant: RoomPartisipantWithUser;
+	participant: RoomParticipantWithUser;
 }
 
 export type RoomParticipantLeftPayload = RoomPresencePayload;

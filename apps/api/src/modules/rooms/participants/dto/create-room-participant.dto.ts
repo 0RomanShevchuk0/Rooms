@@ -1,6 +1,6 @@
 import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
 
-export class CreateRoomPartisipantDto {
+export class CreateRoomParticipantDto {
 	@IsUUID('4')
 	roomId: string;
 

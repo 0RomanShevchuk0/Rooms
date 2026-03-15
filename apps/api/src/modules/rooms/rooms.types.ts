@@ -1,14 +1,14 @@
 import {
-	RoomPartisipantWithUser,
-	roomPartisipantWithUserSelect,
-} from './partisipants/room-partisipants.select';
+	RoomParticipantWithUser,
+	roomParticipantWithUserSelect,
+} from './participants/room-participants.select';
 import { Prisma } from 'generated/prisma/client';
 
-export type RoomWithPartisipants = Prisma.RoomGetPayload<{
-	include: { participants: { select: typeof roomPartisipantWithUserSelect } };
+export type RoomWithParticipants = Prisma.RoomGetPayload<{
+	include: { participants: { select: typeof roomParticipantWithUserSelect } };
 }>;
 
 export type RoomJoinLeaveResult = {
-	room: RoomWithPartisipants;
-	participant: RoomPartisipantWithUser;
+	room: RoomWithParticipants;
+	participant: RoomParticipantWithUser;
 };

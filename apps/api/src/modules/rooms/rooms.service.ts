@@ -7,33 +7,33 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { Room } from 'generated/prisma/client';
-import { RoomJoinLeaveResult, RoomWithPartisipants } from './rooms.types';
-import { roomPartisipantWithUserSelect } from './partisipants/room-partisipants.select';
-import { RoomPartisipantsService } from './partisipants/room-partisipants.service';
+import { RoomJoinLeaveResult, RoomWithParticipants } from './rooms.types';
+import { roomParticipantWithUserSelect } from './participants/room-participants.select';
+import { RoomParticipantsService } from './participants/room-participants.service';
 
 @Injectable()
 export class RoomsService {
 	constructor(
 		private prisma: PrismaService,
-		private readonly participantsService: RoomPartisipantsService,
+		private readonly participantsService: RoomParticipantsService,
 	) {}
 
-	findMany(filters?: { userId?: string }): Promise<RoomWithPartisipants[]> {
+	findMany(filters?: { userId?: string }): Promise<RoomWithParticipants[]> {
 		return this.prisma.room.findMany({
 			where: {
 				...(filters?.userId && {
 					participants: { some: { userId: filters.userId } },
 				}),
 			},
-			include: { participants: { select: roomPartisipantWithUserSelect } },
+			include: { participants: { select: roomParticipantWithUserSelect } },
 		});
 	}
 
-	findById(id: string): Promise<RoomWithPartisipants | null> {
+	findById(id: string): Promise<RoomWithParticipants | null> {
 		return this.prisma.room.findUnique({
 			where: { id },
 			include: {
-				participants: { select: roomPartisipantWithUserSelect },
+				participants: { select: roomParticipantWithUserSelect },
 				chat: true,
 			},
 		});
@@ -44,7 +44,7 @@ export class RoomsService {
 		return this.participantsService.findByRoomAndUser(roomId, userId);
 	}
 
-	async create(createRoomDto: CreateRoomDto): Promise<RoomWithPartisipants> {
+	async create(createRoomDto: CreateRoomDto): Promise<RoomWithParticipants> {
 		const userIds = Array.from(new Set(createRoomDto.userIds || []));
 
 		const existingUsers = await this.prisma.user.findMany({
@@ -86,7 +86,7 @@ export class RoomsService {
 				},
 			},
 			include: {
-				participants: { select: roomPartisipantWithUserSelect },
+				participants: { select: roomParticipantWithUserSelect },
 				chat: true,
 			},
 		});
@@ -119,11 +119,11 @@ export class RoomsService {
 	update(
 		id: string,
 		updateRoomDto: UpdateRoomDto,
-	): Promise<RoomWithPartisipants> {
+	): Promise<RoomWithParticipants> {
 		return this.prisma.room.update({
 			where: { id },
 			data: updateRoomDto,
-			include: { participants: { select: roomPartisipantWithUserSelect } },
+			include: { participants: { select: roomParticipantWithUserSelect } },
 		});
 	}
 
@@ -133,7 +133,7 @@ export class RoomsService {
 		});
 	}
 
-	private async findByIdOrThrow(id: string): Promise<RoomWithPartisipants> {
+	private async findByIdOrThrow(id: string): Promise<RoomWithParticipants> {
 		const room = await this.findById(id);
 		if (!room) {
 			throw new NotFoundException(`Room "${id}" not found`);

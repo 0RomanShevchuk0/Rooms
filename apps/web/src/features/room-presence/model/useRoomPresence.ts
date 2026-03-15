@@ -1,6 +1,6 @@
 "use client";
 
-import { useRoomsSocket } from "@/app/_providers/ws";
+import { useRoomsSocket } from "@/shared/lib/realtime";
 import { ROOM_SOCKET_EVENTS, type RoomWithParticipants } from "@/entities/room";
 import { queryKeys } from "@/shared/react-query";
 import { useQueryClient } from "@tanstack/react-query";

@@ -3,7 +3,7 @@ import { type MessageWithSender } from "@/entities/message";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { SendHorizonal } from "lucide-react";
-import { useChatSocket } from "@/app/_providers/ws";
+import { useChatSocket } from "@/shared/lib/realtime";
 import { useRef, useState } from "react";
 import { CHAT_SOCKET_EVENTS } from "@/entities/chat";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";

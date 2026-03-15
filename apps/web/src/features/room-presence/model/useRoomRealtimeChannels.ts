@@ -1,6 +1,6 @@
 "use client";
 
-import { useChatSocket, useRoomsSocket } from "@/app/_providers/ws";
+import { useChatSocket, useRoomsSocket } from "@/shared/lib/realtime";
 import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
 import { getMeRoomParticipant, ROOM_SOCKET_EVENTS } from "@/entities/room";
 import { queryKeys } from "@/shared/react-query";

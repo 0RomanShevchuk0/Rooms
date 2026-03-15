@@ -1,7 +1,7 @@
 import { getMessages, GetMessagesResponse, MessageWithSender } from "@/entities/message";
 import { queryKeys } from "@/shared/react-query";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 interface UseMessagesQueryProps {
 	chatId: string;
@@ -28,30 +28,40 @@ export function useMessagesQuery({ chatId }: UseMessagesQueryProps) {
 	const pushMessagesToCache = useCallback(
 		(newMessages: MessageWithSender[]) => {
 			queryClient.setQueryData<InfiniteMessagesData>(chatKey, (old) => {
-				const oldPages = old?.pages ?? [];
-				const existingIds = new Set(oldPages.flatMap((m) => m.items.map((msg) => msg.id)));
+				const pages = old?.pages;
+				if (!pages) return old;
+
+				const existingIds = new Set<string>();
+
+				for (const page of pages) {
+					for (const msg of page.items) {
+						existingIds.add(msg.id);
+					}
+				}
 
 				const newUnique = newMessages.filter((m) => !existingIds.has(m.id));
 				if (newUnique.length === 0) return old;
 
-				const newPages = oldPages.map((page, index) => {
-					if (index !== 0) return page;
-					return {
-						...page,
-						items: [...newUnique, ...page.items],
-					};
-				});
+				const firstPage = pages[0];
+
+				const newPages = [
+					{
+						...firstPage,
+						items: [...newUnique, ...firstPage.items],
+					},
+					...pages.slice(1),
+				];
 
 				return {
+					...old,
 					pages: newPages,
-					pageParams: old?.pageParams ?? [],
 				} satisfies InfiniteMessagesData;
 			});
 		},
 		[chatKey, queryClient],
 	);
 
-	const messages = data?.pages.flatMap((page) => page.items) ?? [];
+	const messages = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
 
 	return {
 		messages,

@@ -7,6 +7,7 @@ import { RoomHeader } from "@/widgets/room-header";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presence";
 import { RoomSidebar } from "@/widgets/room-sidebar";
+import { NotFoundScreen } from "@/shared/ui/not-found-screen";
 
 export default function RoomPage() {
 	const roomId = useParams().id as string;
@@ -19,7 +20,7 @@ export default function RoomPage() {
 	if (isPending) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
-		return <div className="w-full h-screen flex items-center justify-center">Room not found</div>;
+		return <NotFoundScreen description="Room not found" />;
 	}
 
 	return (

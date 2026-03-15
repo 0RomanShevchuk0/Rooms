@@ -5,7 +5,7 @@ import { Input } from "@/shared/ui/input";
 import { SendHorizonal } from "lucide-react";
 import { useChatSocket } from "@/app/_providers/ws";
 import { useRef, useState } from "react";
-import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
+import { CHAT_SOCKET_EVENTS } from "@/entities/chat";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";

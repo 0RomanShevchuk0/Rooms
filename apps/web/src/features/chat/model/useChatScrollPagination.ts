@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 interface UseChatScrollPaginationProps {
 	hasNextPage: boolean;
@@ -6,6 +6,7 @@ interface UseChatScrollPaginationProps {
 	fetchNextPage: () => void;
 	chatContainerRef: React.RefObject<HTMLDivElement | null>;
 	sentinel: HTMLDivElement | null;
+	messagesCount: number;
 }
 
 const PAGINATION_TOP_THRESHOLD = 200;
@@ -16,20 +17,36 @@ export function useChatScrollPagination({
 	fetchNextPage,
 	chatContainerRef,
 	sentinel,
+	messagesCount,
 }: UseChatScrollPaginationProps) {
-	const paginationRef = useRef({ hasNextPage, isFetchingNextPage, fetchNextPage });
+	const prevScrollHeightRef = useRef<number | null>(null);
 
 	useEffect(() => {
-		paginationRef.current = { hasNextPage, isFetchingNextPage, fetchNextPage };
-	});
+		if (isFetchingNextPage) {
+			const container = chatContainerRef.current;
+			if (container) {
+				prevScrollHeightRef.current = container.scrollHeight;
+			}
+		}
+	}, [isFetchingNextPage, chatContainerRef]);
+
+	useLayoutEffect(() => {
+		const container = chatContainerRef.current;
+		if (!container || prevScrollHeightRef.current === null) return;
+
+		const diff = container.scrollHeight - prevScrollHeightRef.current;
+		if (diff > 0) {
+			container.scrollTop += diff;
+		}
+		prevScrollHeightRef.current = null;
+	}, [messagesCount, chatContainerRef]);
 
 	useEffect(() => {
-		if (!sentinel) return;
+		if (!sentinel || isFetchingNextPage || !hasNextPage) return;
 
 		const observer = new IntersectionObserver(
 			(entries) => {
-				const { hasNextPage, isFetchingNextPage, fetchNextPage } = paginationRef.current;
-				if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+				if (entries[0].isIntersecting) {
 					fetchNextPage();
 				}
 			},
@@ -44,5 +61,5 @@ export function useChatScrollPagination({
 		return () => {
 			observer.disconnect();
 		};
-	}, [sentinel, chatContainerRef]);
+	}, [sentinel, chatContainerRef, isFetchingNextPage, hasNextPage, fetchNextPage]);
 }

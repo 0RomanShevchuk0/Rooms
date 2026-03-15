@@ -32,7 +32,7 @@ export function Chat({ chatId }: ChatProps) {
 	});
 	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
 	useChatScrollToBottom({ messages, chatContainerRef, shouldScrollToBottomRef });
-	useChatScrollPagination({ hasNextPage, isFetchingNextPage, fetchNextPage, chatContainerRef, sentinel });
+	useChatScrollPagination({ hasNextPage, isFetchingNextPage, fetchNextPage, chatContainerRef, sentinel, messagesCount: messages.length });
 
 	const handleSendMessage = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();

@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./button";
+import { ROUTES } from "../routes";
 
 type NotFoundScreenProps = {
 	title?: string;
@@ -12,8 +13,8 @@ type NotFoundScreenProps = {
 export function NotFoundScreen({
 	title = "404",
 	description = "Not found",
-	backHref = "/rooms",
-	backLabel = "Back to rooms",
+	backHref = ROUTES.home,
+	backLabel = "Back to home",
 }: NotFoundScreenProps) {
 	return (
 		<div className="flex h-screen w-full flex-col items-center justify-center gap-4">

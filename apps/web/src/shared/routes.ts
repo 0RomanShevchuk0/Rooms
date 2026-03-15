@@ -7,7 +7,6 @@ export const ROUTES = {
 	},
 
 	rooms: {
-		list: "/rooms",
 		room: (id: string) => `/rooms/${id}`,
 	},
 } as const;

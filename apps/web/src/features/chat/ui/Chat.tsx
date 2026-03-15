@@ -10,7 +10,7 @@ import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";
 import { useMessagesQuery } from "../model/useMessages";
-import { useChatScroll } from "../model/useChatScroll";
+import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
 
 interface ChatProps {
@@ -31,7 +31,7 @@ export function Chat({ chatId }: ChatProps) {
 		chatId,
 	});
 	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
-	useChatScroll({ messages, chatContainerRef, shouldScrollToBottomRef });
+	useChatScrollToBottom({ messages, chatContainerRef, shouldScrollToBottomRef });
 	useChatScrollPagination({ hasNextPage, isFetchingNextPage, fetchNextPage, chatContainerRef, sentinel });
 
 	const handleSendMessage = (e: React.SubmitEvent<HTMLFormElement>) => {

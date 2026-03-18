@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createSocket, type AppSocket } from "../createSocket";
 import { SOCKET_NAMESPACES } from "../socket-namespaces";
+import { useSession } from "@/entities/session";
 
 type RoomsSocketState = {
 	socket: AppSocket;
@@ -19,8 +20,12 @@ export const useRoomsSocket = create<RoomsSocketState>((set, get) => {
 		socket,
 		connected: false,
 		connect: () => {
-			if (!get().socket.connected) {
-				get().socket.connect();
+			const { accessToken } = useSession.getState();
+			const s = get().socket;
+
+			if (!s.connected) {
+				s.auth = { token: accessToken };
+				s.connect();
 			}
 		},
 		disconnect: () => {

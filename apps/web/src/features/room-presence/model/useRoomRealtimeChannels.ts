@@ -14,8 +14,22 @@ interface UseRoomRealtimeChannelsProps {
 }
 
 export function useRoomRealtimeChannels({ roomId, chatId, userId }: UseRoomRealtimeChannelsProps) {
-	const { socket: roomsSocket } = useRoomsSocket();
-	const { socket: chatSocket } = useChatSocket();
+	const {
+		socket: roomsSocket,
+		connect: roomsConnect,
+		disconnect: roomsDisconnect,
+	} = useRoomsSocket();
+	const { socket: chatSocket, connect: chatConnect, disconnect: chatDisconnect } = useChatSocket();
+
+	useEffect(() => {
+		chatConnect();
+		roomsConnect();
+
+		return () => {
+			chatDisconnect();
+			roomsDisconnect();
+		};
+	}, [chatConnect, chatDisconnect, roomsConnect, roomsDisconnect]);
 
 	const { data: participant } = useQuery({
 		queryKey: queryKeys.rooms.meRoomParticipant(roomId),

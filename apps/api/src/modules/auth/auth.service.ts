@@ -93,6 +93,18 @@ export class AuthService {
 		};
 	}
 
+	verifyAccessToken(token: string): JwtPayload | null {
+		try {
+			const accessSecret =
+				this.configService.getOrThrow<string>('JWT_SECRET');
+			return this.jwtService.verify<JwtPayload>(token, {
+				secret: accessSecret,
+			});
+		} catch {
+			return null;
+		}
+	}
+
 	verifyRefreshToken(token: string): JwtPayload | null {
 		try {
 			const refreshSecret =

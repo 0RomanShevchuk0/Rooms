@@ -1,6 +1,7 @@
 import {
 	ConnectedSocket,
 	MessageBody,
+	OnGatewayConnection,
 	SubscribeMessage,
 	WebSocketGateway,
 	WebSocketServer,
@@ -13,6 +14,7 @@ import type {
 	ChatDisconnectPayload,
 	ChatMessagePayload,
 } from './chat-ws.types';
+import { AuthService } from '../../../modules/auth/auth.service';
 
 @WebSocketGateway({
 	namespace: '/chat',
@@ -21,14 +23,27 @@ import type {
 		credentials: true,
 	},
 })
-export class ChatWsGateway {
+export class ChatWsGateway implements OnGatewayConnection {
 	@WebSocketServer()
 	server!: Server;
 
-	constructor(private readonly chatsService: ChatsService) {}
+	constructor(
+		private readonly chatsService: ChatsService,
+		private readonly authService: AuthService,
+	) {}
+
+	handleConnection(client: Socket) {
+		const token = client.handshake.auth?.token as string;
+		const payload = this.authService.verifyAccessToken(token);
+
+		if (!payload?.sub) {
+			client.disconnect();
+			return;
+		}
+	}
 
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.CONNECT)
-	async connectToRoom(
+	async connectToChat(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: ChatConnectPayload,
 	) {
@@ -37,7 +52,7 @@ export class ChatWsGateway {
 	}
 
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.DISCONNECT)
-	async disconnectFromRoom(
+	async disconnectFromChat(
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: ChatDisconnectPayload,
 	) {

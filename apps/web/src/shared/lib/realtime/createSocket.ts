@@ -13,17 +13,3 @@ export function createSocket(namespace: string, options: Partial<ManagerOptions 
 		...options,
 	});
 }
-
-// for ngrok
-// export function createSocket(namespace: string, options: Partial<ManagerOptions & SocketOptions> = {}): AppSocket {
-// 	// const apiUrl = "/api";
-
-// 	const normalizedNamespace = namespace.startsWith("/") ? namespace : `/${namespace}`;
-// 	const origin = apiUrl.startsWith("http") ? apiUrl.replace(/\/api\/?$/, "") : window.location.origin;
-
-// 	return io(`${origin}${normalizedNamespace}`, {
-// 		path: SOCKET_IO_PATH,
-// 		transports: ["polling", "websocket"],
-// 		...options,
-// 	});
-// }

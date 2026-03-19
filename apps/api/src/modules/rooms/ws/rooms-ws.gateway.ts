@@ -1,7 +1,6 @@
 import {
 	ConnectedSocket,
 	MessageBody,
-	OnGatewayConnection,
 	OnGatewayDisconnect,
 	SubscribeMessage,
 	WebSocketGateway,
@@ -18,7 +17,6 @@ import type {
 	RoomsSocketData,
 } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
-import { AuthService } from 'src/modules/auth/auth.service';
 
 @WebSocketGateway({
 	namespace: '/rooms',
@@ -27,26 +25,12 @@ import { AuthService } from 'src/modules/auth/auth.service';
 		credentials: true,
 	},
 })
-export class RoomsWsGateway
-	implements OnGatewayConnection, OnGatewayDisconnect
-{
+export class RoomsWsGateway implements OnGatewayDisconnect {
 	@WebSocketServer()
 	server!: Server;
 
-	constructor(private readonly authService: AuthService) {}
-
 	private roomParticipants = new Map<string, Set<string>>();
 	private socketContexts = new Map<string, RoomsSocketData>();
-
-	handleConnection(client: RoomsSocket) {
-		const token = client.handshake.auth?.token as string;
-		const payload = this.authService.verifyAccessToken(token);
-
-		if (!payload?.sub) {
-			client.disconnect();
-			return;
-		}
-	}
 
 	handleDisconnect(client: RoomsSocket) {
 		const context = this.socketContexts.get(client.id);

@@ -13,13 +13,6 @@ export type RoomsSocket = Socket<
 	Record<string, never>,
 	Partial<RoomsSocketData>
 >;
-
-export interface RoomParticipantPayload {
-	roomId: string;
-	participantId: string;
-}
-
-export type RoomConnectPayload = RoomParticipantPayload;
 export interface RoomPresencePayload {
 	participantId: string;
 	onlineParticipantIds: string[];

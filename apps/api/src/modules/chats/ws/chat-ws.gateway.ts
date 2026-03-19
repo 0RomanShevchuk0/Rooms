@@ -8,12 +8,17 @@ import {
 import type { Server, Socket } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from './chat-ws.constants';
 import { ChatsService } from '../chats.service';
-import type {
-	ChatConnectPayload,
-	ChatDisconnectPayload,
-	ChatMessagePayload,
-} from './chat-ws.types';
+import { ChatConnectionDto } from '../dto/ws/chat-connection.dto';
+import { UsePipes, ValidationPipe } from '@nestjs/common';
+import { SendMessageDto } from '../dto/ws/send-message.dto';
 
+@UsePipes(
+	new ValidationPipe({
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true,
+	}),
+)
 @WebSocketGateway({
 	namespace: '/chat',
 	cors: {
@@ -30,7 +35,7 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
 		@ConnectedSocket() client: Socket,
-		@MessageBody() body: ChatConnectPayload,
+		@MessageBody() body: ChatConnectionDto,
 	) {
 		await client.join(body.chatId);
 		return { ok: true };
@@ -39,7 +44,7 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromChat(
 		@ConnectedSocket() client: Socket,
-		@MessageBody() body: ChatDisconnectPayload,
+		@MessageBody() body: ChatConnectionDto,
 	) {
 		await client.leave(body.chatId);
 		return { ok: true };
@@ -48,7 +53,7 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.MESSAGE)
 	async sendMessage(
 		@ConnectedSocket() client: Socket,
-		@MessageBody() body: ChatMessagePayload,
+		@MessageBody() body: SendMessageDto,
 	) {
 		const message = await this.chatsService.sendMessage(
 			body.chatId,

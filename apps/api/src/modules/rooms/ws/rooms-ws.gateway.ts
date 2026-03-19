@@ -6,18 +6,26 @@ import {
 	WebSocketGateway,
 	WebSocketServer,
 } from '@nestjs/websockets';
+import { UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import type {
 	RoomsSocket,
-	RoomConnectPayload,
 	RoomPresencePayload,
 	RoomParticipantJoinedPayload,
 	RoomParticipantLeftPayload,
 	RoomsSocketData,
 } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
+import { RoomConnectionDto } from '../dto/ws/room-connection.dto';
 
+@UsePipes(
+	new ValidationPipe({
+		whitelist: true,
+		forbidNonWhitelisted: true,
+		transform: true,
+	}),
+)
 @WebSocketGateway({
 	namespace: '/rooms',
 	cors: {
@@ -56,7 +64,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
 	async connectToRoom(
 		@ConnectedSocket() client: RoomsSocket,
-		@MessageBody() body: RoomConnectPayload,
+		@MessageBody() body: RoomConnectionDto,
 	) {
 		const sessionVersion = this.getNextSessionVersion(client.id);
 		const context: RoomsSocketData = {

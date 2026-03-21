@@ -55,6 +55,7 @@ export class ChatWsGateway {
 		@ConnectedSocket() client: Socket,
 		@MessageBody() body: SendMessageDto,
 	) {
+		// todo: validate access to the chat
 		const message = await this.chatsService.sendMessage(
 			body.chatId,
 			body.senderId,

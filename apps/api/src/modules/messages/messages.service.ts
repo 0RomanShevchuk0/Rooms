@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import {
 	messageWithSenderSelect,
@@ -51,37 +50,5 @@ export class MessagesService {
 		const nextCursor = hasMore ? items[items.length - 1].id : null;
 
 		return { items, nextCursor };
-	}
-
-	findAll() {
-		return this.prisma.message.findMany({
-			include: {
-				sender: true,
-				chat: true,
-			},
-		});
-	}
-
-	findOne(id: string) {
-		return this.prisma.message.findUnique({
-			where: { id },
-			include: {
-				sender: true,
-				chat: true,
-			},
-		});
-	}
-
-	update(id: string, updateMessageDto: UpdateMessageDto) {
-		return this.prisma.message.update({
-			where: { id },
-			data: updateMessageDto,
-		});
-	}
-
-	remove(id: string) {
-		return this.prisma.message.delete({
-			where: { id },
-		});
 	}
 }

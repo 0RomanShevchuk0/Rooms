@@ -10,10 +10,9 @@ import { useEffect } from "react";
 interface UseRoomRealtimeChannelsProps {
 	roomId: string;
 	chatId?: string;
-	userId?: string;
 }
 
-export function useRoomRealtimeChannels({ roomId, chatId, userId }: UseRoomRealtimeChannelsProps) {
+export function useRoomRealtimeChannels({ roomId, chatId }: UseRoomRealtimeChannelsProps) {
 	const {
 		socket: roomsSocket,
 		connect: roomsConnect,
@@ -34,12 +33,12 @@ export function useRoomRealtimeChannels({ roomId, chatId, userId }: UseRoomRealt
 	const { data: participant } = useQuery({
 		queryKey: queryKeys.rooms.meRoomParticipant(roomId),
 		queryFn: () => getMeRoomParticipant(roomId),
-		enabled: Boolean(roomId && userId),
+		enabled: Boolean(roomId),
 	});
 	const participantId = participant?.id;
 
 	useEffect(() => {
-		if (!userId || !participantId) return;
+		if (!participantId) return;
 
 		roomsSocket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId, participantId });
 		if (chatId) {
@@ -52,5 +51,5 @@ export function useRoomRealtimeChannels({ roomId, chatId, userId }: UseRoomRealt
 				chatSocket.emit(CHAT_SOCKET_EVENTS.DISCONNECT, { chatId });
 			}
 		};
-	}, [chatId, chatSocket, participantId, roomId, roomsSocket, userId]);
+	}, [chatId, chatSocket, participantId, roomId, roomsSocket]);
 }

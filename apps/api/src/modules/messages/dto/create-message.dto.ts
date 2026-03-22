@@ -6,8 +6,4 @@ export class CreateMessageDto {
 
 	@IsString()
 	content: string;
-
-	// todo: get user from auth
-	@IsUUID()
-	senderId: string;
 }

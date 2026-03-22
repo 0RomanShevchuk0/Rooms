@@ -10,14 +10,17 @@ import { UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import type {
-	RoomsSocket,
 	RoomPresencePayload,
 	RoomParticipantJoinedPayload,
 	RoomParticipantLeftPayload,
 	RoomsSocketData,
+	RoomsSocketWithAuth,
 } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
 import { RoomConnectionDto } from '../dto/ws/room-connection.dto';
+import { RoomParticipantsService } from '../participants/room-participants.service';
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
 @UsePipes(
 	new ValidationPipe({
@@ -29,7 +32,7 @@ import { RoomConnectionDto } from '../dto/ws/room-connection.dto';
 @WebSocketGateway({
 	namespace: '/rooms',
 	cors: {
-		origin: '*',
+		origin: allowedOrigins,
 		credentials: true,
 	},
 })
@@ -37,10 +40,12 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	@WebSocketServer()
 	server!: Server;
 
+	constructor(private readonly participantsService: RoomParticipantsService) {}
+
 	private roomParticipants = new Map<string, Set<string>>();
 	private socketContexts = new Map<string, RoomsSocketData>();
 
-	handleDisconnect(client: RoomsSocket) {
+	handleDisconnect(client: RoomsSocketWithAuth) {
 		const context = this.socketContexts.get(client.id);
 		if (!context) {
 			return;
@@ -63,9 +68,24 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
 	async connectToRoom(
-		@ConnectedSocket() client: RoomsSocket,
+		@ConnectedSocket() client: RoomsSocketWithAuth,
 		@MessageBody() body: RoomConnectionDto,
 	) {
+		const userId = client.data.user?.sub;
+		if (!userId) {
+			return { ok: false, error: 'Unauthorized' };
+		}
+
+		const participant =
+			await this.participantsService.isUserParticipantInRoom(
+				body.roomId,
+				body.participantId,
+				userId,
+			);
+		if (!participant) {
+			return { ok: false, error: 'Participant not found in the room' };
+		}
+
 		const sessionVersion = this.getNextSessionVersion(client.id);
 		const context: RoomsSocketData = {
 			participantId: body.participantId,
@@ -88,7 +108,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.DISCONNECT)
-	async disconnectFromRoom(@ConnectedSocket() client: RoomsSocket) {
+	async disconnectFromRoom(@ConnectedSocket() client: RoomsSocketWithAuth) {
 		const context = this.socketContexts.get(client.id);
 		if (!context) {
 			return { ok: true };

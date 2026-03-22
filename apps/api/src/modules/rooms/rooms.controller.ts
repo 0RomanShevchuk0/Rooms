@@ -25,11 +25,6 @@ export class RoomsController {
 		private readonly roomsWsGateway: RoomsWsGateway,
 	) {}
 
-	@Get()
-	findAll() {
-		return this.roomsService.findMany();
-	}
-
 	@Get('my')
 	findMy(@CurrentUser() user: AuthUser) {
 		return this.roomsService.findMany({ userId: user.id });
@@ -64,11 +59,6 @@ export class RoomsController {
 	@Patch(':id')
 	update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
 		return this.roomsService.update(id, updateRoomDto);
-	}
-
-	@Delete(':id')
-	remove(@Param('id') id: string) {
-		return this.roomsService.remove(id);
 	}
 
 	@Delete(':id/participants')

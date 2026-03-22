@@ -5,12 +5,20 @@ import {
 	WebSocketGateway,
 	WebSocketServer,
 } from '@nestjs/websockets';
-import type { Server, Socket } from 'socket.io';
+import type { Server } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from './chat-ws.constants';
 import { ChatsService } from '../chats.service';
 import { ChatConnectionDto } from '../dto/ws/chat-connection.dto';
-import { UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+	ForbiddenException,
+	NotFoundException,
+	UsePipes,
+	ValidationPipe,
+} from '@nestjs/common';
 import { SendMessageDto } from '../dto/ws/send-message.dto';
+import { type SocketWithAuth } from 'src/realtime/ws/api-socket-io.adapter';
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
 @UsePipes(
 	new ValidationPipe({
@@ -22,7 +30,7 @@ import { SendMessageDto } from '../dto/ws/send-message.dto';
 @WebSocketGateway({
 	namespace: '/chat',
 	cors: {
-		origin: '*',
+		origin: allowedOrigins,
 		credentials: true,
 	},
 })
@@ -34,16 +42,27 @@ export class ChatWsGateway {
 
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
-		@ConnectedSocket() client: Socket,
+		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: ChatConnectionDto,
 	) {
+		const senderId = client.data.user?.sub;
+		if (!senderId) {
+			return { error: 'Unauthorized' };
+		}
+
+		try {
+			await this.chatsService.getChatForUserOrThrow(body.chatId, senderId);
+		} catch (error) {
+			return this.mapServiceError(error);
+		}
+
 		await client.join(body.chatId);
 		return { ok: true };
 	}
 
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromChat(
-		@ConnectedSocket() client: Socket,
+		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: ChatConnectionDto,
 	) {
 		await client.leave(body.chatId);
@@ -52,18 +71,34 @@ export class ChatWsGateway {
 
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.MESSAGE)
 	async sendMessage(
-		@ConnectedSocket() client: Socket,
+		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: SendMessageDto,
 	) {
-		// todo: validate access to the chat
-		const message = await this.chatsService.sendMessage(
-			body.chatId,
-			body.senderId,
-			body.content,
-		);
+		const senderId = client.data.user?.sub;
+		if (!senderId) {
+			return { error: 'Unauthorized' };
+		}
 
-		client.to(body.chatId).emit(CHAT_SOCKET_EVENTS.MESSAGE, message);
+		try {
+			const message = await this.chatsService.sendMessage(senderId, body);
 
-		return message;
+			client.to(body.chatId).emit(CHAT_SOCKET_EVENTS.MESSAGE, message);
+
+			return message;
+		} catch (error) {
+			return this.mapServiceError(error);
+		}
+	}
+
+	private mapServiceError(error: unknown) {
+		if (error instanceof ForbiddenException) {
+			return { error: 'Forbidden' };
+		}
+
+		if (error instanceof NotFoundException) {
+			return { error: 'Not found' };
+		}
+
+		return { error: 'Internal error' };
 	}
 }

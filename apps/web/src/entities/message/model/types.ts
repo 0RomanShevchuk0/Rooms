@@ -12,12 +12,6 @@ export interface MessageWithSender extends Message {
 	sender: User;
 }
 
-export interface CreateMessagePayload {
-	chatId: string;
-	content: string;
-	senderId: string;
-}
-
 export interface GetMessagesParams {
 	chatId: string;
 	cursor?: string;

@@ -90,4 +90,16 @@ export class RoomParticipantsService {
 			select: roomParticipantWithUserSelect,
 		});
 	}
+
+	async isUserParticipantInRoom(
+		roomId: string,
+		participantId: string,
+		userId: string,
+	): Promise<boolean> {
+		const participant = await this.prisma.roomParticipant.findFirst({
+			where: { id: participantId, roomId, userId },
+			select: { id: true },
+		});
+		return Boolean(participant);
+	}
 }

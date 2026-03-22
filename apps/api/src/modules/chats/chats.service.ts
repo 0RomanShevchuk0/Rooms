@@ -7,6 +7,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { MessagesService } from '../messages/messages.service';
+import { SendMessageDto } from './dto/ws/send-message.dto';
 
 @Injectable()
 export class ChatsService {
@@ -25,20 +26,13 @@ export class ChatsService {
 		});
 	}
 
-	findAll() {
-		return this.prisma.chat.findMany();
-	}
-
-	findOne(id: string) {
-		return this.prisma.chat.findUnique({
-			where: { id },
-		});
-	}
-
-	findOneByRoomId(roomId: string) {
-		return this.prisma.chat.findFirst({
-			where: { roomId },
-		});
+	async findOne(chatId: string, userId: string) {
+		const chat = await this.getChatForUserOrThrow(chatId, userId);
+		return {
+			id: chat.id,
+			roomId: chat.roomId,
+			createdAt: chat.createdAt,
+		};
 	}
 
 	update(id: string, updateChatDto: UpdateChatDto) {
@@ -54,25 +48,38 @@ export class ChatsService {
 		});
 	}
 
-	async getMessages(
+	async getChatMessages(
 		chatId: string,
 		userId: string,
 		cursor?: string,
 		limit = 20,
 	) {
-		const chat = await this.prisma.chat.findUnique({
-			where: { id: chatId },
-			include: {
-				room: {
-					include: {
-						participants: {
-							where: { userId },
-						},
-					},
-				},
-			},
-		});
+		await this.getChatForUserOrThrow(chatId, userId);
 
+		return this.messagesService.findByChatId(chatId, cursor, limit);
+	}
+
+	async sendMessage(senderId: string, body: SendMessageDto) {
+		const { chatId, content } = body;
+
+		await this.getChatForUserOrThrow(chatId, senderId);
+
+		const message = await this.messagesService.create(senderId, {
+			chatId,
+			content,
+		});
+		return message;
+	}
+
+	async hasUserAccessToChat(chatId: string, userId: string) {
+		const chat = await this.findChatWithUserParticipant(chatId, userId);
+		const isParticipant = Boolean(chat?.room.participants.length);
+
+		return isParticipant;
+	}
+
+	async getChatForUserOrThrow(chatId: string, userId: string) {
+		const chat = await this.findChatWithUserParticipant(chatId, userId);
 		if (!chat) {
 			throw new NotFoundException(`Chat "${chatId}" not found`);
 		}
@@ -81,15 +88,23 @@ export class ChatsService {
 			throw new ForbiddenException('You are not a participant of this room');
 		}
 
-		return this.messagesService.findByChatId(chatId, cursor, limit);
+		return chat;
 	}
 
-	async sendMessage(chatId: string, senderId: string, content: string) {
-		const message = await this.messagesService.create(senderId, {
-			chatId,
-			content,
-			senderId,
+	private findChatWithUserParticipant(chatId: string, userId: string) {
+		return this.prisma.chat.findUnique({
+			where: { id: chatId },
+			include: {
+				room: {
+					select: {
+						participants: {
+							where: { userId },
+							select: { id: true, userId: true },
+							take: 1,
+						},
+					},
+				},
+			},
 		});
-		return message;
 	}
 }

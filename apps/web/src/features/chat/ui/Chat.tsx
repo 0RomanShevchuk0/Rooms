@@ -27,12 +27,20 @@ export function Chat({ chatId }: ChatProps) {
 
 	const { socket } = useChatSocket();
 
-	const { messages, hasNextPage, isFetchingNextPage, pushMessagesToCache, fetchNextPage } = useMessagesQuery({
-		chatId,
-	});
+	const { messages, hasNextPage, isFetchingNextPage, pushMessagesToCache, fetchNextPage } =
+		useMessagesQuery({
+			chatId,
+		});
 	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
 	useChatScrollToBottom({ messages, chatContainerRef, shouldScrollToBottomRef });
-	useChatScrollPagination({ hasNextPage, isFetchingNextPage, fetchNextPage, chatContainerRef, sentinel, messagesCount: messages.length });
+	useChatScrollPagination({
+		hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+		chatContainerRef,
+		sentinel,
+		messagesCount: messages.length,
+	});
 
 	const handleSendMessage = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -40,10 +48,14 @@ export function Chat({ chatId }: ChatProps) {
 		const content = message.trim();
 		if (!content) return;
 
-		socket.emit(CHAT_SOCKET_EVENTS.MESSAGE, { chatId, senderId: user.id, content }, (response: MessageWithSender) => {
-			shouldScrollToBottomRef.current = true;
-			pushMessagesToCache([response]);
-		});
+		socket.emit(
+			CHAT_SOCKET_EVENTS.MESSAGE,
+			{ chatId, content },
+			(response: MessageWithSender) => {
+				shouldScrollToBottomRef.current = true;
+				pushMessagesToCache([response]);
+			},
+		);
 
 		setMessage("");
 	};

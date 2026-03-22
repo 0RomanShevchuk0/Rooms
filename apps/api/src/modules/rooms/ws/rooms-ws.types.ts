@@ -1,5 +1,6 @@
-import type { Socket } from 'socket.io';
+import type { DefaultEventsMap, Socket } from 'socket.io';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
+import { SocketWithAuth } from 'src/realtime/ws/api-socket-io.adapter';
 
 export interface RoomsSocketData {
 	roomId: string;
@@ -8,11 +9,13 @@ export interface RoomsSocketData {
 }
 
 export type RoomsSocket = Socket<
-	Record<string, never>,
-	Record<string, never>,
-	Record<string, never>,
+	DefaultEventsMap,
+	DefaultEventsMap,
+	DefaultEventsMap,
 	Partial<RoomsSocketData>
 >;
+
+export type RoomsSocketWithAuth = RoomsSocket & SocketWithAuth;
 export interface RoomPresencePayload {
 	participantId: string;
 	onlineParticipantIds: string[];

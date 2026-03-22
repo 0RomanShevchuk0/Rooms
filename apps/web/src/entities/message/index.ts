@@ -1,2 +1,2 @@
-export type { Message, MessageWithSender, CreateMessagePayload, GetMessagesParams, GetMessagesResponse } from "./model/types";
-export { createMessage, getMessage, getMessages } from "./api";
+export type { Message, MessageWithSender, GetMessagesParams, GetMessagesResponse } from "./model/types";
+export { getMessage, getMessages } from "./api";

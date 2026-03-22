@@ -1,9 +1,22 @@
 import { INestApplicationContext } from '@nestjs/common';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import type { Server, ServerOptions, Socket } from 'socket.io';
+import type {
+	DefaultEventsMap,
+	Server,
+	ServerOptions,
+	Socket,
+} from 'socket.io';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { JwtPayload } from 'src/modules/auth/types/jwt-payload.type';
 
 const SOCKET_IO_PATH = '/api/socket.io';
+
+export type SocketWithAuth = Socket<
+	DefaultEventsMap,
+	DefaultEventsMap,
+	DefaultEventsMap,
+	Partial<{ user: JwtPayload }>
+>;
 
 export class ApiSocketIoAdapter extends IoAdapter {
 	private authService: AuthService;
@@ -30,6 +43,9 @@ export class ApiSocketIoAdapter extends IoAdapter {
 			if (!payload?.sub) {
 				return next(new Error('Unauthorized'));
 			}
+
+			const socketWithAuth = socket as SocketWithAuth;
+			socketWithAuth.data.user = payload;
 
 			next();
 		};

@@ -9,17 +9,14 @@ import type { RoomParticipantJoinedData, RoomPresenceData } from "./types";
 
 interface UseRoomPresenceProps {
 	roomId: string;
-	userId?: string;
 }
 
-export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
+export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 	const queryClient = useQueryClient();
 	const { socket } = useRoomsSocket();
 	const [onlineParticipantIds, setOnlineParticipantIds] = useState<Set<string>>(new Set());
 
 	useEffect(() => {
-		if (!userId) return;
-
 		const onJoined = (data: RoomParticipantJoinedData) => {
 			queryClient.setQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId), (old) => {
 				if (!old) return old;
@@ -59,7 +56,7 @@ export function useRoomPresence({ roomId, userId }: UseRoomPresenceProps) {
 
 			setOnlineParticipantIds(new Set());
 		};
-	}, [socket, roomId, queryClient, userId]);
+	}, [socket, roomId, queryClient]);
 
 	return { onlineParticipantIds };
 }

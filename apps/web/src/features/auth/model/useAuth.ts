@@ -62,8 +62,9 @@ export function useAuth({ type }: UseAuthProps) {
 		},
 	});
 
-	const handleAuth = async (data: AuthCredentials) => {
-		await mutation.mutateAsync(data);
+	const handleAuth = (data: AuthCredentials) => {
+		mutation.mutate(data);
 	};
+
 	return { handleAuth, isLoading: mutation.isPending, error: formError };
 }

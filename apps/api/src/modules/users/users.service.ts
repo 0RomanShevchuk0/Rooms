@@ -42,6 +42,7 @@ export class UsersService {
 				id: true,
 				username: true,
 				password: true,
+				deletedAt: true,
 			},
 		});
 	}

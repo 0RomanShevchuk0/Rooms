@@ -78,6 +78,10 @@ export class AuthService {
 			return null;
 		}
 
+		if (user.deletedAt) {
+			return null;
+		}
+
 		const isPasswordValid = await this.passwordsService.validatePassword(
 			password,
 			user.password,

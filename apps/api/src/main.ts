@@ -4,7 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 import { ApiSocketIoAdapter } from './realtime/ws/api-socket-io.adapter';
-import { DomainErrorFilter } from './shared/errors/domain-error.filter';
+import { DomainErrorHttpFilter } from './shared/errors/domain-error-http.filter';
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
@@ -28,7 +28,7 @@ async function bootstrap() {
 			transform: true,
 		}),
 	);
-	app.useGlobalFilters(new DomainErrorFilter());
+	app.useGlobalFilters(new DomainErrorHttpFilter());
 
 	await app.listen(process.env.PORT ?? 3000);
 	console.log(`Application is running on port ${process.env.PORT ?? 3000}`);

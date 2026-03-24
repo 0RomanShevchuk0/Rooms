@@ -4,7 +4,7 @@ import {
 	ValidationPipe,
 	applyDecorators,
 } from '@nestjs/common';
-import { DomainErrorFilter } from 'src/shared/errors/domain-error.filter';
+import { DomainErrorWsFilter } from 'src/shared/errors/domain-error-ws.filter';
 
 export function ApiWsHandler() {
 	return applyDecorators(
@@ -15,6 +15,6 @@ export function ApiWsHandler() {
 				transform: true,
 			}),
 		),
-		UseFilters(new DomainErrorFilter()),
+		UseFilters(new DomainErrorWsFilter()),
 	);
 }

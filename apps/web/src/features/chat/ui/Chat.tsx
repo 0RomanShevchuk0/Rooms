@@ -12,9 +12,25 @@ import { useMessagesSocket } from "../model/useMessagesSocket";
 import { useMessagesQuery } from "../model/useMessages";
 import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
+import toast from "react-hot-toast";
+import { getWsErrorMessage, isWsErrorResponse } from "@/shared/lib/realtime/ws-errors";
 
 interface ChatProps {
 	chatId: string;
+}
+
+function isMessageWithSender(payload: unknown): payload is MessageWithSender {
+	if (!payload || typeof payload !== "object") {
+		return false;
+	}
+
+	const record = payload as Record<string, unknown>;
+	return (
+		typeof record.id === "string" &&
+		typeof record.content === "string" &&
+		typeof record.chatId === "string" &&
+		typeof record.senderId === "string"
+	);
 }
 
 export function Chat({ chatId }: ChatProps) {
@@ -48,16 +64,27 @@ export function Chat({ chatId }: ChatProps) {
 		const content = message.trim();
 		if (!content) return;
 
+		setMessage("");
 		socket.emit(
 			CHAT_SOCKET_EVENTS.MESSAGE,
 			{ chatId, content },
-			(response: MessageWithSender) => {
+			(response: unknown) => {
+				if (isWsErrorResponse(response)) {
+					toast.error(getWsErrorMessage(response));
+					setMessage((prev) => prev || content);
+					return;
+				}
+
+				if (!isMessageWithSender(response)) {
+					toast.error("Failed to send message");
+					setMessage((prev) => prev || content);
+					return;
+				}
+
 				shouldScrollToBottomRef.current = true;
 				pushMessagesToCache([response]);
 			},
 		);
-
-		setMessage("");
 	};
 
 	return (

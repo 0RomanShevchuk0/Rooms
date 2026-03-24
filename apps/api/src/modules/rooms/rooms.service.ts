@@ -1,9 +1,4 @@
-import {
-	BadRequestException,
-	ForbiddenException,
-	Injectable,
-	NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
@@ -11,6 +6,7 @@ import { Room } from 'generated/prisma/client';
 import { RoomJoinLeaveResult, RoomWithParticipants } from './rooms.types';
 import { roomParticipantWithUserSelect } from './participants/room-participants.select';
 import { RoomParticipantsService } from './participants/room-participants.service';
+import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
 export class RoomsService {
@@ -50,7 +46,14 @@ export class RoomsService {
 		);
 
 		if (!isParticipant) {
-			throw new ForbiddenException('You are not a participant of this room');
+			throw DomainError.accessDenied(
+				'You are not a participant of this room',
+				{
+					entity: 'room',
+					roomId: id,
+					userId,
+				},
+			);
 		}
 
 		return room;
@@ -78,8 +81,7 @@ export class RoomsService {
 				(id) => !existingIds.has(id),
 			);
 
-			throw new BadRequestException({
-				message: 'Some users were not found',
+			throw DomainError.validation('Some users were not found', {
 				missingParticipantIds,
 			});
 		}
@@ -156,7 +158,10 @@ export class RoomsService {
 	private async findByIdOrThrow(id: string): Promise<RoomWithParticipants> {
 		const room = await this.findById(id);
 		if (!room) {
-			throw new NotFoundException(`Room "${id}" not found`);
+			throw DomainError.notFound(`Room "${id}" not found`, {
+				entity: 'room',
+				roomId: id,
+			});
 		}
 		return room;
 	}

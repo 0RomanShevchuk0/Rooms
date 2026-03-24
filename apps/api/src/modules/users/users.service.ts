@@ -1,8 +1,4 @@
-import {
-	BadRequestException,
-	Injectable,
-	NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,6 +6,7 @@ import { PasswordsService } from '../auth/passwords.service';
 import { PublicUserDto } from './dto/public-user.dto';
 import { UserForAuth } from './types/user-for-auth.type';
 import { publicUserSelect } from './users.select';
+import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
 export class UsersService {
@@ -23,6 +20,17 @@ export class UsersService {
 			where: { id },
 			select: publicUserSelect,
 		});
+	}
+
+	async findByIdOrThrow(id: string): Promise<PublicUserDto> {
+		const user = await this.findById(id);
+		if (!user) {
+			throw DomainError.notFound(`User "${id}" not found`, {
+				entity: 'user',
+				userId: id,
+			});
+		}
+		return user;
 	}
 
 	async findByUsername(username: string): Promise<PublicUserDto | null> {
@@ -60,7 +68,9 @@ export class UsersService {
 	async create(createUserDto: CreateUserDto): Promise<PublicUserDto> {
 		const existingUser = await this.findByUsername(createUserDto.username);
 		if (existingUser) {
-			throw new BadRequestException('Username already exists');
+			throw DomainError.validation('Username already exists', {
+				field: 'username',
+			});
 		}
 
 		const passwordHash = await this.passwordsService.hashPassword(
@@ -83,22 +93,23 @@ export class UsersService {
 		const hasUpdatableFields =
 			updateUserDto.email !== undefined || updateUserDto.name !== undefined;
 		if (!hasUpdatableFields) {
-			throw new BadRequestException('At least one field must be provided');
+			throw DomainError.validation('At least one field must be provided');
 		}
 
-		const existingUser = await this.findById(id);
-		if (!existingUser) {
-			throw new NotFoundException(`User "${id}" not found`);
-		}
+		const existingUser = await this.findByIdOrThrow(id);
 
 		if (existingUser.deletedAt) {
-			throw new BadRequestException('Deleted user cannot be updated');
+			throw DomainError.validation('Deleted user cannot be updated', {
+				userId: id,
+			});
 		}
 
 		if (updateUserDto.email !== undefined && updateUserDto.email !== null) {
 			const userWithSameEmail = await this.findByEmail(updateUserDto.email);
 			if (userWithSameEmail && userWithSameEmail.id !== id) {
-				throw new BadRequestException('Email already exists');
+				throw DomainError.validation('Email already exists', {
+					field: 'email',
+				});
 			}
 		}
 
@@ -113,13 +124,12 @@ export class UsersService {
 	}
 
 	async remove(id: string): Promise<PublicUserDto> {
-		const existingUser = await this.findById(id);
-		if (!existingUser) {
-			throw new NotFoundException(`User "${id}" not found`);
-		}
+		const existingUser = await this.findByIdOrThrow(id);
 
 		if (existingUser.deletedAt) {
-			throw new BadRequestException('User is already deleted');
+			throw DomainError.validation('User is already deleted', {
+				userId: id,
+			});
 		}
 
 		return this.prisma.user.update({

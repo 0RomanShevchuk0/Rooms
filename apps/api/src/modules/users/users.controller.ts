@@ -3,7 +3,6 @@ import {
 	Controller,
 	Delete,
 	Get,
-	NotFoundException,
 	Param,
 	ParseUUIDPipe,
 	Patch,
@@ -28,22 +27,14 @@ export class UsersController {
 
 	@Get('me')
 	async getMe(@CurrentUser() user: AuthUser) {
-		const foundUser = await this.usersService.findById(user.id);
-		if (!foundUser) {
-			throw new NotFoundException('User not found');
-		}
-		return foundUser;
+		return this.usersService.findByIdOrThrow(user.id);
 	}
 
 	@Get(':id')
 	async findUser(
 		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
 	) {
-		const foundUser = await this.usersService.findById(id);
-		if (!foundUser) {
-			throw new NotFoundException(`User "${id}" not found`);
-		}
-		return foundUser;
+		return this.usersService.findByIdOrThrow(id);
 	}
 
 	@Patch(':id')

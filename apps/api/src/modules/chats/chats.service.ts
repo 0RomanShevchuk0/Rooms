@@ -1,13 +1,10 @@
-import {
-	Injectable,
-	ForbiddenException,
-	NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { MessagesService } from '../messages/messages.service';
 import { SendMessageDto } from './dto/ws/send-message.dto';
+import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
 export class ChatsService {
@@ -81,11 +78,21 @@ export class ChatsService {
 	async getChatForUserOrThrow(chatId: string, userId: string) {
 		const chat = await this.findChatWithUserParticipant(chatId, userId);
 		if (!chat) {
-			throw new NotFoundException(`Chat "${chatId}" not found`);
+			throw DomainError.notFound(`Chat "${chatId}" not found`, {
+				entity: 'chat',
+				chatId,
+			});
 		}
 
 		if (chat.room.participants.length === 0) {
-			throw new ForbiddenException('You are not a participant of this room');
+			throw DomainError.accessDenied(
+				'You are not a participant of this room',
+				{
+					entity: 'chat',
+					chatId,
+					userId,
+				},
+			);
 		}
 
 		return chat;

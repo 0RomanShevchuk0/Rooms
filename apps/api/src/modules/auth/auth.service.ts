@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { AuthDto } from './dto/auth.dto';
@@ -6,6 +6,7 @@ import { UsersService } from '../users/users.service';
 import { PasswordsService } from './passwords.service';
 import { AuthUser } from './types/auth-user.type';
 import { JwtPayload } from './types/jwt-payload.type';
+import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
 export class AuthService {
@@ -51,7 +52,9 @@ export class AuthService {
 		);
 
 		if (existingUser) {
-			throw new ConflictException('Username already exists');
+			throw DomainError.conflict('Username already exists', {
+				field: 'username',
+			});
 		}
 
 		const newUser = await this.usersService.create({

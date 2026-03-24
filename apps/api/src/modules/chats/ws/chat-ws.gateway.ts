@@ -9,24 +9,14 @@ import type { Server } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from './chat-ws.constants';
 import { ChatsService } from '../chats.service';
 import { ChatConnectionDto } from '../dto/ws/chat-connection.dto';
-import {
-	ForbiddenException,
-	NotFoundException,
-	UsePipes,
-	ValidationPipe,
-} from '@nestjs/common';
 import { SendMessageDto } from '../dto/ws/send-message.dto';
 import { type SocketWithAuth } from 'src/realtime/ws/api-socket-io.adapter';
+import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
+import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
-@UsePipes(
-	new ValidationPipe({
-		whitelist: true,
-		forbidNonWhitelisted: true,
-		transform: true,
-	}),
-)
+@ApiWsHandler()
 @WebSocketGateway({
 	namespace: '/chat',
 	cors: {
@@ -45,16 +35,8 @@ export class ChatWsGateway {
 		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: ChatConnectionDto,
 	) {
-		const senderId = client.data.user?.sub;
-		if (!senderId) {
-			return { error: 'Unauthorized' };
-		}
-
-		try {
-			await this.chatsService.getChatForUserOrThrow(body.chatId, senderId);
-		} catch (error) {
-			return this.mapServiceError(error);
-		}
+		const senderId = requireWsUser(client).sub;
+		await this.chatsService.getChatForUserOrThrow(body.chatId, senderId);
 
 		await client.join(body.chatId);
 		return { ok: true };
@@ -74,31 +56,9 @@ export class ChatWsGateway {
 		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: SendMessageDto,
 	) {
-		const senderId = client.data.user?.sub;
-		if (!senderId) {
-			return { error: 'Unauthorized' };
-		}
-
-		try {
-			const message = await this.chatsService.sendMessage(senderId, body);
-
-			client.to(body.chatId).emit(CHAT_SOCKET_EVENTS.MESSAGE, message);
-
-			return message;
-		} catch (error) {
-			return this.mapServiceError(error);
-		}
-	}
-
-	private mapServiceError(error: unknown) {
-		if (error instanceof ForbiddenException) {
-			return { error: 'Forbidden' };
-		}
-
-		if (error instanceof NotFoundException) {
-			return { error: 'Not found' };
-		}
-
-		return { error: 'Internal error' };
+		const senderId = requireWsUser(client).sub;
+		const message = await this.chatsService.sendMessage(senderId, body);
+		client.to(body.chatId).emit(CHAT_SOCKET_EVENTS.MESSAGE, message);
+		return message;
 	}
 }

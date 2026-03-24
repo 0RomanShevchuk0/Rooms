@@ -6,7 +6,6 @@ import {
 	WebSocketGateway,
 	WebSocketServer,
 } from '@nestjs/websockets';
-import { UsePipes, ValidationPipe } from '@nestjs/common';
 import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import type {
@@ -19,16 +18,12 @@ import type {
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
 import { RoomConnectionDto } from '../dto/ws/room-connection.dto';
 import { RoomParticipantsService } from '../participants/room-participants.service';
+import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
+import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
-@UsePipes(
-	new ValidationPipe({
-		whitelist: true,
-		forbidNonWhitelisted: true,
-		transform: true,
-	}),
-)
+@ApiWsHandler()
 @WebSocketGateway({
 	namespace: '/rooms',
 	cors: {
@@ -71,10 +66,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		@ConnectedSocket() client: RoomsSocketWithAuth,
 		@MessageBody() body: RoomConnectionDto,
 	) {
-		const userId = client.data.user?.sub;
-		if (!userId) {
-			return { ok: false, error: 'Unauthorized' };
-		}
+		const userId = requireWsUser(client).sub;
 
 		const participant =
 			await this.participantsService.isUserParticipantInRoom(

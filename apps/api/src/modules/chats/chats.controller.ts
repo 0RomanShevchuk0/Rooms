@@ -12,12 +12,11 @@ export class ChatsController {
 
 	@Get(':id')
 	async findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-		const chat = await this.chatsService.findOne(id, user.id);
-		return chat;
+		return this.chatsService.findOne(id, user.id);
 	}
 
 	@Get(':id/messages')
-	getMessages(
+	async getMessages(
 		@Param('id') id: string,
 		@Query() query: GetMessagesQueryDto,
 		@CurrentUser() user: AuthUser,

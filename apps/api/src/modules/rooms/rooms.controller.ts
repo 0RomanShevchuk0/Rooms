@@ -39,12 +39,15 @@ export class RoomsController {
 	}
 
 	@Get(':id/participants/me')
-	findMyParticipant(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+	async findMyParticipant(
+		@Param('id') id: string,
+		@CurrentUser() user: AuthUser,
+	) {
 		return this.roomsService.findMyParticipant(id, user.id);
 	}
 
 	@Post()
-	create(@Body() createRoomDto: CreateRoomDto) {
+	async create(@Body() createRoomDto: CreateRoomDto) {
 		return this.roomsService.create(createRoomDto);
 	}
 
@@ -56,7 +59,7 @@ export class RoomsController {
 	}
 
 	@Patch(':id')
-	update(
+	async update(
 		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
 		@Body() updateRoomDto: UpdateRoomDto,
 		@CurrentUser() user: AuthUser,

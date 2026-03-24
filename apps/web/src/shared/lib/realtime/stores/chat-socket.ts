@@ -3,6 +3,8 @@ import { createSocket, type AppSocket } from "../createSocket";
 import { SOCKET_NAMESPACES } from "../socket-namespaces";
 import { SYSTEM_SOCKET_EVENTS } from "../socket-events";
 import { useSession } from "@/entities/session";
+import toast from "react-hot-toast";
+import { getWsErrorCode, getWsErrorMessage } from "../ws-errors";
 
 type ChatSocketState = {
 	socket: AppSocket;
@@ -22,6 +24,15 @@ export const useChatSocket = create<ChatSocketState>((set, get) => {
 		if (err.message === "Unauthorized") {
 			useSession.getState().clearSession();
 		}
+	});
+	socket.on(SYSTEM_SOCKET_EVENTS.EXCEPTION, (payload: unknown) => {
+		const code = getWsErrorCode(payload);
+		if (code === "UNAUTHORIZED") {
+			useSession.getState().clearSession();
+			return;
+		}
+
+		toast.error(`Error: ${getWsErrorMessage(payload)}`);
 	});
 
 	return {

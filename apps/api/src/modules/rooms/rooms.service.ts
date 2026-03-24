@@ -1,5 +1,6 @@
 import {
 	BadRequestException,
+	ForbiddenException,
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
@@ -37,6 +38,22 @@ export class RoomsService {
 				chat: true,
 			},
 		});
+	}
+
+	async findByIdForUserOrThrow(
+		id: string,
+		userId: string,
+	): Promise<RoomWithParticipants> {
+		const room = await this.findByIdOrThrow(id);
+		const isParticipant = room.participants.some(
+			(participant) => participant.userId === userId,
+		);
+
+		if (!isParticipant) {
+			throw new ForbiddenException('You are not a participant of this room');
+		}
+
+		return room;
 	}
 
 	async findMyParticipant(roomId: string, userId: string) {
@@ -116,10 +133,13 @@ export class RoomsService {
 		return { room: updatedRoom, participant: deletedParticipant };
 	}
 
-	update(
+	async update(
 		id: string,
+		userId: string,
 		updateRoomDto: UpdateRoomDto,
 	): Promise<RoomWithParticipants> {
+		await this.findByIdForUserOrThrow(id, userId);
+
 		return this.prisma.room.update({
 			where: { id },
 			data: updateRoomDto,

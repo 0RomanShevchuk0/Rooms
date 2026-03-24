@@ -7,7 +7,7 @@ import {
 	Param,
 	Delete,
 	UseGuards,
-	NotFoundException,
+	ParseUUIDPipe,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -31,12 +31,11 @@ export class RoomsController {
 	}
 
 	@Get(':id')
-	async findOne(@Param('id') id: string) {
-		const room = await this.roomsService.findById(id);
-		if (!room) {
-			throw new NotFoundException(`Room "${id}" not found`);
-		}
-		return room;
+	async findOne(
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@CurrentUser() user: AuthUser,
+	) {
+		return this.roomsService.findByIdForUserOrThrow(id, user.id);
 	}
 
 	@Get(':id/participants/me')
@@ -57,8 +56,12 @@ export class RoomsController {
 	}
 
 	@Patch(':id')
-	update(@Param('id') id: string, @Body() updateRoomDto: UpdateRoomDto) {
-		return this.roomsService.update(id, updateRoomDto);
+	update(
+		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Body() updateRoomDto: UpdateRoomDto,
+		@CurrentUser() user: AuthUser,
+	) {
+		return this.roomsService.update(id, user.id, updateRoomDto);
 	}
 
 	@Delete(':id/participants')

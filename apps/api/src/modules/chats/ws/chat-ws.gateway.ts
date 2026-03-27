@@ -35,8 +35,8 @@ export class ChatWsGateway {
 		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: ChatConnectionDto,
 	) {
-		const senderId = requireWsUser(client).sub;
-		await this.chatsService.getChatForUserOrThrow(body.chatId, senderId);
+		const userId = requireWsUser(client).sub;
+		await this.chatsService.getChatForUserOrThrow(body.chatId, userId);
 
 		await client.join(body.chatId);
 		return { ok: true };

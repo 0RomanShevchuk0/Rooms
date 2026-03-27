@@ -8,5 +8,6 @@ import { RoomParticipantsService } from './participants/room-participants.servic
 	imports: [PrismaModule],
 	controllers: [RoomsController],
 	providers: [RoomsService, RoomsWsGateway, RoomParticipantsService],
+	exports: [RoomsService, RoomParticipantsService],
 })
 export class RoomsModule {}

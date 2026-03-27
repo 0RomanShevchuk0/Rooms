@@ -1,17 +1,14 @@
 "use client";
-import { useRoomByIdQuery } from "@/entities/room";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
-import { useParams } from "next/navigation";
 import { RoomHeader } from "@/widgets/room-header";
 import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presence";
 import { RoomSidebar } from "@/widgets/room-sidebar";
 import { NotFoundScreen } from "@/shared/ui/not-found-screen";
+import { SnakeGame } from "@/features/snake-game";
+import { useRoomFromParamsQuery } from "./useRoomFromParamsQuery";
 
 export default function RoomPage() {
-	const roomId = useParams().id as string;
-
-	const { room, isPending } = useRoomByIdQuery({ roomId });
+	const { roomId, room, isPending } = useRoomFromParamsQuery();
 	useRoomRealtimeChannels({ roomId, chatId: room?.chat.id });
 	const { onlineParticipantIds } = useRoomPresence({ roomId });
 
@@ -27,15 +24,7 @@ export default function RoomPage() {
 				<RoomHeader roomId={roomId} roomName={room.name} />
 
 				<div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-					<Card className="border-border/60">
-						<CardHeader className="space-y-2">
-							<div className="flex items-center justify-between">
-								<CardTitle>Match starts in 00:10</CardTitle>
-							</div>
-							<p className="text-sm text-muted-foreground">Controls: WASD / arrows.</p>
-						</CardHeader>
-						<CardContent className="space-y-4"></CardContent>
-					</Card>
+					<SnakeGame />
 
 					<RoomSidebar room={room} onlineParticipantIds={onlineParticipantIds} />
 				</div>

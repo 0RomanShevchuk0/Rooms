@@ -7,6 +7,7 @@ import { RoomsModule } from './modules/rooms/rooms.module';
 import { ChatsModule } from './modules/chats/chats.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { SnakeModule } from './modules/games/snake/snake.module';
 
 @Module({
 	imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from './modules/auth/auth.module';
 		ChatsModule,
 		MessagesModule,
 		AuthModule,
+		SnakeModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

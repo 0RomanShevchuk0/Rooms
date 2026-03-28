@@ -1,5 +1,9 @@
 {
 	"name": "rooms-monorepo",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
 	"private": true,
 	"packageManager": "npm@11.8.0",
 	"scripts": {
@@ -8,5 +12,8 @@
 	},
 	"devDependencies": {
 		"prettier": "^3.4.2"
+	},
+	"overrides": {
+		"zod": "4.3.6"
 	}
 }

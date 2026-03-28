@@ -8,6 +8,10 @@ import {
 } from '@nestjs/websockets';
 import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
+import {
+	type RoomConnectPayload,
+	RoomConnectPayloadSchema,
+} from '@rooms/contracts/room';
 import type {
 	RoomPresencePayload,
 	RoomParticipantJoinedPayload,
@@ -16,10 +20,10 @@ import type {
 	RoomsSocketWithAuth,
 } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
-import { RoomConnectionDto } from '../dto/ws/room-connection.dto';
 import { RoomParticipantsService } from '../participants/room-participants.service';
 import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
@@ -64,7 +68,8 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
 	async connectToRoom(
 		@ConnectedSocket() client: RoomsSocketWithAuth,
-		@MessageBody() body: RoomConnectionDto,
+		@MessageBody(new ZodValidationPipe(RoomConnectPayloadSchema))
+		body: RoomConnectPayload,
 	) {
 		const userId = requireWsUser(client).sub;
 

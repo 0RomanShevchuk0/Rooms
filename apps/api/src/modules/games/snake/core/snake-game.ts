@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events';
 import { directionPositions } from './constants';
-import { DirectionEnum, Position, SnakeGameState } from './types';
+import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
+import { type Position, type SnakeGameState } from './types';
 
 type SnakeGameEvents = {
 	tick: [state: SnakeGameState];
@@ -21,7 +22,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.resetGameState();
 	}
 
-	public changeDirection(newDirection: DirectionEnum) {
+	public changeDirection(newDirection: SnakeDirection) {
 		this.state.snakeDirection = newDirection;
 	}
 
@@ -89,7 +90,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private resetGameState() {
 		this.state = {
 			snakeLength: 1,
-			snakeDirection: DirectionEnum.UP,
+			snakeDirection: SNAKE_DIRECTION.UP,
 			snakePosition: { x: 10, y: 10 },
 			foodPosition: this.generateFoodPosition(),
 			gameOver: false,

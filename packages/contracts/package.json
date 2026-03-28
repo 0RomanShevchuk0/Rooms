@@ -2,11 +2,30 @@
 	"name": "@rooms/contracts",
 	"version": "1.0.0",
 	"description": "",
-	"type": "module",
+	"type": "commonjs",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json"
+	},
 	"exports": {
-		".": {
-			"types": "./src/index.ts",
-			"default": "./src/index.ts"
+		"./chat": {
+			"types": "./dist/chat/index.d.ts",
+			"require": "./dist/chat/index.js",
+			"default": "./dist/chat/index.js"
+		},
+		"./room": {
+			"types": "./dist/room/index.d.ts",
+			"require": "./dist/room/index.js",
+			"default": "./dist/room/index.js"
+		},
+		"./snake-game": {
+			"types": "./dist/snake-game/index.d.ts",
+			"require": "./dist/snake-game/index.js",
+			"default": "./dist/snake-game/index.js"
 		}
 	},
 	"dependencies": {

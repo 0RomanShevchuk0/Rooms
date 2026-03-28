@@ -3,7 +3,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { MessagesService } from '../messages/messages.service';
-import { SendMessageDto } from './dto/ws/send-message.dto';
+import type { ChatSendMessagePayload } from '@rooms/contracts/chat';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
@@ -56,7 +56,7 @@ export class ChatsService {
 		return this.messagesService.findByChatId(chatId, cursor, limit);
 	}
 
-	async sendMessage(senderId: string, body: SendMessageDto) {
+	async sendMessage(senderId: string, body: ChatSendMessagePayload) {
 		const { chatId, content } = body;
 
 		await this.getChatForUserOrThrow(chatId, senderId);

@@ -7,12 +7,22 @@ import {
 	ConnectedSocket,
 } from '@nestjs/websockets';
 import { SnakeService } from './snake.service';
-import { DirectionEnum, SnakeGameState } from './core';
+import type {
+	SnakeDirection,
+	SnakeGameState as CoreSnakeGameState,
+} from './core';
 import { ApiWsHandler } from '../../../realtime/ws/api-ws-handler.decorator';
 import type { Server } from 'socket.io';
+import {
+	type SnakeChangeDirectionPayload,
+	SnakeChangeDirectionPayloadSchema,
+	type SnakeRoomPayload,
+	SnakeRoomPayloadSchema,
+} from '@rooms/contracts/snake-game';
 import { SNAKE_GAME_SOCKET_EVENTS } from './snake-ws.constants';
 import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
@@ -36,41 +46,47 @@ export class SnakeGateway {
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: { roomId: string },
+		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
+		payload: SnakeRoomPayload,
 	) {
 		const userId = requireWsUser(client).sub;
 		console.log('🚀 ~ SnakeGateway ~ connectToChat ~ userId:', userId);
-		await this.roomsService.findByIdForUserOrThrow(body.roomId, userId);
+		await this.roomsService.findByIdForUserOrThrow(payload.roomId, userId);
 
-		await client.join(body.roomId);
-		console.log('🚀 ~ SnakeGateway ~ connectToChat ~ roomId:', body.roomId);
+		await client.join(payload.roomId);
+		console.log(
+			'🚀 ~ SnakeGateway ~ connectToChat ~ roomId:',
+			payload.roomId,
+		);
 		return { ok: true };
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.DISCONNECT)
 	async disconnect(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: { roomId: string },
+		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
+		payload: SnakeRoomPayload,
 	) {
-		await client.leave(body.roomId);
+		await client.leave(payload.roomId);
 		return { ok: true };
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.START_GAME)
 	startGame(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: { roomId: string },
+		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
+		payload: SnakeRoomPayload,
 	) {
-		const game = this.snakeService.startGame(body.roomId);
+		const game = this.snakeService.startGame(payload.roomId);
 
-		const onTick = (state: SnakeGameState) => {
+		const onTick = (state: CoreSnakeGameState) => {
 			this.server
-				.to(body.roomId)
+				.to(payload.roomId)
 				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, state);
 		};
-		const onGameOver = (state: SnakeGameState) => {
+		const onGameOver = (state: CoreSnakeGameState) => {
 			this.server
-				.to(body.roomId)
+				.to(payload.roomId)
 				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, state);
 		};
 
@@ -83,13 +99,15 @@ export class SnakeGateway {
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION)
 	changeDirection(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: { roomId: string; direction: DirectionEnum },
+		@MessageBody(new ZodValidationPipe(SnakeChangeDirectionPayloadSchema))
+		payload: SnakeChangeDirectionPayload,
 	) {
+		const direction: SnakeDirection = payload.direction;
 		console.log(
 			'🚀 ~ SnakeGateway ~ changeDirection ~ direction:',
-			body.direction,
+			payload.direction,
 		);
-		this.snakeService.changeDirection(body.roomId, body.direction);
+		this.snakeService.changeDirection(payload.roomId, direction);
 		return { ok: true, message: 'Direction changed!' };
 	}
 }

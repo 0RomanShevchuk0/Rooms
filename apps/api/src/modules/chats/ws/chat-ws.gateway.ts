@@ -8,11 +8,16 @@ import {
 import type { Server } from 'socket.io';
 import { CHAT_SOCKET_EVENTS } from './chat-ws.constants';
 import { ChatsService } from '../chats.service';
-import { ChatConnectionDto } from '../dto/ws/chat-connection.dto';
-import { SendMessageDto } from '../dto/ws/send-message.dto';
+import {
+	ChatConnectionPayloadSchema,
+	ChatSendMessagePayloadSchema,
+	type ChatConnectionPayload,
+	type ChatSendMessagePayload,
+} from '@rooms/contracts/chat';
 import { type SocketWithAuth } from 'src/realtime/ws/api-socket-io.adapter';
 import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
@@ -33,7 +38,8 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: ChatConnectionDto,
+		@MessageBody(new ZodValidationPipe(ChatConnectionPayloadSchema))
+		body: ChatConnectionPayload,
 	) {
 		const userId = requireWsUser(client).sub;
 		await this.chatsService.getChatForUserOrThrow(body.chatId, userId);
@@ -45,7 +51,8 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromChat(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: ChatConnectionDto,
+		@MessageBody(new ZodValidationPipe(ChatConnectionPayloadSchema))
+		body: ChatConnectionPayload,
 	) {
 		await client.leave(body.chatId);
 		return { ok: true };
@@ -54,7 +61,8 @@ export class ChatWsGateway {
 	@SubscribeMessage(CHAT_SOCKET_EVENTS.MESSAGE)
 	async sendMessage(
 		@ConnectedSocket() client: SocketWithAuth,
-		@MessageBody() body: SendMessageDto,
+		@MessageBody(new ZodValidationPipe(ChatSendMessagePayloadSchema))
+		body: ChatSendMessagePayload,
 	) {
 		const senderId = requireWsUser(client).sub;
 		const message = await this.chatsService.sendMessage(senderId, body);

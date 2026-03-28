@@ -1,4 +1,1 @@
-export interface Chat {
-	id: string;
-	roomId?: string | null;
-}
+export type { Chat } from "@rooms/contracts/chat";

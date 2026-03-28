@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DirectionEnum, SnakeGame } from './core';
+import { type SnakeDirection, SnakeGame } from './core';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class SnakeService {
 		return game;
 	}
 
-	changeDirection(roomId: string, direction: DirectionEnum) {
+	changeDirection(roomId: string, direction: SnakeDirection) {
 		const game = this.getGameByRoomIdOrThrow(roomId);
 		game.changeDirection(direction);
 	}

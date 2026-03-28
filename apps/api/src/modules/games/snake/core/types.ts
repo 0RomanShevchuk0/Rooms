@@ -1,9 +1,4 @@
-export enum DirectionEnum {
-	UP = 'up',
-	DOWN = 'down',
-	LEFT = 'left',
-	RIGHT = 'right',
-}
+import type { SnakeDirection } from './direction';
 
 export type Position = {
 	x: number;
@@ -12,7 +7,7 @@ export type Position = {
 
 export interface SnakeGameState {
 	snakeLength: number;
-	snakeDirection: DirectionEnum;
+	snakeDirection: SnakeDirection;
 	snakePosition: Position;
 	foodPosition: Position;
 	gameOver: boolean;

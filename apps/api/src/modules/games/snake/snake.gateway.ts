@@ -7,7 +7,7 @@ import {
 	ConnectedSocket,
 } from '@nestjs/websockets';
 import { SnakeService } from './snake.service';
-import { DirectionEnum, Position } from './core';
+import { DirectionEnum, SnakeGameState } from './core';
 import { ApiWsHandler } from '../../../realtime/ws/api-ws-handler.decorator';
 import type { Server } from 'socket.io';
 import { SNAKE_GAME_SOCKET_EVENTS } from './snake-ws.constants';
@@ -61,9 +61,22 @@ export class SnakeGateway {
 		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody() body: { roomId: string },
 	) {
-		const { onMove, onGameOver } = this.createGameHandlers(body.roomId);
-		this.snakeService.startGame(body.roomId, onMove, onGameOver);
-		console.log('🚀 ~ SnakeGateway ~ startGame ~ game started');
+		const game = this.snakeService.startGame(body.roomId);
+
+		const onTick = (state: SnakeGameState) => {
+			this.server
+				.to(body.roomId)
+				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, state);
+		};
+		const onGameOver = (state: SnakeGameState) => {
+			this.server
+				.to(body.roomId)
+				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, state);
+		};
+
+		game.on('tick', onTick);
+		game.on('gameOver', onGameOver);
+
 		return { ok: true, message: 'Game started!' };
 	}
 
@@ -78,18 +91,5 @@ export class SnakeGateway {
 		);
 		this.snakeService.changeDirection(body.roomId, body.direction);
 		return { ok: true, message: 'Direction changed!' };
-	}
-
-	private createGameHandlers(roomId: string) {
-		return {
-			onMove: (position: Position) => {
-				this.server
-					.to(roomId)
-					.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, position);
-			},
-			onGameOver: () => {
-				this.server.to(roomId).emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER);
-			},
-		};
 	}
 }

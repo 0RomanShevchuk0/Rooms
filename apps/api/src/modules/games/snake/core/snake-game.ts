@@ -1,25 +1,24 @@
+import EventEmitter from 'node:events';
 import { directionPositions } from './constants';
 import { DirectionEnum, Position, SnakeGameState } from './types';
 
-export class SnakeGame {
+type SnakeGameEvents = {
+	tick: [state: SnakeGameState];
+	gameOver: [state: SnakeGameState];
+};
+
+export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private readonly fieldSize: number;
 	private readonly tickMs: number;
 	private gameLoop?: NodeJS.Timeout;
 	private state: SnakeGameState;
 
-	onMove: (position: Position) => void;
-	onGameOver: () => void;
+	constructor() {
+		super();
 
-	constructor(
-		onMoveCallback: (position: Position) => void,
-		onGameOverCallback: () => void,
-	) {
 		this.fieldSize = 20;
 		this.tickMs = 140;
 		this.resetGameState();
-
-		this.onMove = onMoveCallback;
-		this.onGameOver = onGameOverCallback;
 	}
 
 	public changeDirection(newDirection: DirectionEnum) {
@@ -35,6 +34,7 @@ export class SnakeGame {
 
 			if (!isCollision) {
 				this.moveSnake(nextPosition);
+				this.emit('tick', this.state);
 			} else {
 				this.endGame();
 			}
@@ -49,7 +49,7 @@ export class SnakeGame {
 			this.gameLoop = undefined;
 		}
 
-		this.onGameOver();
+		this.emit('gameOver', this.state);
 	}
 
 	private generateFoodPosition(): Position {
@@ -74,8 +74,6 @@ export class SnakeGame {
 			x: position.x,
 			y: position.y,
 		};
-
-		this.onMove(this.state.snakePosition);
 	}
 
 	private checkCollision(snakePosition: Position): boolean {

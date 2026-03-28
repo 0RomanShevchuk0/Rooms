@@ -1,19 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { DirectionEnum, Position, SnakeGame } from './core';
+import { DirectionEnum, SnakeGame } from './core';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
 export class SnakeService {
 	private roomGameMap = new Map<string, SnakeGame>();
 
-	startGame(
-		roomId: string,
-		onMove: (position: Position) => void,
-		onGameOver: () => void,
-	) {
-		const game = new SnakeGame(onMove, onGameOver);
+	startGame(roomId: string) {
+		const game = new SnakeGame();
 		this.roomGameMap.set(roomId, game);
 		game.startGame();
+		return game;
 	}
 
 	changeDirection(roomId: string, direction: DirectionEnum) {

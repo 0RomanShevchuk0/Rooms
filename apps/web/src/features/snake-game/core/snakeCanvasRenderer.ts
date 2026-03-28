@@ -1,3 +1,4 @@
+import { SnakePosition } from "@/entities/snake-game";
 import Konva from "konva";
 
 interface SnakeCanvasEngineConfig {
@@ -33,7 +34,7 @@ export class SnakeCanvasRenderer {
 		layer.add(this.snakeRect);
 	}
 
-	public updateSnakePosition(position: { x: number; y: number }) {
+	public updateSnakePosition(position: SnakePosition) {
 		const cellSize = this.stage.width() / this.fieldSize;
 		this.snakeRect.position({
 			x: position.x * cellSize,

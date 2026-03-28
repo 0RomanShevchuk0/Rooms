@@ -1,4 +1,4 @@
-import { SNAKE_GAME_SOCKET_EVENTS } from "@/entities/snake-game";
+import { SNAKE_GAME_SOCKET_EVENTS, SnakeGameState } from "@/entities/snake-game";
 import { SnakeCanvasRenderer } from "../core";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
 import { useEffect, useRef } from "react";
@@ -24,14 +24,14 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 			fieldSize: 20,
 		});
 
-		const handleSnakeMoved = (gameState: { x: number; y: number }) => {
+		const handleSnakeMoved = (gameState: SnakeGameState) => {
 			console.log("Received game state update:", gameState);
-			snakeGame.updateSnakePosition(gameState);
+			snakeGame.updateSnakePosition(gameState.snakePosition);
 		};
 
-		const handleGameOver = () => {
+		const handleGameOver = (gameState: SnakeGameState) => {
 			alert("Game Over!");
-			console.log("Game over received!!!!!!!");
+			console.log("Game over state:", gameState);
 		};
 
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
@@ -39,6 +39,7 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 
 		const handleDirectionChange = (event: KeyboardEvent) => {
 			const direction = directionInputMap[event.key];
+			console.log("🚀 ~ handleDirectionChange ~ event.key:", event.key);
 			console.log("🚀 ~ RoomPage ~ direction:", direction);
 			if (direction) {
 				snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION, { direction, roomId });

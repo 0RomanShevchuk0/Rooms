@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ChatIdSchema } from "./model.js";
+import { ChatIdSchema } from "./base.js";
 
 export const CHAT_SOCKET_EVENTS = {
 	CONNECT: "chat:connect",

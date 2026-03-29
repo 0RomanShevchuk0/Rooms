@@ -8,8 +8,9 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useId, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
+import type { AuthCredentials } from "@rooms/contracts/auth";
 
-import type { AuthCredentials, AuthFormType } from "../model/types";
+import type { AuthFormType } from "../model/types";
 import { ROUTES } from "@/shared/routes";
 
 const AUTH_FORM_CONTENT: Record<

@@ -3,7 +3,11 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { Room } from 'generated/prisma/client';
-import { RoomJoinLeaveResult, RoomWithParticipants } from './rooms.types';
+import {
+	RoomJoinLeaveResult,
+	RoomWithParticipants,
+	RoomWithParticipantsAndChat,
+} from './rooms.types';
 import { roomParticipantWithUserSelect } from './participants/room-participants.select';
 import { RoomParticipantsService } from './participants/room-participants.service';
 import { DomainError } from 'src/shared/errors/domain.error';
@@ -26,7 +30,7 @@ export class RoomsService {
 		});
 	}
 
-	findById(id: string): Promise<RoomWithParticipants | null> {
+	findById(id: string): Promise<RoomWithParticipantsAndChat | null> {
 		return this.prisma.room.findUnique({
 			where: { id },
 			include: {
@@ -39,7 +43,7 @@ export class RoomsService {
 	async findByIdForUserOrThrow(
 		id: string,
 		userId: string,
-	): Promise<RoomWithParticipants> {
+	): Promise<RoomWithParticipantsAndChat> {
 		const room = await this.findByIdOrThrow(id);
 		const isParticipant = room.participants.some(
 			(participant) => participant.userId === userId,
@@ -64,7 +68,9 @@ export class RoomsService {
 		return this.participantsService.findByRoomAndUser(roomId, userId);
 	}
 
-	async create(createRoomDto: CreateRoomDto): Promise<RoomWithParticipants> {
+	async create(
+		createRoomDto: CreateRoomDto,
+	): Promise<RoomWithParticipantsAndChat> {
 		const userIds = Array.from(new Set(createRoomDto.userIds || []));
 
 		const existingUsers = await this.prisma.user.findMany({
@@ -155,7 +161,9 @@ export class RoomsService {
 		});
 	}
 
-	private async findByIdOrThrow(id: string): Promise<RoomWithParticipants> {
+	private async findByIdOrThrow(
+		id: string,
+	): Promise<RoomWithParticipantsAndChat> {
 		const room = await this.findById(id);
 		if (!room) {
 			throw DomainError.notFound(`Room "${id}" not found`, {

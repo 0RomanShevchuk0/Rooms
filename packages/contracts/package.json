@@ -12,10 +12,20 @@
 		"build": "tsc -p tsconfig.build.json"
 	},
 	"exports": {
+		"./auth": {
+			"types": "./dist/auth/index.d.ts",
+			"require": "./dist/auth/index.js",
+			"default": "./dist/auth/index.js"
+		},
 		"./chat": {
 			"types": "./dist/chat/index.d.ts",
 			"require": "./dist/chat/index.js",
 			"default": "./dist/chat/index.js"
+		},
+		"./message": {
+			"types": "./dist/message/index.d.ts",
+			"require": "./dist/message/index.js",
+			"default": "./dist/message/index.js"
 		},
 		"./room": {
 			"types": "./dist/room/index.d.ts",
@@ -26,6 +36,11 @@
 			"types": "./dist/snake-game/index.d.ts",
 			"require": "./dist/snake-game/index.js",
 			"default": "./dist/snake-game/index.js"
+		},
+		"./user": {
+			"types": "./dist/user/index.d.ts",
+			"require": "./dist/user/index.js",
+			"default": "./dist/user/index.js"
 		},
 		"./ws": {
 			"types": "./dist/ws.d.ts",

@@ -1,6 +1,6 @@
 import { api } from "@/shared/api";
-import type { AuthTokenResponse } from "../types";
+import type { AuthRefreshTokensResponse } from "@rooms/contracts/auth";
 
-export async function refreshTokens(): Promise<AuthTokenResponse> {
-	return await api.post<AuthTokenResponse>("/auth/refresh-tokens");
+export async function refreshTokens(): Promise<AuthRefreshTokensResponse> {
+	return await api.post<AuthRefreshTokensResponse>("/auth/refresh-tokens");
 }

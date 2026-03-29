@@ -1,4 +1,4 @@
-import type { MessageWithSender } from "@/entities/message/model/types";
+import type { MessageWithSender } from "@rooms/contracts/message";
 import { api } from "@/shared/api";
 
 export function getMessage(messageId: string) {

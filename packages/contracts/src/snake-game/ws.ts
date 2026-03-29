@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { SnakeDirectionSchema } from "./model.js";
+import {
+	SnakeDirectionEnum,
+	SnakeDirectionSchema,
+	SnakeGameStateSchema,
+	SnakePositionSchema,
+} from "./base.js";
 
 export const SNAKE_GAME_SOCKET_EVENTS = {
 	CONNECT: "snake-game:connect",
@@ -19,6 +24,15 @@ export const SnakeChangeDirectionPayloadSchema = z.object({
 	direction: SnakeDirectionSchema,
 });
 
+export {
+	SnakeDirectionEnum,
+	SnakeDirectionSchema,
+	SnakeGameStateSchema,
+	SnakePositionSchema,
+};
+export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
+export type SnakePosition = z.infer<typeof SnakePositionSchema>;
+export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
 export type SnakeRoomPayload = z.infer<typeof SnakeRoomPayloadSchema>;
 export type SnakeChangeDirectionPayload = z.infer<
 	typeof SnakeChangeDirectionPayloadSchema

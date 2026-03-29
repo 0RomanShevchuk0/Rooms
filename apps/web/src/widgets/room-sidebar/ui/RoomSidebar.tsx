@@ -1,4 +1,4 @@
-import { RoomWithParticipantsAndChat } from "@/entities/room/model/types";
+import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { Chat } from "@/features/chat";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";

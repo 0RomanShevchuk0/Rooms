@@ -6,6 +6,11 @@ import { AuthDto } from './dto/auth.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user.type';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import type {
+	AuthLogoutResponse,
+	AuthRefreshTokensResponse,
+	AuthTokenResponse,
+} from '@rooms/contracts/auth';
 
 @Controller('auth')
 export class AuthController {
@@ -35,7 +40,7 @@ export class AuthController {
 		@CurrentUser() user: AuthUser,
 		@Body() authDto: AuthDto,
 		@Res({ passthrough: true }) res: Response,
-	) {
+	): Promise<AuthTokenResponse> {
 		void authDto;
 		const tokens = await this.authService.login(user);
 		this.setAuthCookies(res, tokens);
@@ -46,14 +51,14 @@ export class AuthController {
 	async register(
 		@Body() authDto: AuthDto,
 		@Res({ passthrough: true }) res: Response,
-	) {
+	): Promise<AuthTokenResponse> {
 		const tokens = await this.authService.register(authDto);
 		this.setAuthCookies(res, tokens);
 		return { access_token: tokens.access_token };
 	}
 
 	@Post('logout')
-	logout(@Res({ passthrough: true }) res: Response) {
+	logout(@Res({ passthrough: true }) res: Response): AuthLogoutResponse {
 		const isProd = this.configService.get('NODE_ENV') === 'production';
 
 		res.clearCookie('refresh_token', {
@@ -70,7 +75,7 @@ export class AuthController {
 	async refreshTokens(
 		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
-	) {
+	): Promise<AuthRefreshTokensResponse> {
 		const refreshToken = req.cookies.refresh_token as string | undefined;
 
 		if (!refreshToken) {

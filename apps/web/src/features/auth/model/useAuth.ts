@@ -1,6 +1,7 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
-import { AuthCredentials, AuthFormType } from "./types";
+import type { AuthCredentials } from "@rooms/contracts/auth";
+import type { AuthFormType } from "./types";
 import { login, register } from "../api";
 import toast from "react-hot-toast";
 import axios from "axios";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRoomsSocket } from "@/shared/lib/realtime";
-import type { RoomWithParticipants } from "@/entities/room";
+import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { queryKeys } from "@/shared/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -22,7 +22,7 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 
 	useEffect(() => {
 		const onJoined = (data: RoomParticipantJoinedPayload) => {
-			queryClient.setQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId), (old) => {
+			queryClient.setQueryData<RoomWithParticipantsAndChat>(queryKeys.rooms.byId(roomId), (old) => {
 				if (!old) return old;
 				if (old.participants.some((p) => p.id === data.participant.id)) return old;
 				return { ...old, participants: [...old.participants, data.participant] };
@@ -31,7 +31,7 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 		};
 
 		const onLeft = (data: RoomPresencePayload) => {
-			queryClient.setQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId), (old) => {
+			queryClient.setQueryData<RoomWithParticipantsAndChat>(queryKeys.rooms.byId(roomId), (old) => {
 				if (!old) return old;
 				if (!old.participants.some((p) => p.id === data.participantId)) return old;
 				return { ...old, participants: old.participants.filter((p) => p.id !== data.participantId) };

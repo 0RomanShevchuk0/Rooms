@@ -1,4 +1,4 @@
-import { RoomWithParticipants } from "@/entities/room";
+import type { RoomWithParticipants } from "@rooms/contracts/room";
 import { Badge } from "@/shared/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 

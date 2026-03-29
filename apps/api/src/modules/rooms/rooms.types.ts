@@ -8,7 +8,14 @@ export type RoomWithParticipants = Prisma.RoomGetPayload<{
 	include: { participants: { select: typeof roomParticipantWithUserSelect } };
 }>;
 
+export type RoomWithParticipantsAndChat = Prisma.RoomGetPayload<{
+	include: {
+		participants: { select: typeof roomParticipantWithUserSelect };
+		chat: true;
+	};
+}>;
+
 export type RoomJoinLeaveResult = {
-	room: RoomWithParticipants;
+	room: RoomWithParticipantsAndChat;
 	participant: RoomParticipantWithUser;
 };

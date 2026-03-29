@@ -1,4 +1,4 @@
-import { MessageWithSender } from "@/entities/message";
+import type { MessageWithSender } from "@rooms/contracts/message";
 import { useLayoutEffect } from "react";
 
 interface UseChatScrollProps {

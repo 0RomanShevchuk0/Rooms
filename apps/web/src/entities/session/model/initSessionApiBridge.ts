@@ -19,7 +19,7 @@ export function initSessionApiBridge() {
 	api.setRefreshHandler(async () => {
 		try {
 			const data = await refreshTokens();
-			return data.access_token ?? null;
+			return "access_token" in data ? (data.access_token ?? null) : null;
 		} catch {
 			return null;
 		}

@@ -34,7 +34,7 @@ export function useRefreshToken() {
 		const refreshToken = async () => {
 			try {
 				const data = await refreshTokenMutation.mutateAsync();
-				if (data?.access_token) {
+				if ("access_token" in data && data.access_token) {
 					setAccessToken(data.access_token);
 				}
 			} finally {

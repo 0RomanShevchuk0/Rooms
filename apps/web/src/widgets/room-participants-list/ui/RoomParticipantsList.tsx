@@ -1,8 +1,8 @@
-import { ParticipantWithUser } from "@/entities/room/model/types";
+import type { RoomParticipant } from "@rooms/contracts/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 
 interface RoomParticipantsListProps {
-	participants: ParticipantWithUser[];
+	participants: RoomParticipant[];
 	onlineParticipantIds: Set<string>;
 }
 

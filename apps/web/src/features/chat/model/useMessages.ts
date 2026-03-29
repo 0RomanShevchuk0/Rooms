@@ -1,13 +1,18 @@
-import { getMessages, GetMessagesResponse, MessageWithSender } from "@/entities/message";
+import { getMessages } from "@/entities/message";
 import { queryKeys } from "@/shared/react-query";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
+import type { GetChatMessagesResponse } from "@rooms/contracts/chat";
+import type { MessageWithSender } from "@rooms/contracts/message";
 
 interface UseMessagesQueryProps {
 	chatId: string;
 }
 
-type InfiniteMessagesData = InfiniteData<GetMessagesResponse, string | undefined>;
+type InfiniteMessagesData = InfiniteData<
+	GetChatMessagesResponse,
+	string | undefined
+>;
 
 const MESSAGES_LIMIT = 30;
 

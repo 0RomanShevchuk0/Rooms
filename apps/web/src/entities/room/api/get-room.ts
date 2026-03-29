@@ -1,4 +1,4 @@
-import type { RoomWithParticipantsAndChat } from "@/entities/room";
+import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { api } from "@/shared/api";
 
 export function getRoom(id: string) {

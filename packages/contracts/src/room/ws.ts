@@ -2,8 +2,7 @@ import { z } from "zod";
 import {
 	RoomIdSchema,
 	RoomParticipantIdSchema,
-	RoomPresencePayloadSchema,
-} from "./model.js";
+} from "./base.js";
 
 export const ROOM_SOCKET_EVENTS = {
 	CONNECT: "room:connect",
@@ -15,6 +14,11 @@ export const ROOM_SOCKET_EVENTS = {
 export const RoomConnectPayloadSchema = z.object({
 	roomId: RoomIdSchema,
 	participantId: RoomParticipantIdSchema,
+});
+
+export const RoomPresencePayloadSchema = z.object({
+	participantId: RoomParticipantIdSchema,
+	onlineParticipantIds: z.array(RoomParticipantIdSchema),
 });
 
 export const RoomParticipantUserPayloadSchema = z.object({
@@ -40,6 +44,7 @@ export const RoomParticipantJoinedPayloadSchema =
 export const RoomParticipantLeftPayloadSchema = RoomPresencePayloadSchema;
 
 export type RoomConnectPayload = z.infer<typeof RoomConnectPayloadSchema>;
+export type RoomPresencePayload = z.infer<typeof RoomPresencePayloadSchema>;
 export type RoomParticipantUserPayload = z.infer<
 	typeof RoomParticipantUserPayloadSchema
 >;

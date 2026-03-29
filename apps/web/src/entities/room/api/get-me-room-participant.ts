@@ -1,6 +1,6 @@
-import type { ParticipantWithUser } from "@/entities/room/model/types";
+import type { RoomParticipant } from "@rooms/contracts/room";
 import { api } from "@/shared/api";
 
 export function getMeRoomParticipant(roomId: string) {
-	return api.get<ParticipantWithUser | null>(`/rooms/${roomId}/participants/me`);
+	return api.get<RoomParticipant | null>(`/rooms/${roomId}/participants/me`);
 }

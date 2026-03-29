@@ -11,8 +11,11 @@ import {
 	type GetChatMessagesQuery,
 	type GetChatMessagesResponse,
 } from '@rooms/contracts/chat';
-import type { MessageWithSender } from '../messages/messages.types';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
+import {
+	toGetChatByIdResponse,
+	toMessageWithSenderPayload,
+} from './chats.mapper';
 
 @UseGuards(JwtAuthGuard)
 @Controller('chats')
@@ -26,11 +29,7 @@ export class ChatsController {
 		@CurrentUser() user: AuthUser,
 	): Promise<GetChatByIdResponse> {
 		const chat = await this.chatsService.findOne(params.id, user.id);
-		return {
-			id: chat.id,
-			roomId: chat.roomId,
-			createdAt: chat.createdAt.toISOString(),
-		};
+		return toGetChatByIdResponse(chat);
 	}
 
 	@Get(':id/messages')
@@ -49,29 +48,8 @@ export class ChatsController {
 		);
 
 		return {
-			items: result.items.map((message) =>
-				this.toMessageWithSender(message),
-			),
+			items: result.items.map(toMessageWithSenderPayload),
 			nextCursor: result.nextCursor,
-		};
-	}
-
-	private toMessageWithSender(message: MessageWithSender) {
-		return {
-			id: message.id,
-			content: message.content,
-			chatId: message.chatId,
-			senderId: message.senderId,
-			createdAt: message.createdAt.toISOString(),
-			sender: {
-				id: message.sender.id,
-				username: message.sender.username,
-				email: message.sender.email,
-				name: message.sender.name,
-				deletedAt: message.sender.deletedAt
-					? message.sender.deletedAt.toISOString()
-					: null,
-			},
 		};
 	}
 }

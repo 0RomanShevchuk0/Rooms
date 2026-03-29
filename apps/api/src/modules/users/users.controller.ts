@@ -19,8 +19,8 @@ import {
 	type User as RestUser,
 	type UserIdParams,
 } from '@rooms/contracts/user';
-import type { PublicUser } from './users.select';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
+import { toRestUser } from './users.mapper';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -30,13 +30,13 @@ export class UsersController {
 	@Get()
 	async fetchUsers(): Promise<RestUser[]> {
 		const users = await this.usersService.findMany();
-		return users.map((user) => this.toRestUser(user));
+		return users.map(toRestUser);
 	}
 
 	@Get('me')
 	async getMe(@CurrentUser() user: AuthUser): Promise<RestUser> {
 		const foundUser = await this.usersService.findByIdOrThrow(user.id);
-		return this.toRestUser(foundUser);
+		return toRestUser(foundUser);
 	}
 
 	@Get(':id')
@@ -44,7 +44,7 @@ export class UsersController {
 		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
 	): Promise<RestUser> {
 		const foundUser = await this.usersService.findByIdOrThrow(params.id);
-		return this.toRestUser(foundUser);
+		return toRestUser(foundUser);
 	}
 
 	@Patch(':id')
@@ -55,7 +55,7 @@ export class UsersController {
 		body: UpdateUserPayload,
 	): Promise<RestUser> {
 		const updatedUser = await this.usersService.update(params.id, body);
-		return this.toRestUser(updatedUser);
+		return toRestUser(updatedUser);
 	}
 
 	@Delete(':id')
@@ -64,16 +64,6 @@ export class UsersController {
 		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
 	): Promise<RestUser> {
 		const deletedUser = await this.usersService.remove(params.id);
-		return this.toRestUser(deletedUser);
-	}
-
-	private toRestUser(user: PublicUser): RestUser {
-		return {
-			id: user.id,
-			username: user.username,
-			email: user.email,
-			name: user.name,
-			deletedAt: user.deletedAt ? user.deletedAt.toISOString() : null,
-		};
+		return toRestUser(deletedUser);
 	}
 }

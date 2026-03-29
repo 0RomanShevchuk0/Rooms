@@ -24,13 +24,12 @@ import {
 	type RoomWithParticipantsAndChat,
 	type UpdateRoomPayload,
 } from '@rooms/contracts/room';
-import type {
-	RoomWithParticipants as RoomWithParticipantsEntity,
-	RoomWithParticipantsAndChat as RoomWithParticipantsAndChatEntity,
-} from './rooms.types';
-import type { RoomParticipantWithUser } from './participants/room-participants.select';
-import { DomainError } from 'src/shared/errors/domain.error';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
+import {
+	toRoomParticipantPayload,
+	toRoomWithParticipants,
+	toRoomWithParticipantsAndChat,
+} from './rooms.mapper';
 
 @UseGuards(JwtAuthGuard)
 @Controller('rooms')
@@ -45,7 +44,7 @@ export class RoomsController {
 		@CurrentUser() user: AuthUser,
 	): Promise<RoomWithParticipants[]> {
 		const rooms = await this.roomsService.findMany({ userId: user.id });
-		return rooms.map((room) => this.toRoomWithParticipants(room));
+		return rooms.map(toRoomWithParticipants);
 	}
 
 	@Get(':id')
@@ -57,7 +56,7 @@ export class RoomsController {
 			params.id,
 			user.id,
 		);
-		return this.toRoomWithParticipantsAndChat(room);
+		return toRoomWithParticipantsAndChat(room);
 	}
 
 	@Get(':id/participants/me')
@@ -69,7 +68,7 @@ export class RoomsController {
 			params.id,
 			user.id,
 		);
-		return participant ? this.toRoomParticipant(participant) : null;
+		return participant ? toRoomParticipantPayload(participant) : null;
 	}
 
 	@Post()
@@ -78,7 +77,7 @@ export class RoomsController {
 		createRoomDto: CreateRoomPayload,
 	): Promise<RoomWithParticipants> {
 		const room = await this.roomsService.create(createRoomDto);
-		return this.toRoomWithParticipants(room);
+		return toRoomWithParticipants(room);
 	}
 
 	@Post(':id/participants')
@@ -91,7 +90,7 @@ export class RoomsController {
 			user.id,
 		);
 		this.roomsWsGateway.notifyParticipantJoined(params.id, participant);
-		return this.toRoomWithParticipants(room);
+		return toRoomWithParticipants(room);
 	}
 
 	@Patch(':id')
@@ -106,7 +105,7 @@ export class RoomsController {
 			user.id,
 			updateRoomDto,
 		);
-		return this.toRoomWithParticipants(room);
+		return toRoomWithParticipants(room);
 	}
 
 	@Delete(':id/participants')
@@ -119,58 +118,6 @@ export class RoomsController {
 			user.id,
 		);
 		this.roomsWsGateway.notifyParticipantLeft(params.id, participant);
-		return this.toRoomWithParticipants(room);
-	}
-
-	private toRoomParticipant(
-		participant: RoomParticipantWithUser,
-	): RoomParticipant {
-		return {
-			id: participant.id,
-			isReady: participant.isReady,
-			userId: participant.userId,
-			user: {
-				id: participant.user.id,
-				username: participant.user.username,
-				email: participant.user.email,
-				name: participant.user.name,
-				deletedAt: participant.user.deletedAt
-					? participant.user.deletedAt.toISOString()
-					: null,
-			},
-		};
-	}
-
-	private toRoomWithParticipants(
-		room: RoomWithParticipantsEntity | RoomWithParticipantsAndChatEntity,
-	): RoomWithParticipants {
-		return {
-			id: room.id,
-			name: room.name,
-			description: room.description,
-			participants: room.participants.map((participant) =>
-				this.toRoomParticipant(participant),
-			),
-		};
-	}
-
-	private toRoomWithParticipantsAndChat(
-		room: RoomWithParticipantsAndChatEntity,
-	): RoomWithParticipantsAndChat {
-		if (!room.chat) {
-			throw DomainError.notFound(`Chat for room "${room.id}" not found`, {
-				entity: 'chat',
-				roomId: room.id,
-			});
-		}
-
-		return {
-			...this.toRoomWithParticipants(room),
-			chat: {
-				id: room.chat.id,
-				roomId: room.chat.roomId,
-				createdAt: room.chat.createdAt.toISOString(),
-			},
-		};
+		return toRoomWithParticipants(room);
 	}
 }

@@ -11,10 +11,6 @@ import {
 	ROOM_SOCKET_EVENTS,
 	type RoomConnectPayload,
 	RoomConnectPayloadSchema,
-	type RoomParticipantJoinedPayload,
-	type RoomParticipantLeftPayload,
-	type RoomParticipantPayload,
-	type RoomPresencePayload,
 } from '@rooms/contracts/room';
 import type { RoomsSocketData, RoomsSocketWithAuth } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
@@ -22,6 +18,10 @@ import { RoomParticipantsService } from '../participants/room-participants.servi
 import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
+import {
+	toRoomParticipantJoinedPayload,
+	toRoomPresencePayload,
+} from '../rooms.mapper';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
@@ -54,9 +54,9 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 			context.sessionVersion,
 		);
 
-		const payload = this.toRoomPresencePayload(
-			context.roomId,
+		const payload = toRoomPresencePayload(
 			context.participantId,
+			this.getOnlineParticipantIds(context.roomId),
 		);
 		this.server
 			.to(context.roomId)
@@ -92,9 +92,9 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		this.addParticipantToRoom(body.roomId, body.participantId);
 		await client.join(body.roomId);
 
-		const payload = this.toRoomPresencePayload(
-			body.roomId,
+		const payload = toRoomPresencePayload(
 			body.participantId,
+			this.getOnlineParticipantIds(body.roomId),
 		);
 
 		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, payload);
@@ -116,9 +116,9 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 			context.sessionVersion,
 		);
 
-		const payload = this.toRoomPresencePayload(
-			context.roomId,
+		const payload = toRoomPresencePayload(
 			context.participantId,
+			this.getOnlineParticipantIds(context.roomId),
 		);
 
 		this.server
@@ -132,11 +132,10 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		roomId: string,
 		participant: RoomParticipantWithUser,
 	) {
-		const payload: RoomParticipantJoinedPayload = {
-			participantId: participant.id,
-			onlineParticipantIds: this.getOnlineParticipantIds(roomId),
-			participant: this.toParticipantPayload(participant),
-		};
+		const payload = toRoomParticipantJoinedPayload(
+			participant,
+			this.getOnlineParticipantIds(roomId),
+		);
 		this.server
 			.to(roomId)
 			.emit(ROOM_SOCKET_EVENTS.PARTICIPANT_JOINED, payload);
@@ -146,44 +145,15 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		roomId: string,
 		participant: RoomParticipantWithUser,
 	) {
-		const payload: RoomParticipantLeftPayload = this.toRoomPresencePayload(
-			roomId,
+		const payload = toRoomPresencePayload(
 			participant.id,
+			this.getOnlineParticipantIds(roomId),
 		);
 		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PARTICIPANT_LEFT, payload);
 	}
 
 	public getOnlineParticipantIds(roomId: string): string[] {
 		return Array.from(this.roomParticipants.get(roomId) ?? []);
-	}
-
-	private toParticipantPayload(
-		participant: RoomParticipantWithUser,
-	): RoomParticipantPayload {
-		return {
-			id: participant.id,
-			isReady: participant.isReady,
-			userId: participant.userId,
-			user: {
-				id: participant.user.id,
-				username: participant.user.username,
-				email: participant.user.email,
-				name: participant.user.name,
-				deletedAt: participant.user.deletedAt
-					? participant.user.deletedAt.toISOString()
-					: null,
-			},
-		};
-	}
-
-	private toRoomPresencePayload(
-		roomId: string,
-		participantId: string,
-	): RoomPresencePayload {
-		return {
-			participantId,
-			onlineParticipantIds: this.getOnlineParticipantIds(roomId),
-		};
 	}
 
 	private addParticipantToRoom(roomId: string, participantId: string) {

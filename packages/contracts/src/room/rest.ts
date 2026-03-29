@@ -9,6 +9,10 @@ export const RoomSchema = z.object({
 	description: z.string().nullable(),
 });
 
+export const RoomIdParamsSchema = z.object({
+	id: RoomIdSchema,
+});
+
 export const RoomParticipantSchema = z.object({
 	id: RoomParticipantIdSchema,
 	isReady: z.boolean(),
@@ -35,6 +39,7 @@ export const CreateRoomPayloadSchema = z.object({
 export const UpdateRoomPayloadSchema = CreateRoomPayloadSchema.partial();
 
 export type Room = z.infer<typeof RoomSchema>;
+export type RoomIdParams = z.infer<typeof RoomIdParamsSchema>;
 export type RoomParticipant = z.infer<typeof RoomParticipantSchema>;
 export type RoomWithParticipants = z.infer<typeof RoomWithParticipantsSchema>;
 export type RoomWithParticipantsAndChat = z.infer<

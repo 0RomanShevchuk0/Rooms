@@ -1,4 +1,4 @@
-export class PublicUserDto {
+export interface PublicUser {
 	id: string;
 	name: string | null;
 	email: string | null;

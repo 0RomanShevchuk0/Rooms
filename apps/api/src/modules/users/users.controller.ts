@@ -4,18 +4,23 @@ import {
 	Delete,
 	Get,
 	Param,
-	ParseUUIDPipe,
 	Patch,
 	UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type AuthUser } from '../auth/types/auth-user.type';
 import { SelfUserGuard } from './guards/self-user.guard';
-import type { User as RestUser } from '@rooms/contracts/user';
-import type { PublicUserDto } from './dto/public-user.dto';
+import {
+	UpdateUserPayloadSchema,
+	UserIdParamsSchema,
+	type UpdateUserPayload,
+	type User as RestUser,
+	type UserIdParams,
+} from '@rooms/contracts/user';
+import type { PublicUser } from './types/public-user.type';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -36,30 +41,33 @@ export class UsersController {
 
 	@Get(':id')
 	async findUser(
-		@Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
 	): Promise<RestUser> {
-		const foundUser = await this.usersService.findByIdOrThrow(id);
+		const foundUser = await this.usersService.findByIdOrThrow(params.id);
 		return this.toRestUser(foundUser);
 	}
 
 	@Patch(':id')
 	@UseGuards(SelfUserGuard)
 	async updateUser(
-		@Param('id') id: string,
-		@Body() body: UpdateUserDto,
+		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
+		@Body(new ZodValidationPipe(UpdateUserPayloadSchema))
+		body: UpdateUserPayload,
 	): Promise<RestUser> {
-		const updatedUser = await this.usersService.update(id, body);
+		const updatedUser = await this.usersService.update(params.id, body);
 		return this.toRestUser(updatedUser);
 	}
 
 	@Delete(':id')
 	@UseGuards(SelfUserGuard)
-	async deleteUser(@Param('id') id: string): Promise<RestUser> {
-		const deletedUser = await this.usersService.remove(id);
+	async deleteUser(
+		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
+	): Promise<RestUser> {
+		const deletedUser = await this.usersService.remove(params.id);
 		return this.toRestUser(deletedUser);
 	}
 
-	private toRestUser(user: PublicUserDto): RestUser {
+	private toRestUser(user: PublicUser): RestUser {
 		return {
 			id: user.id,
 			username: user.username,

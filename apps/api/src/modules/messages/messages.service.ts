@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
+import type { CreateMessageInput } from './inputs/create-message.input';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import {
 	messageWithSenderSelect,
@@ -10,7 +10,7 @@ import {
 export class MessagesService {
 	constructor(private prisma: PrismaService) {}
 
-	create(senderId: string, createMessageDto: CreateMessageDto) {
+	create(senderId: string, createMessageDto: CreateMessageInput) {
 		return this.prisma.message.create({
 			data: {
 				content: createMessageDto.content,

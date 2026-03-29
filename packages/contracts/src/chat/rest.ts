@@ -4,7 +4,7 @@ import { PaginatedMessagesResponseSchema } from "../message/rest.js";
 
 export const GetChatMessagesQuerySchema = z.object({
 	cursor: z.string().uuid().optional(),
-	limit: z.number().int().positive().max(100).optional(),
+	limit: z.coerce.number().int().positive().max(100).optional(),
 });
 
 export const GetChatByIdParamsSchema = z.object({

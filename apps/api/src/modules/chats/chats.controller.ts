@@ -1,14 +1,18 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ChatsService } from './chats.service';
-import { GetMessagesQueryDto } from './dto/get-messages-query.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { type AuthUser } from '../auth/types/auth-user.type';
-import type {
-	GetChatByIdResponse,
-	GetChatMessagesResponse,
+import {
+	GetChatByIdParamsSchema,
+	GetChatMessagesQuerySchema,
+	type GetChatByIdParams,
+	type GetChatByIdResponse,
+	type GetChatMessagesQuery,
+	type GetChatMessagesResponse,
 } from '@rooms/contracts/chat';
 import type { MessageWithSender } from '../messages/messages.types';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 @UseGuards(JwtAuthGuard)
 @Controller('chats')
@@ -17,10 +21,11 @@ export class ChatsController {
 
 	@Get(':id')
 	async findOne(
-		@Param('id') id: string,
+		@Param(new ZodValidationPipe(GetChatByIdParamsSchema))
+		params: GetChatByIdParams,
 		@CurrentUser() user: AuthUser,
 	): Promise<GetChatByIdResponse> {
-		const chat = await this.chatsService.findOne(id, user.id);
+		const chat = await this.chatsService.findOne(params.id, user.id);
 		return {
 			id: chat.id,
 			roomId: chat.roomId,
@@ -30,12 +35,14 @@ export class ChatsController {
 
 	@Get(':id/messages')
 	async getMessages(
-		@Param('id') id: string,
-		@Query() query: GetMessagesQueryDto,
+		@Param(new ZodValidationPipe(GetChatByIdParamsSchema))
+		params: GetChatByIdParams,
+		@Query(new ZodValidationPipe(GetChatMessagesQuerySchema))
+		query: GetChatMessagesQuery,
 		@CurrentUser() user: AuthUser,
 	): Promise<GetChatMessagesResponse> {
 		const result = await this.chatsService.getChatMessages(
-			id,
+			params.id,
 			user.id,
 			query.cursor,
 			query.limit,

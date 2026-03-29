@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import type { CreateUserInput } from './inputs/create-user.input';
+import type { UpdateUserInput } from './inputs/update-user.input';
 import { PasswordsService } from '../auth/passwords.service';
-import { PublicUserDto } from './dto/public-user.dto';
+import type { PublicUser } from './types/public-user.type';
 import { UserForAuth } from './types/user-for-auth.type';
 import { publicUserSelect } from './users.select';
 import { DomainError } from 'src/shared/errors/domain.error';
@@ -15,14 +15,14 @@ export class UsersService {
 		private passwordsService: PasswordsService,
 	) {}
 
-	async findById(id: string): Promise<PublicUserDto | null> {
+	async findById(id: string): Promise<PublicUser | null> {
 		return this.prisma.user.findUnique({
 			where: { id },
 			select: publicUserSelect,
 		});
 	}
 
-	async findByIdOrThrow(id: string): Promise<PublicUserDto> {
+	async findByIdOrThrow(id: string): Promise<PublicUser> {
 		const user = await this.findById(id);
 		if (!user) {
 			throw DomainError.notFound(`User "${id}" not found`, {
@@ -33,14 +33,14 @@ export class UsersService {
 		return user;
 	}
 
-	async findByUsername(username: string): Promise<PublicUserDto | null> {
+	async findByUsername(username: string): Promise<PublicUser | null> {
 		return this.prisma.user.findUnique({
 			where: { username },
 			select: publicUserSelect,
 		});
 	}
 
-	async findByEmail(email: string): Promise<PublicUserDto | null> {
+	async findByEmail(email: string): Promise<PublicUser | null> {
 		return this.prisma.user.findUnique({
 			where: { email },
 			select: publicUserSelect,
@@ -59,13 +59,13 @@ export class UsersService {
 		});
 	}
 
-	async findMany(): Promise<PublicUserDto[]> {
+	async findMany(): Promise<PublicUser[]> {
 		return this.prisma.user.findMany({
 			select: publicUserSelect,
 		});
 	}
 
-	async create(createUserDto: CreateUserDto): Promise<PublicUserDto> {
+	async create(createUserDto: CreateUserInput): Promise<PublicUser> {
 		const existingUser = await this.findByUsername(createUserDto.username);
 		if (existingUser) {
 			throw DomainError.validation('Username already exists', {
@@ -88,8 +88,8 @@ export class UsersService {
 
 	async update(
 		id: string,
-		updateUserDto: UpdateUserDto,
-	): Promise<PublicUserDto> {
+		updateUserDto: UpdateUserInput,
+	): Promise<PublicUser> {
 		const hasUpdatableFields =
 			updateUserDto.email !== undefined || updateUserDto.name !== undefined;
 		if (!hasUpdatableFields) {
@@ -123,7 +123,7 @@ export class UsersService {
 		});
 	}
 
-	async remove(id: string): Promise<PublicUserDto> {
+	async remove(id: string): Promise<PublicUser> {
 		const existingUser = await this.findByIdOrThrow(id);
 
 		if (existingUser.deletedAt) {

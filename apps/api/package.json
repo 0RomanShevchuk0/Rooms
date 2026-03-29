@@ -24,7 +24,6 @@
 		"@nestjs/config": "^4.0.2",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/jwt": "^11.0.2",
-		"@nestjs/mapped-types": "*",
 		"@nestjs/passport": "^11.0.5",
 		"@nestjs/platform-express": "^11.0.1",
 		"@nestjs/platform-socket.io": "^11.1.13",
@@ -33,15 +32,14 @@
 		"@prisma/client": "7.6.0",
 		"@rooms/contracts": "^1.0.0",
 		"bcrypt": "^6.0.0",
-		"class-transformer": "^0.5.1",
-		"class-validator": "^0.14.3",
 		"cookie-parser": "^1.4.7",
 		"passport": "^0.7.0",
 		"passport-jwt": "^4.0.1",
 		"passport-local": "^1.0.0",
 		"reflect-metadata": "^0.2.2",
 		"rxjs": "^7.8.1",
-		"socket.io": "^4.8.3"
+		"socket.io": "^4.8.3",
+		"zod": "^4.3.6"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "^3.2.0",

@@ -6,8 +6,10 @@ import {
 	Injectable,
 	UnauthorizedException,
 } from '@nestjs/common';
-import { isUUID } from 'class-validator';
 import type { Request } from 'express';
+import { z } from 'zod';
+
+const userIdParamSchema = z.string().uuid();
 
 @Injectable()
 export class SelfUserGuard implements CanActivate {
@@ -20,7 +22,7 @@ export class SelfUserGuard implements CanActivate {
 			throw new UnauthorizedException();
 		}
 
-		if (!targetUserId || !isUUID(targetUserId, 4)) {
+		if (!targetUserId || !userIdParamSchema.safeParse(targetUserId).success) {
 			throw new BadRequestException(
 				'Validation failed (uuid v4 is expected)',
 			);

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import type { CreateChatInput } from './inputs/create-chat.input';
+import type { UpdateChatInput } from './inputs/update-chat.input';
+import type { SendMessageInput } from './inputs/send-message.input';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { MessagesService } from '../messages/messages.service';
-import type { ChatSendMessagePayload } from '@rooms/contracts/chat';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
@@ -13,7 +13,7 @@ export class ChatsService {
 		private messagesService: MessagesService,
 	) {}
 
-	create(createChatDto: CreateChatDto) {
+	create(createChatDto: CreateChatInput) {
 		return this.prisma.chat.create({
 			data: {
 				room: {
@@ -32,7 +32,7 @@ export class ChatsService {
 		};
 	}
 
-	update(id: string, updateChatDto: UpdateChatDto) {
+	update(id: string, updateChatDto: UpdateChatInput) {
 		return this.prisma.chat.update({
 			where: { id },
 			data: updateChatDto,
@@ -56,7 +56,7 @@ export class ChatsService {
 		return this.messagesService.findByChatId(chatId, cursor, limit);
 	}
 
-	async sendMessage(senderId: string, body: ChatSendMessagePayload) {
+	async sendMessage(senderId: string, body: SendMessageInput) {
 		const { chatId, content } = body;
 
 		await this.getChatForUserOrThrow(chatId, senderId);

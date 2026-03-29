@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { UpdateRoomDto } from './dto/update-room.dto';
+import type { CreateRoomInput } from './inputs/create-room.input';
+import type { UpdateRoomInput } from './inputs/update-room.input';
 import { PrismaService } from 'src/database/prisma/prisma.service';
 import { Room } from 'generated/prisma/client';
 import {
@@ -69,7 +69,7 @@ export class RoomsService {
 	}
 
 	async create(
-		createRoomDto: CreateRoomDto,
+		createRoomDto: CreateRoomInput,
 	): Promise<RoomWithParticipantsAndChat> {
 		const userIds = Array.from(new Set(createRoomDto.userIds || []));
 
@@ -144,7 +144,7 @@ export class RoomsService {
 	async update(
 		id: string,
 		userId: string,
-		updateRoomDto: UpdateRoomDto,
+		updateRoomDto: UpdateRoomInput,
 	): Promise<RoomWithParticipants> {
 		await this.findByIdForUserOrThrow(id, userId);
 

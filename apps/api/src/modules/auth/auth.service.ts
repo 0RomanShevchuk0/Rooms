@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { AuthDto } from './dto/auth.dto';
 import { UsersService } from '../users/users.service';
 import { PasswordsService } from './passwords.service';
 import { AuthUser } from './types/auth-user.type';
 import { JwtPayload } from './types/jwt-payload.type';
 import { DomainError } from 'src/shared/errors/domain.error';
+import type { AuthCredentialsInput } from './inputs/auth-credentials.input';
 
 @Injectable()
 export class AuthService {
@@ -46,7 +46,7 @@ export class AuthService {
 		return { access_token, refresh_token };
 	}
 
-	async register(authDto: AuthDto) {
+	async register(authDto: AuthCredentialsInput) {
 		const existingUser = await this.usersService.findByUsername(
 			authDto.username,
 		);

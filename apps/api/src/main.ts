@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 
 import { ApiSocketIoAdapter } from './realtime/ws/api-socket-io.adapter';
@@ -20,14 +19,6 @@ async function bootstrap() {
 	});
 
 	app.use(cookieParser());
-
-	app.useGlobalPipes(
-		new ValidationPipe({
-			whitelist: true,
-			forbidNonWhitelisted: true,
-			transform: true,
-		}),
-	);
 	app.useGlobalFilters(new DomainErrorHttpFilter());
 
 	await app.listen(process.env.PORT ?? 3000);

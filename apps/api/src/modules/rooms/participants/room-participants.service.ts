@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
-import { CreateRoomParticipantDto } from './dto/create-room-participant.dto';
-import { UpdateRoomParticipantDto } from './dto/update-room-participant.dto';
+import type { CreateRoomParticipantInput } from './inputs/create-room-participant.input';
+import type { UpdateRoomParticipantInput } from './inputs/update-room-participant.input';
 import {
 	RoomParticipantWithUser,
 	roomParticipantWithUserSelect,
@@ -12,7 +12,7 @@ export class RoomParticipantsService {
 	constructor(private prisma: PrismaService) {}
 
 	create(
-		createRoomParticipantDto: CreateRoomParticipantDto,
+		createRoomParticipantDto: CreateRoomParticipantInput,
 	): Promise<RoomParticipantWithUser> {
 		return this.prisma.roomParticipant.create({
 			data: {
@@ -39,7 +39,7 @@ export class RoomParticipantsService {
 
 	update(
 		id: string,
-		updateRoomParticipantDto: UpdateRoomParticipantDto,
+		updateRoomParticipantDto: UpdateRoomParticipantInput,
 	): Promise<RoomParticipantWithUser> {
 		return this.prisma.roomParticipant.update({
 			where: { id },

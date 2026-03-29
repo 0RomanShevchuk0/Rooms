@@ -2,15 +2,17 @@ import { Controller, Post, Body, UseGuards, Res, Req } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
-import { AuthDto } from './dto/auth.dto';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user.type';
 import { LocalAuthGuard } from './guards/local-auth.guard';
-import type {
-	AuthLogoutResponse,
-	AuthRefreshTokensResponse,
-	AuthTokenResponse,
+import {
+	AuthCredentialsSchema,
+	type AuthCredentials,
+	type AuthLogoutResponse,
+	type AuthRefreshTokensResponse,
+	type AuthTokenResponse,
 } from '@rooms/contracts/auth';
+import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -38,7 +40,8 @@ export class AuthController {
 	@Post('login')
 	async login(
 		@CurrentUser() user: AuthUser,
-		@Body() authDto: AuthDto,
+		@Body(new ZodValidationPipe(AuthCredentialsSchema))
+		authDto: AuthCredentials,
 		@Res({ passthrough: true }) res: Response,
 	): Promise<AuthTokenResponse> {
 		void authDto;
@@ -49,7 +52,8 @@ export class AuthController {
 
 	@Post('register')
 	async register(
-		@Body() authDto: AuthDto,
+		@Body(new ZodValidationPipe(AuthCredentialsSchema))
+		authDto: AuthCredentials,
 		@Res({ passthrough: true }) res: Response,
 	): Promise<AuthTokenResponse> {
 		const tokens = await this.authService.register(authDto);

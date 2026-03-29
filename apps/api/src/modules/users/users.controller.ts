@@ -19,7 +19,7 @@ import {
 	type User as RestUser,
 	type UserIdParams,
 } from '@rooms/contracts/user';
-import type { PublicUser } from './types/public-user.type';
+import type { PublicUser } from './users.select';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 
 @UseGuards(JwtAuthGuard)

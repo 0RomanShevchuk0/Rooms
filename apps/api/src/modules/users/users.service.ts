@@ -3,9 +3,8 @@ import { PrismaService } from 'src/database/prisma/prisma.service';
 import type { CreateUserInput } from './inputs/create-user.input';
 import type { UpdateUserInput } from './inputs/update-user.input';
 import { PasswordsService } from '../auth/passwords.service';
-import type { PublicUser } from './types/public-user.type';
 import { UserForAuth } from './types/user-for-auth.type';
-import { publicUserSelect } from './users.select';
+import { publicUserSelect, type PublicUser } from './users.select';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()

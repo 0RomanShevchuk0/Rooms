@@ -32,10 +32,4 @@ export default tseslint.config(
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
-  {
-    files: ['src/**/*.dto.ts', 'src/**/dto/**/*.ts'],
-    rules: {
-      '@typescript-eslint/no-unsafe-call': 'off',
-    },
-  },
 );

@@ -1,4 +1,5 @@
 {
+	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
 		"target": "ES2022",
 		"module": "CommonJS",
@@ -6,8 +7,6 @@
 		"declaration": true,
 		"sourceMap": true,
 		"strict": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
 		"rootDir": "./src",
 		"outDir": "./dist"
 	},

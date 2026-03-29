@@ -1,28 +1,10 @@
-type DomainWsErrorResponse = {
-	error: string;
-	code?: string;
-};
-
-type NestWsErrorResponse = {
-	status: "error";
-	message: string;
-	cause?: unknown;
-};
-
-export type WsErrorResponse = DomainWsErrorResponse | NestWsErrorResponse;
+import {
+	WsErrorResponseSchema,
+	type WsErrorResponse,
+} from "@rooms/contracts/ws";
 
 export function isWsErrorResponse(payload: unknown): payload is WsErrorResponse {
-	if (!payload || typeof payload !== "object") {
-		return false;
-	}
-
-	const record = payload as Record<string, unknown>;
-
-	if (typeof record.error === "string") {
-		return true;
-	}
-
-	return record.status === "error" && typeof record.message === "string";
+	return WsErrorResponseSchema.safeParse(payload).success;
 }
 
 export function getWsErrorMessage(

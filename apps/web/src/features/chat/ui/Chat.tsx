@@ -1,11 +1,15 @@
-import { type MessageWithSender } from "@/entities/message";
-
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { SendHorizonal } from "lucide-react";
 import { useChatSocket } from "@/shared/lib/realtime";
 import { useRef, useState } from "react";
-import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
+import {
+	CHAT_SOCKET_EVENTS,
+	ChatMessagePayloadSchema,
+	type ChatSendMessagePayload,
+	type ChatMessagePayload,
+} from "@rooms/contracts/chat";
+import type { WsErrorResponse } from "@rooms/contracts/ws";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";
@@ -13,29 +17,10 @@ import { useMessagesQuery } from "../model/useMessages";
 import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
 import toast from "react-hot-toast";
-import {
-	getWsErrorMessage,
-	isWsErrorResponse,
-	type WsErrorResponse,
-} from "@/shared/lib/realtime/ws-errors";
-import type { ChatSendMessagePayload } from "@rooms/contracts/chat";
+import { getWsErrorMessage, isWsErrorResponse } from "@/shared/lib/realtime/ws-errors";
 
 interface ChatProps {
 	chatId: string;
-}
-
-function isMessageWithSender(payload: unknown): payload is MessageWithSender {
-	if (!payload || typeof payload !== "object") {
-		return false;
-	}
-
-	const record = payload as Record<string, unknown>;
-	return (
-		typeof record.id === "string" &&
-		typeof record.content === "string" &&
-		typeof record.chatId === "string" &&
-		typeof record.senderId === "string"
-	);
 }
 
 export function Chat({ chatId }: ChatProps) {
@@ -74,21 +59,22 @@ export function Chat({ chatId }: ChatProps) {
 		socket.emit(
 			CHAT_SOCKET_EVENTS.MESSAGE,
 			payload,
-			(response: MessageWithSender | WsErrorResponse) => {
+			(response: ChatMessagePayload | WsErrorResponse) => {
 				if (isWsErrorResponse(response)) {
 					toast.error(getWsErrorMessage(response));
 					setMessage((prev) => prev || content);
 					return;
 				}
 
-				if (!isMessageWithSender(response)) {
+				const parsedResponse = ChatMessagePayloadSchema.safeParse(response);
+				if (!parsedResponse.success) {
 					toast.error("Failed to send message");
 					setMessage((prev) => prev || content);
 					return;
 				}
 
 				shouldScrollToBottomRef.current = true;
-				pushMessagesToCache([response]);
+				pushMessagesToCache([parsedResponse.data]);
 			},
 		);
 	};

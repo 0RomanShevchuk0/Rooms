@@ -1,11 +1,9 @@
 import { DOMAIN_ERROR_CODES, isDomainError } from './domain.error';
+import type { DomainWsErrorResponse } from '@rooms/contracts/ws';
 
-type WsErrorResponse = {
-	error: string;
-	code: string;
-};
-
-export function mapDomainErrorToWsResponse(error: unknown): WsErrorResponse {
+export function mapDomainErrorToWsResponse(
+	error: unknown,
+): DomainWsErrorResponse {
 	if (!isDomainError(error)) {
 		return { error: 'Internal error', code: 'INTERNAL_ERROR' };
 	}

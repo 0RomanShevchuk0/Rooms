@@ -26,6 +26,11 @@
 			"types": "./dist/snake-game/index.d.ts",
 			"require": "./dist/snake-game/index.js",
 			"default": "./dist/snake-game/index.js"
+		},
+		"./ws": {
+			"types": "./dist/ws.d.ts",
+			"require": "./dist/ws.js",
+			"default": "./dist/ws.js"
 		}
 	},
 	"dependencies": {

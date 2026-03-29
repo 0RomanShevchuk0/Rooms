@@ -17,6 +17,7 @@ import {
 	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeChangeDirectionPayload,
 	SnakeChangeDirectionPayloadSchema,
+	type SnakeGameState,
 	type SnakeRoomPayload,
 	SnakeRoomPayloadSchema,
 } from '@rooms/contracts/snake-game';
@@ -80,14 +81,16 @@ export class SnakeGateway {
 		const game = this.snakeService.startGame(payload.roomId);
 
 		const onTick = (state: CoreSnakeGameState) => {
+			const gameStatePayload = this.toSnakeGameStatePayload(state);
 			this.server
 				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, state);
+				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, gameStatePayload);
 		};
 		const onGameOver = (state: CoreSnakeGameState) => {
+			const gameStatePayload = this.toSnakeGameStatePayload(state);
 			this.server
 				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, state);
+				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, gameStatePayload);
 		};
 
 		game.on('tick', onTick);
@@ -109,5 +112,21 @@ export class SnakeGateway {
 		);
 		this.snakeService.changeDirection(payload.roomId, direction);
 		return { ok: true, message: 'Direction changed!' };
+	}
+
+	private toSnakeGameStatePayload(state: CoreSnakeGameState): SnakeGameState {
+		return {
+			snakeLength: state.snakeLength,
+			snakeDirection: state.snakeDirection,
+			snakePosition: {
+				x: state.snakePosition.x,
+				y: state.snakePosition.y,
+			},
+			foodPosition: {
+				x: state.foodPosition.x,
+				y: state.foodPosition.y,
+			},
+			gameOver: state.gameOver,
+		};
 	}
 }

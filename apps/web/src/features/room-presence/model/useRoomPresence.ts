@@ -5,8 +5,11 @@ import type { RoomWithParticipants } from "@/entities/room";
 import { queryKeys } from "@/shared/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { RoomParticipantJoinedData, RoomPresenceData } from "./types";
-import { ROOM_SOCKET_EVENTS } from "@rooms/contracts/room";
+import {
+	ROOM_SOCKET_EVENTS,
+	type RoomParticipantJoinedPayload,
+	type RoomPresencePayload,
+} from "@rooms/contracts/room";
 
 interface UseRoomPresenceProps {
 	roomId: string;
@@ -18,7 +21,7 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 	const [onlineParticipantIds, setOnlineParticipantIds] = useState<Set<string>>(new Set());
 
 	useEffect(() => {
-		const onJoined = (data: RoomParticipantJoinedData) => {
+		const onJoined = (data: RoomParticipantJoinedPayload) => {
 			queryClient.setQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId), (old) => {
 				if (!old) return old;
 				if (old.participants.some((p) => p.id === data.participant.id)) return old;
@@ -27,7 +30,7 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 
-		const onLeft = (data: RoomPresenceData) => {
+		const onLeft = (data: RoomPresencePayload) => {
 			queryClient.setQueryData<RoomWithParticipants>(queryKeys.rooms.byId(roomId), (old) => {
 				if (!old) return old;
 				if (!old.participants.some((p) => p.id === data.participantId)) return old;
@@ -36,11 +39,11 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 
-		const onConnected = (data: RoomPresenceData) => {
+		const onConnected = (data: RoomPresencePayload) => {
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 
-		const onDisconnected = (data: RoomPresenceData) => {
+		const onDisconnected = (data: RoomPresencePayload) => {
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 

@@ -1,10 +1,9 @@
 import { useChatSocket } from "@/shared/lib/realtime";
-import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
-import { MessageWithSender } from "@/entities/message";
+import { CHAT_SOCKET_EVENTS, type ChatMessagePayload } from "@rooms/contracts/chat";
 import { useEffect } from "react";
 
 interface UseMessagesSocketProps {
-	onMessage: (message: MessageWithSender) => void;
+	onMessage: (message: ChatMessagePayload) => void;
 }
 
 export function useMessagesSocket({ onMessage }: UseMessagesSocketProps) {

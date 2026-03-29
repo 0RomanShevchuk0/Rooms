@@ -5,7 +5,7 @@ import { Input } from "@/shared/ui/input";
 import { SendHorizonal } from "lucide-react";
 import { useChatSocket } from "@/shared/lib/realtime";
 import { useRef, useState } from "react";
-import { CHAT_SOCKET_EVENTS } from "@/entities/chat";
+import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";
@@ -13,7 +13,12 @@ import { useMessagesQuery } from "../model/useMessages";
 import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
 import toast from "react-hot-toast";
-import { getWsErrorMessage, isWsErrorResponse } from "@/shared/lib/realtime/ws-errors";
+import {
+	getWsErrorMessage,
+	isWsErrorResponse,
+	type WsErrorResponse,
+} from "@/shared/lib/realtime/ws-errors";
+import type { ChatSendMessagePayload } from "@rooms/contracts/chat";
 
 interface ChatProps {
 	chatId: string;
@@ -63,12 +68,13 @@ export function Chat({ chatId }: ChatProps) {
 		if (!user?.id) return;
 		const content = message.trim();
 		if (!content) return;
+		const payload: ChatSendMessagePayload = { chatId, content };
 
 		setMessage("");
 		socket.emit(
 			CHAT_SOCKET_EVENTS.MESSAGE,
-			{ chatId, content },
-			(response: unknown) => {
+			payload,
+			(response: MessageWithSender | WsErrorResponse) => {
 				if (isWsErrorResponse(response)) {
 					toast.error(getWsErrorMessage(response));
 					setMessage((prev) => prev || content);

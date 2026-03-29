@@ -7,8 +7,8 @@ import {
 	WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server } from 'socket.io';
-import { ROOM_SOCKET_EVENTS } from './rooms-ws.constants';
 import {
+	ROOM_SOCKET_EVENTS,
 	type RoomConnectPayload,
 	RoomConnectPayloadSchema,
 } from '@rooms/contracts/room';

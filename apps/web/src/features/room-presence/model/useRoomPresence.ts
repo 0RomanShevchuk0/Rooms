@@ -1,11 +1,12 @@
 "use client";
 
 import { useRoomsSocket } from "@/shared/lib/realtime";
-import { ROOM_SOCKET_EVENTS, type RoomWithParticipants } from "@/entities/room";
+import type { RoomWithParticipants } from "@/entities/room";
 import { queryKeys } from "@/shared/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { RoomParticipantJoinedData, RoomPresenceData } from "./types";
+import { ROOM_SOCKET_EVENTS } from "@rooms/contracts/room";
 
 interface UseRoomPresenceProps {
 	roomId: string;

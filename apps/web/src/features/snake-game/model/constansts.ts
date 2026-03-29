@@ -1,4 +1,4 @@
-import { SnakeDirectionEnum } from "@/entities/snake-game";
+import { SnakeDirectionEnum } from "@rooms/contracts/snake-game";
 
 export const directionInputMap: Record<string, SnakeDirectionEnum> = {
 	ArrowUp: SnakeDirectionEnum.UP,

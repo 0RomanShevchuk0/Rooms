@@ -1,8 +1,12 @@
-import { SNAKE_GAME_SOCKET_EVENTS, SnakeGameState } from "@/entities/snake-game";
 import { SnakeCanvasRenderer } from "../core";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
 import { useEffect, useRef } from "react";
 import { directionInputMap } from "./constansts";
+import {
+	SNAKE_GAME_SOCKET_EVENTS,
+	type SnakeChangeDirectionPayload,
+	type SnakeGameState,
+} from "@rooms/contracts/snake-game";
 
 interface UseSnakeGameProps {
 	roomId: string;
@@ -42,7 +46,8 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 			console.log("🚀 ~ handleDirectionChange ~ event.key:", event.key);
 			console.log("🚀 ~ RoomPage ~ direction:", direction);
 			if (direction) {
-				snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION, { direction, roomId });
+				const payload: SnakeChangeDirectionPayload = { direction, roomId };
+				snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION, payload);
 			}
 		};
 

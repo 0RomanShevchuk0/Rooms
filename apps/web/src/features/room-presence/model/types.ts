@@ -1,10 +1,8 @@
-import { ParticipantWithUser } from "@/entities/room/model/types";
+import type { RoomPresencePayload } from "@rooms/contracts/room";
+import type { ParticipantWithUser } from "@/entities/room/model/types";
 
-export interface RoomPresenceData {
-	participantId: string;
-	onlineParticipantIds: string[];
-}
+export type RoomPresenceData = RoomPresencePayload;
 
-export interface RoomParticipantJoinedData extends RoomPresenceData {
+export type RoomParticipantJoinedData = RoomPresenceData & {
 	participant: ParticipantWithUser;
-}
+};

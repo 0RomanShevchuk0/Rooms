@@ -6,9 +6,9 @@ import {
 	WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server } from 'socket.io';
-import { CHAT_SOCKET_EVENTS } from './chat-ws.constants';
 import { ChatsService } from '../chats.service';
 import {
+	CHAT_SOCKET_EVENTS,
 	ChatConnectionPayloadSchema,
 	ChatSendMessagePayloadSchema,
 	type ChatConnectionPayload,

@@ -1,4 +1,4 @@
-import { SnakePosition } from "@/entities/snake-game";
+import type { SnakePosition } from "@rooms/contracts/snake-game";
 import Konva from "konva";
 
 interface SnakeCanvasEngineConfig {

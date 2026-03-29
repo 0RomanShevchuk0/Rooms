@@ -1,13 +1,15 @@
 "use client";
 
 import { useChatSocket, useRoomsSocket } from "@/shared/lib/realtime";
-import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
-import { getMeRoomParticipant, ROOM_SOCKET_EVENTS } from "@/entities/room";
+import { getMeRoomParticipant } from "@/entities/room";
 import { queryKeys } from "@/shared/react-query";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
-import { SNAKE_GAME_SOCKET_EVENTS } from "@/entities/snake-game";
+import type { ChatConnectionPayload } from "@rooms/contracts/chat";
+import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
+import { ROOM_SOCKET_EVENTS, type RoomConnectPayload } from "@rooms/contracts/room";
+import { SNAKE_GAME_SOCKET_EVENTS, type SnakeRoomPayload } from "@rooms/contracts/snake-game";
 
 interface UseRoomRealtimeChannelsProps {
 	roomId: string;
@@ -56,18 +58,23 @@ export function useRoomRealtimeChannels({ roomId, chatId }: UseRoomRealtimeChann
 	useEffect(() => {
 		if (!participantId) return;
 
-		roomsSocket.emit(ROOM_SOCKET_EVENTS.CONNECT, { roomId, participantId });
-		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CONNECT, { roomId });
+		const roomConnectPayload: RoomConnectPayload = { roomId, participantId };
+		const snakeRoomPayload: SnakeRoomPayload = { roomId };
+
+		roomsSocket.emit(ROOM_SOCKET_EVENTS.CONNECT, roomConnectPayload);
+		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CONNECT, snakeRoomPayload);
 
 		if (chatId) {
-			chatSocket.emit(CHAT_SOCKET_EVENTS.CONNECT, { chatId });
+			const chatConnectPayload: ChatConnectionPayload = { chatId };
+			chatSocket.emit(CHAT_SOCKET_EVENTS.CONNECT, chatConnectPayload);
 		}
 
 		return () => {
 			roomsSocket.emit(ROOM_SOCKET_EVENTS.DISCONNECT);
-			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.DISCONNECT, { roomId });
+			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.DISCONNECT, snakeRoomPayload);
 			if (chatId) {
-				chatSocket.emit(CHAT_SOCKET_EVENTS.DISCONNECT, { chatId });
+				const chatDisconnectPayload: ChatConnectionPayload = { chatId };
+				chatSocket.emit(CHAT_SOCKET_EVENTS.DISCONNECT, chatDisconnectPayload);
 			}
 		};
 	}, [chatId, chatSocket, participantId, roomId, roomsSocket, snakeGameSocket]);

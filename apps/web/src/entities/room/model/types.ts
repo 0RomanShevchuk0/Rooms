@@ -1,5 +1,5 @@
 import type { User } from "@/entities/user";
-import type { Chat } from "@/entities/chat";
+import type { Chat } from "@rooms/contracts/chat";
 
 export interface Room {
 	id: string;

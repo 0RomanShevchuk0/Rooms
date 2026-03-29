@@ -1,8 +1,8 @@
 import { useRoomFromParamsQuery } from "@/app/(protected)/rooms/[id]/useRoomFromParamsQuery";
-import { SNAKE_GAME_SOCKET_EVENTS } from "@/entities/snake-game";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { useSnakeGame } from "../model/useSnakeGame";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
+import { SNAKE_GAME_SOCKET_EVENTS, type SnakeRoomPayload } from "@rooms/contracts/snake-game";
 
 export function SnakeGame() {
 	const { roomId } = useRoomFromParamsQuery();
@@ -17,7 +17,8 @@ export function SnakeGame() {
 					<CardTitle>Match starts in 00:10</CardTitle>
 					<button
 						onClick={() => {
-							snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.START_GAME, { roomId });
+							const payload: SnakeRoomPayload = { roomId };
+							snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.START_GAME, payload);
 						}}
 					>
 						Start Game

@@ -14,12 +14,12 @@ import type {
 import { ApiWsHandler } from '../../../realtime/ws/api-ws-handler.decorator';
 import type { Server } from 'socket.io';
 import {
+	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeChangeDirectionPayload,
 	SnakeChangeDirectionPayloadSchema,
 	type SnakeRoomPayload,
 	SnakeRoomPayloadSchema,
 } from '@rooms/contracts/snake-game';
-import { SNAKE_GAME_SOCKET_EVENTS } from './snake-ws.constants';
 import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';

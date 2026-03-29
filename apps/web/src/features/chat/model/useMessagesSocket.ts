@@ -1,5 +1,5 @@
 import { useChatSocket } from "@/shared/lib/realtime";
-import { CHAT_SOCKET_EVENTS } from "@/entities/chat/model/socket-events";
+import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
 import { MessageWithSender } from "@/entities/message";
 import { useEffect } from "react";
 

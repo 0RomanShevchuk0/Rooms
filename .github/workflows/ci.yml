@@ -26,6 +26,9 @@ jobs:
          - name: build @rooms/contracts
            run: npm run -w @rooms/contracts build
 
+         - name: generate prisma client
+           run: npm run -w @rooms/api prisma generate
+
          - name: Typecheck API
            run: npm exec -w @rooms/api -- tsc --noEmit -p tsconfig.json
 

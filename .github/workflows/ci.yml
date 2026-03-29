@@ -1,0 +1,39 @@
+name: CI
+
+on:
+   pull_request:
+   push:
+      branches: [main]
+
+jobs:
+   validate:
+      runs-on: ubuntu-latest
+      timeout-minutes: 15
+
+      steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+
+         - name: Setup Node
+           uses: actions/setup-node@v4
+           with:
+              node-version: 20.19.5
+              cache: npm
+
+         - name: Install deps
+           run: npm ci
+
+         - name: build @rooms/contracts
+           run: npm run -w @rooms/contracts build
+
+         - name: Typecheck API
+           run: npm exec -w @rooms/api -- tsc --noEmit -p tsconfig.json
+
+         - name: Typecheck Web
+           run: npm exec -w @rooms/web -- tsc --noEmit -p tsconfig.json
+
+         - name: Lint API
+           run: npm run -w @rooms/api lint
+
+         - name: Lint Web
+           run: npm run -w @rooms/web lint

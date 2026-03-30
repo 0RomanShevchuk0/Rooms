@@ -1,4 +1,4 @@
-import type { SnakePosition } from "@rooms/contracts/snake-game";
+import type { SnakeGameState, SnakePosition } from "@rooms/contracts/snake-game";
 import Konva from "konva";
 
 interface SnakeCanvasEngineConfig {
@@ -11,6 +11,7 @@ interface SnakeCanvasEngineConfig {
 export class SnakeCanvasRenderer {
 	private stage: Konva.Stage;
 	private snakeRect: Konva.Rect;
+	private foodRect: Konva.Rect;
 	private fieldSize: number;
 	private cellSize: number;
 
@@ -30,34 +31,54 @@ export class SnakeCanvasRenderer {
 		const grid = this.generateGrid();
 		layer.add(grid);
 
-		this.snakeRect = this.createSnake();
+		this.snakeRect = this.createSnake({ x: 0, y: 0 });
+		this.foodRect = this.createFood({ x: 0, y: 0 });
+		this.snakeRect.hide();
+		this.foodRect.hide();
+
 		layer.add(this.snakeRect);
+		layer.add(this.foodRect);
 	}
 
-	public updateSnakePosition(position: SnakePosition) {
-		const cellSize = this.stage.width() / this.fieldSize;
-		this.snakeRect.position({
-			x: position.x * cellSize,
-			y: position.y * cellSize,
+	public render(state: SnakeGameState) {
+		this.snakeRect = this.snakeRect.position({
+			x: state.snakePosition.x * this.cellSize,
+			y: state.snakePosition.y * this.cellSize,
 		});
+		this.foodRect = this.foodRect.position({
+			x: state.foodPosition.x * this.cellSize,
+			y: state.foodPosition.y * this.cellSize,
+		});
+		this.snakeRect.show();
+		this.foodRect.show();
 	}
 
 	public destroy() {
 		this.stage.destroy();
 	}
 
-	private createSnake() {
-		const snakeStartX = Math.floor(this.fieldSize / 2) * this.cellSize;
-		const snakeStartY = Math.floor(this.fieldSize / 2) * this.cellSize;
+	private createSnake(position: SnakePosition) {
 		const snakeRect = new Konva.Rect({
-			x: snakeStartX,
-			y: snakeStartY,
+			x: position.x * this.cellSize,
+			y: position.y * this.cellSize,
 			width: this.cellSize,
 			height: this.cellSize,
 			fill: "cornflowerblue",
 		});
 
 		return snakeRect;
+	}
+
+	private createFood(position: SnakePosition) {
+		const foodRect = new Konva.Rect({
+			x: position.x * this.cellSize,
+			y: position.y * this.cellSize,
+			width: this.cellSize,
+			height: this.cellSize,
+			fill: "tomato",
+		});
+
+		return foodRect;
 	}
 
 	private generateGrid() {

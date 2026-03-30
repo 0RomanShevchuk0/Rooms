@@ -48,7 +48,7 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
 			setSnakeLength(gameState.snakeLength);
 			setGameStatus("running");
-			snakeGame.updateSnakePosition(gameState.snakePosition);
+			snakeGame.render(gameState);
 		};
 
 		const handleGameOver = (gameState: SnakeGameState) => {

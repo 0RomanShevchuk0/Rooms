@@ -35,6 +35,16 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 			if (!isCollision) {
 				this.moveSnake(nextPosition);
+
+				const hasEatenFood =
+					this.state.snakePosition.x === this.state.foodPosition.x &&
+					this.state.snakePosition.y === this.state.foodPosition.y;
+
+				if (hasEatenFood) {
+					this.state.snakeLength += 1;
+					this.state.foodPosition = this.generateFoodPosition();
+				}
+
 				this.emit('tick', this.state);
 			} else {
 				this.endGame();

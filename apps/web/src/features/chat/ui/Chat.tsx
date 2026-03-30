@@ -17,7 +17,11 @@ import { useMessagesQuery } from "../model/useMessages";
 import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
 import toast from "react-hot-toast";
-import { getWsErrorMessage, isWsErrorResponse } from "@/shared/lib/realtime/ws-errors";
+import {
+	getWsErrorMessage,
+	getWsValidationIssues,
+	isWsErrorResponse,
+} from "@/shared/lib/realtime/ws-errors";
 
 interface ChatProps {
 	chatId: string;
@@ -61,7 +65,14 @@ export function Chat({ chatId }: ChatProps) {
 			payload,
 			(response: ChatMessagePayload | WsErrorResponse) => {
 				if (isWsErrorResponse(response)) {
-					toast.error(getWsErrorMessage(response));
+					const firstIssue = getWsValidationIssues(response)[0];
+					const validationMessage = firstIssue
+						? firstIssue.path
+							? `${firstIssue.path}: ${firstIssue.message}`
+							: firstIssue.message
+						: null;
+
+					toast.error(validationMessage ?? getWsErrorMessage(response));
 					setMessage((prev) => prev || content);
 					return;
 				}

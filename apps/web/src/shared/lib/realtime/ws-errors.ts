@@ -1,5 +1,6 @@
 import {
 	WsErrorResponseSchema,
+	type DomainWsValidationIssue,
 	type WsErrorResponse,
 } from "@rooms/contracts/ws";
 
@@ -32,4 +33,18 @@ export function getWsErrorCode(payload: unknown): string | undefined {
 	}
 
 	return undefined;
+}
+
+export function getWsValidationIssues(
+	payload: unknown,
+): DomainWsValidationIssue[] {
+	if (!isWsErrorResponse(payload)) {
+		return [];
+	}
+
+	if (!("issues" in payload) || !Array.isArray(payload.issues)) {
+		return [];
+	}
+
+	return payload.issues;
 }

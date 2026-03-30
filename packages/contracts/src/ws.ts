@@ -1,8 +1,15 @@
 import { z } from "zod";
 
+export const DomainWsValidationIssueSchema = z.object({
+	path: z.string(),
+	message: z.string(),
+	code: z.string(),
+});
+
 export const DomainWsErrorResponseSchema = z.object({
 	error: z.string(),
 	code: z.string().optional(),
+	issues: z.array(DomainWsValidationIssueSchema).optional(),
 });
 
 export const NestWsErrorResponseSchema = z.object({
@@ -17,5 +24,6 @@ export const WsErrorResponseSchema = z.union([
 ]);
 
 export type DomainWsErrorResponse = z.infer<typeof DomainWsErrorResponseSchema>;
+export type DomainWsValidationIssue = z.infer<typeof DomainWsValidationIssueSchema>;
 export type NestWsErrorResponse = z.infer<typeof NestWsErrorResponseSchema>;
 export type WsErrorResponse = z.infer<typeof WsErrorResponseSchema>;

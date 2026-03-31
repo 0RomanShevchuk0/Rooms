@@ -31,7 +31,7 @@ export function SnakeGame() {
 
 			<SnakeGameOverDialog
 				open={Boolean(gameOverState)}
-				finalSnakeLength={gameOverState?.snakeLength ?? snakeLength}
+				finalSnakeLength={gameOverState?.snakeSegments.length ?? snakeLength}
 				onClose={closeGameOverModal}
 				onPlayAgain={startGame}
 			/>

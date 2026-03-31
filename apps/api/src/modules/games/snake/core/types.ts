@@ -6,9 +6,14 @@ export type Position = {
 };
 
 export interface SnakeGameState {
-	snakeLength: number;
+	snakeSegments: Position[];
 	snakeDirection: SnakeDirection;
-	snakePosition: Position;
+	gameOver: boolean;
+}
+
+export interface SnakeGameStatePublic {
+	snakeSegments: Position[];
+	snakeDirection: SnakeDirection;
 	foodPosition: Position;
 	gameOver: boolean;
 }

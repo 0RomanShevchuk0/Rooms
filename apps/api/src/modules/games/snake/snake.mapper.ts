@@ -1,16 +1,15 @@
 import type { SnakeGameState } from '@rooms/contracts/snake-game';
-import type { SnakeGameState as CoreSnakeGameState } from './core';
+import { SnakeGameStatePublic as CoreSnakeGameState } from './core/types';
 
 export function toSnakeGameStatePayload(
 	state: CoreSnakeGameState,
 ): SnakeGameState {
 	return {
-		snakeLength: state.snakeLength,
 		snakeDirection: state.snakeDirection,
-		snakePosition: {
-			x: state.snakePosition.x,
-			y: state.snakePosition.y,
-		},
+		snakeSegments: state.snakeSegments.map((segment) => ({
+			x: segment.x,
+			y: segment.y,
+		})),
 		foodPosition: {
 			x: state.foodPosition.x,
 			y: state.foodPosition.y,

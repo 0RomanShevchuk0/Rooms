@@ -7,6 +7,9 @@ export class SnakeService {
 	private roomGameMap = new Map<string, SnakeGame>();
 
 	startGame(roomId: string) {
+		const existingGame = this.roomGameMap.get(roomId);
+		existingGame?.dispose();
+
 		const game = new SnakeGame();
 		this.roomGameMap.set(roomId, game);
 		game.startGame();

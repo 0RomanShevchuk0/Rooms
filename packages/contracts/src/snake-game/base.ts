@@ -22,9 +22,8 @@ export const SnakePositionSchema = z.object({
 });
 
 export const SnakeGameStateSchema = z.object({
-	snakeLength: z.number(),
 	snakeDirection: SnakeDirectionSchema,
-	snakePosition: SnakePositionSchema,
+	snakeSegments: z.array(SnakePositionSchema),
 	foodPosition: SnakePositionSchema,
 	gameOver: z.boolean(),
 });

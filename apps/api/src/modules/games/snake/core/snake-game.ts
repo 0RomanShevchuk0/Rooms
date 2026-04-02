@@ -1,16 +1,8 @@
 import EventEmitter from 'node:events';
-import { directionPositions } from './constants';
-import {
-	directionOpposites,
-	SNAKE_DIRECTION,
-	type SnakeDirection,
-} from './direction';
-import {
-	SnakeGameStatePublic,
-	type Position,
-	type SnakeGameState,
-} from './types';
+import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
+import { SnakeGameStatePublic, type SnakeGameState } from './types';
 import { Food } from './food';
+import { Snake } from './snake';
 
 type SnakeGameEvents = {
 	tick: [state: SnakeGameStatePublic];
@@ -23,6 +15,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private gameLoop?: NodeJS.Timeout;
 	private state: SnakeGameState;
 	private food: Food;
+	private snake: Snake;
 
 	constructor() {
 		super();
@@ -32,11 +25,8 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.resetGameState();
 	}
 
-	public changeDirection(newDirection: SnakeDirection) {
-		if (directionOpposites[newDirection] === this.state.snakeDirection) {
-			return;
-		}
-		this.state.snakeDirection = newDirection;
+	public changeSnakeDirection(direction: SnakeDirection) {
+		this.snake.changeDirection(direction);
 	}
 
 	public startGame() {
@@ -44,17 +34,16 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.resetGameState();
 
 		this.gameLoop = setInterval(() => {
-			const nextHead = this.calculateNextPosition(this.state);
+			const nextHead = this.snake.calculateNextPosition();
 			const ateFood = this.food.isFoodAt(nextHead);
-			const isCollision = this.checkCollision(nextHead, ateFood);
+			const hasCollision = this.snake.hasCollision(nextHead, ateFood);
 
-			if (isCollision) {
+			if (hasCollision) {
 				this.endGame();
 				return;
 			}
 
-			this.addHead(nextHead);
-			if (!ateFood) this.removeTail();
+			this.snake.move(nextHead, ateFood);
 
 			if (ateFood) this.food.respawnFood();
 
@@ -85,71 +74,22 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 	private getPublicGameState(): SnakeGameStatePublic {
 		return {
-			...this.state,
+			gameOver: this.state.gameOver,
+			snakeDirection: this.snake.direction,
+			snakeSegments: this.snake.segments,
 			foodPosition: this.food.getPosition(),
 		};
 	}
 
-	private addHead(position: Position) {
-		this.state.snakeSegments.unshift(position);
-	}
-
-	private removeTail() {
-		this.state.snakeSegments.pop();
-	}
-
-	private calculateNextPosition(gameState: SnakeGameState): Position {
-		const step = directionPositions[gameState.snakeDirection];
-		const snakeHead = gameState.snakeSegments[0];
-		const newPosition: Position = {
-			x: snakeHead.x + step.x,
-			y: snakeHead.y + step.y,
-		};
-		return newPosition;
-	}
-
-	private checkCollision(nextHead: Position, considerTail: boolean): boolean {
-		const isBordersCollision =
-			nextHead.x >= this.fieldSize ||
-			nextHead.x < 0 ||
-			nextHead.y >= this.fieldSize ||
-			nextHead.y < 0;
-
-		const isSelfCollision = this.state.snakeSegments.some(
-			(segment, index) =>
-				index !== 0 &&
-				(considerTail || index !== this.state.snakeSegments.length - 1) &&
-				segment.x === nextHead.x &&
-				segment.y === nextHead.y,
-		);
-
-		return isBordersCollision || isSelfCollision;
-	}
-
 	private resetGameState() {
-		const mockSegments = [
-			{ x: 10, y: 4 },
-			{ x: 10, y: 5 },
-			{ x: 10, y: 6 },
-			{ x: 10, y: 7 },
-			{ x: 10, y: 8 },
-			{ x: 10, y: 9 },
-			{ x: 10, y: 10 },
-			{ x: 10, y: 11 },
-			{ x: 10, y: 12 },
-			{ x: 10, y: 13 },
-			{ x: 10, y: 14 },
-			{ x: 10, y: 15 },
-			{ x: 10, y: 16 },
-			{ x: 10, y: 17 },
-			{ x: 10, y: 18 },
-			{ x: 10, y: 19 },
-		];
 		this.state = {
-			snakeSegments: mockSegments,
-			snakeDirection: SNAKE_DIRECTION.UP,
 			gameOver: false,
 		};
 		this.food = new Food({ fieldSize: this.fieldSize });
+		this.snake = new Snake({
+			initialSegments: [{ x: this.fieldSize / 2, y: this.fieldSize / 2 }],
+			initialDirection: SNAKE_DIRECTION.UP,
+			fieldSize: this.fieldSize,
+		});
 	}
 }

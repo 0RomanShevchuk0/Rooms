@@ -6,8 +6,6 @@ export type Position = {
 };
 
 export interface SnakeGameState {
-	snakeSegments: Position[];
-	snakeDirection: SnakeDirection;
 	gameOver: boolean;
 }
 

@@ -1,10 +1,14 @@
 import { Position } from './types';
 
+interface FoodProps {
+	fieldSize: number;
+}
+
 export class Food {
 	private readonly fieldSize: number;
 	private position: Position;
 
-	constructor({ fieldSize }: { fieldSize: number }) {
+	constructor({ fieldSize }: FoodProps) {
 		this.fieldSize = fieldSize;
 		this.respawnFood();
 	}

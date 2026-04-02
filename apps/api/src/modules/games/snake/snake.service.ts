@@ -18,7 +18,7 @@ export class SnakeService {
 
 	changeDirection(roomId: string, direction: SnakeDirection) {
 		const game = this.getGameByRoomIdOrThrow(roomId);
-		game.changeDirection(direction);
+		game.changeSnakeDirection(direction);
 	}
 
 	private getGameByRoomIdOrThrow(roomId: string): SnakeGame {

@@ -13,15 +13,15 @@ export class Food {
 		this.respawnFood();
 	}
 
-	public getPosition(): Position {
+	getPosition(): Position {
 		return { ...this.position };
 	}
 
-	public isFoodAt(position: Position): boolean {
+	isFoodAt(position: Position): boolean {
 		return this.position.x === position.x && this.position.y === position.y;
 	}
 
-	public respawnFood() {
+	respawnFood() {
 		const position: Position = this.generateFoodPosition();
 		this.position = position;
 	}

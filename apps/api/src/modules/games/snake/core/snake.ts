@@ -10,8 +10,8 @@ interface SnakeProps {
 
 export class Snake {
 	private readonly fieldSize: number;
-	public segments: Position[];
-	public direction: SnakeDirection;
+	segments: Position[];
+	direction: SnakeDirection;
 
 	constructor({ fieldSize, initialDirection, initialSegments }: SnakeProps) {
 		this.fieldSize = fieldSize;
@@ -19,21 +19,21 @@ export class Snake {
 		this.direction = initialDirection;
 	}
 
-	public changeDirection(newDirection: SnakeDirection) {
+	changeDirection(newDirection: SnakeDirection) {
 		if (directionOpposites[newDirection] === this.direction) {
 			return;
 		}
 		this.direction = newDirection;
 	}
 
-	public move(position: Position, ateFood: boolean) {
+	move(position: Position, ateFood: boolean) {
 		this.segments.unshift(position);
 		if (!ateFood) {
 			this.segments.pop();
 		}
 	}
 
-	public calculateNextPosition(): Position {
+	calculateNextPosition(): Position {
 		const step = directionPositions[this.direction];
 		const snakeHead = this.segments[0];
 		const newPosition: Position = {
@@ -43,7 +43,7 @@ export class Snake {
 		return newPosition;
 	}
 
-	public hasCollision(position: Position, considerTail: boolean): boolean {
+	hasCollision(position: Position, considerTail: boolean): boolean {
 		const isFieldCollision = this.checkFieldCollision(position);
 		const isSelfCollision = this.isSelfCollision(position, considerTail);
 		return isFieldCollision || isSelfCollision;

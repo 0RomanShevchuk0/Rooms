@@ -40,7 +40,7 @@ export class SnakeCanvasRenderer {
 		this.layer.add(this.foodRect);
 	}
 
-	public render(state: SnakeGameState) {
+	render(state: SnakeGameState) {
 		this.snakeSegments.forEach((segment) => segment.destroy());
 
 		this.snakeSegments = state.snakeSegments.map((segment) => {
@@ -56,7 +56,7 @@ export class SnakeCanvasRenderer {
 		this.foodRect.show();
 	}
 
-	public destroy() {
+	destroy() {
 		this.stage.destroy();
 	}
 

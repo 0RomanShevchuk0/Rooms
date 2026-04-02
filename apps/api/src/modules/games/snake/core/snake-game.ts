@@ -25,11 +25,11 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.resetGameState();
 	}
 
-	public changeSnakeDirection(direction: SnakeDirection) {
+	changeSnakeDirection(direction: SnakeDirection) {
 		this.snake.changeDirection(direction);
 	}
 
-	public startGame() {
+	startGame() {
 		this.dispose(false);
 		this.resetGameState();
 
@@ -51,7 +51,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		}, this.tickMs);
 	}
 
-	public endGame() {
+	endGame() {
 		this.state.gameOver = true;
 
 		if (this.gameLoop) {
@@ -62,7 +62,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.emit('gameOver', this.getPublicGameState());
 	}
 
-	public dispose(removeListeners = true) {
+	dispose(removeListeners = true) {
 		if (this.gameLoop) {
 			clearInterval(this.gameLoop);
 			this.gameLoop = undefined;

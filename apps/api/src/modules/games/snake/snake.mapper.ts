@@ -1,5 +1,5 @@
 import type { SnakeGameState } from '@rooms/contracts/snake-game';
-import { SnakeGameStatePublic as CoreSnakeGameState } from './core/types';
+import { SnakeGameState as CoreSnakeGameState } from './core/types';
 
 export function toSnakeGameStatePayload(
 	state: CoreSnakeGameState,

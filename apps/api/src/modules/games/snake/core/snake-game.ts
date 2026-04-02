@@ -1,21 +1,21 @@
 import EventEmitter from 'node:events';
 import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
-import { SnakeGameStatePublic, type SnakeGameState } from './types';
+import { type SnakeGameState } from './types';
 import { Food } from './food';
 import { Snake } from './snake';
 
 type SnakeGameEvents = {
-	tick: [state: SnakeGameStatePublic];
-	gameOver: [state: SnakeGameStatePublic];
+	tick: [state: SnakeGameState];
+	gameOver: [state: SnakeGameState];
 };
 
 export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private readonly fieldSize: number;
 	private readonly tickMs: number;
 	private gameLoop?: NodeJS.Timeout;
-	private state: SnakeGameState;
 	private food: Food;
 	private snake: Snake;
+	private gameOver: boolean;
 
 	constructor() {
 		super();
@@ -47,19 +47,14 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 			if (ateFood) this.food.respawnFood();
 
-			this.emit('tick', this.getPublicGameState());
+			this.emit('tick', this.getGameState());
 		}, this.tickMs);
 	}
 
 	endGame() {
-		this.state.gameOver = true;
-
-		if (this.gameLoop) {
-			clearInterval(this.gameLoop);
-			this.gameLoop = undefined;
-		}
-
-		this.emit('gameOver', this.getPublicGameState());
+		this.gameOver = true;
+		this.dispose(false);
+		this.emit('gameOver', this.getGameState());
 	}
 
 	dispose(removeListeners = true) {
@@ -72,9 +67,9 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		}
 	}
 
-	private getPublicGameState(): SnakeGameStatePublic {
+	private getGameState(): SnakeGameState {
 		return {
-			gameOver: this.state.gameOver,
+			gameOver: this.gameOver,
 			snakeDirection: this.snake.direction,
 			snakeSegments: this.snake.segments,
 			foodPosition: this.food.getPosition(),
@@ -82,9 +77,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	private resetGameState() {
-		this.state = {
-			gameOver: false,
-		};
+		this.gameOver = false;
 		this.food = new Food({ fieldSize: this.fieldSize });
 		this.snake = new Snake({
 			initialSegments: [{ x: this.fieldSize / 2, y: this.fieldSize / 2 }],

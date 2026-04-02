@@ -9,7 +9,7 @@ import {
 import { SnakeService } from './snake.service';
 import type {
 	SnakeDirection,
-	SnakeGameStatePublic as CoreSnakeGameStatePublic,
+	SnakeGameState as CoreSnakeGameState,
 } from './core';
 import { ApiWsHandler } from '../../../realtime/ws/api-ws-handler.decorator';
 import type { Server } from 'socket.io';
@@ -80,13 +80,13 @@ export class SnakeGateway {
 	) {
 		const game = this.snakeService.startGame(payload.roomId);
 
-		const onTick = (state: CoreSnakeGameStatePublic) => {
+		const onTick = (state: CoreSnakeGameState) => {
 			const gameStatePayload = toSnakeGameStatePayload(state);
 			this.server
 				.to(payload.roomId)
 				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, gameStatePayload);
 		};
-		const onGameOver = (state: CoreSnakeGameStatePublic) => {
+		const onGameOver = (state: CoreSnakeGameState) => {
 			const gameStatePayload = toSnakeGameStatePayload(state);
 			this.server
 				.to(payload.roomId)

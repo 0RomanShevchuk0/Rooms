@@ -33,22 +33,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		this.dispose(false);
 		this.resetGameState();
 
-		this.gameLoop = setInterval(() => {
-			const nextHead = this.snake.calculateNextPosition();
-			const ateFood = this.food.isFoodAt(nextHead);
-			const hasCollision = this.snake.hasCollision(nextHead, ateFood);
-
-			if (hasCollision) {
-				this.endGame();
-				return;
-			}
-
-			this.snake.move(nextHead, ateFood);
-
-			if (ateFood) this.food.respawnFood();
-
-			this.emit('tick', this.getGameState());
-		}, this.tickMs);
+		this.gameLoop = setInterval(() => this.tick(), this.tickMs);
 	}
 
 	endGame() {
@@ -65,6 +50,23 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		if (removeListeners) {
 			this.removeAllListeners();
 		}
+	}
+
+	private tick() {
+		const nextHead = this.snake.calculateNextPosition();
+		const ateFood = this.food.isFoodAt(nextHead);
+		const hasCollision = this.snake.hasCollision(nextHead, ateFood);
+
+		if (hasCollision) {
+			this.endGame();
+			return;
+		}
+
+		this.snake.move(nextHead, ateFood);
+
+		if (ateFood) this.food.respawnFood();
+
+		this.emit('tick', this.getGameState());
 	}
 
 	private getGameState(): SnakeGameState {

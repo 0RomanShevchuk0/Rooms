@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+   api:
+      build:
+         context: .
+         dockerfile: ./apps/api/Dockerfile
+      env_file:
+         - ./apps/api/.env
+      depends_on:
+         - postgres
+      restart: always
+      ports:
+         - "4000:4000"
+
+   postgres:
+      image: postgres:16
+      environment:
+         POSTGRES_DB: rooms-docker
+         POSTGRES_USER: romanshevchuk
+         POSTGRES_PASSWORD: admin
+      ports:
+         - "5432:5432"
+      volumes:
+         - pgdata:/var/lib/postgresql/data
+      restart: always
+
+volumes:
+   pgdata:

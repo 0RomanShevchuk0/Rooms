@@ -21,7 +21,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		super();
 
 		this.fieldSize = 20;
-		this.tickMs = 140;
+		this.tickMs = this.resolveTickMs();
 		this.resetGameState();
 	}
 
@@ -86,5 +86,18 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			initialDirection: SNAKE_DIRECTION.UP,
 			fieldSize: this.fieldSize,
 		});
+	}
+
+	private resolveTickMs(): number {
+		const fallbackTickMs = 140;
+		const minTickMs = 60;
+		const maxTickMs = 300;
+		const parsedTickMs = Number.parseInt(process.env.SNAKE_TICK_MS ?? '', 10);
+
+		if (!Number.isFinite(parsedTickMs)) {
+			return fallbackTickMs;
+		}
+
+		return Math.min(maxTickMs, Math.max(minTickMs, parsedTickMs));
 	}
 }

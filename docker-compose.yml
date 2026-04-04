@@ -7,8 +7,11 @@ services:
          dockerfile: ./apps/api/Dockerfile
       env_file:
          - ./apps/api/.env
+      environment:
+         DATABASE_URL: postgres://romanshevchuk:admin@postgres:5432/rooms-docker?schema=public
       depends_on:
-         - postgres
+         postgres:
+            condition: service_healthy
       restart: always
       ports:
          - "4000:4000"
@@ -19,6 +22,11 @@ services:
          POSTGRES_DB: rooms-docker
          POSTGRES_USER: romanshevchuk
          POSTGRES_PASSWORD: admin
+      healthcheck:
+         test: ["CMD-SHELL", "pg_isready -U romanshevchuk -d rooms-docker"]
+         interval: 5s
+         timeout: 5s
+         retries: 20
       ports:
          - "5432:5432"
       volumes:

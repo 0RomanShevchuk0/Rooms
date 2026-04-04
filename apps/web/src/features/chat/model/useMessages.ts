@@ -1,8 +1,8 @@
 import { getMessages } from "@/entities/message";
-import type { ClientMessage, ClientMessageStatus } from "@/entities/message";
+import type { ClientMessage } from "@/entities/message";
 import { queryKeys } from "@/shared/react-query";
 import { InfiniteData, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import type { GetChatMessagesResponse } from "@rooms/contracts/chat";
 
 interface UseMessagesQueryProps {
@@ -17,40 +17,11 @@ type InfiniteMessagesData = InfiniteData<MessagesPage, string | undefined>;
 
 const MESSAGES_LIMIT = 30;
 
-function updateMessageInPages(
-	pages: MessagesPage[],
-	messageId: string,
-	updater: (message: ClientMessage) => ClientMessage,
-) {
-	let hasChanges = false;
-
-	const nextPages = pages.map((page) => {
-		let pageHasChanges = false;
-		const nextItems = page.items.map((message) => {
-			if (message.id !== messageId) return message;
-
-			const updatedMessage = updater(message);
-			if (updatedMessage === message) {
-				return message;
-			}
-
-			pageHasChanges = true;
-			hasChanges = true;
-			return updatedMessage;
-		});
-
-		if (!pageHasChanges) return page;
-		return { ...page, items: nextItems };
-	});
-
-	return { nextPages, hasChanges };
-}
-
 export function useMessages({ chatId }: UseMessagesQueryProps) {
 	const queryClient = useQueryClient();
 
 	const chatKey = queryKeys.chats.byId(chatId);
-	const { data, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
+	const { data, isPending, hasNextPage, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
 		queryKey: chatKey,
 		queryFn: ({ pageParam }): Promise<MessagesPage> =>
 			getMessages({ chatId, limit: MESSAGES_LIMIT, cursor: pageParam }),
@@ -94,40 +65,6 @@ export function useMessages({ chatId }: UseMessagesQueryProps) {
 		});
 	};
 
-	const setMessageClientStatus = (messageId: string, status?: ClientMessageStatus) => {
-		queryClient.setQueryData<InfiniteMessagesData>(chatKey, (old) => {
-			const pages = old?.pages;
-			if (!pages) return old;
-
-			const { nextPages, hasChanges } = updateMessageInPages(pages, messageId, (message) => {
-				if (message.clientStatus === status) {
-					return message;
-				}
-
-				return { ...message, clientStatus: status };
-			});
-
-			if (!hasChanges) return old;
-			return { ...old, pages: nextPages } satisfies InfiniteMessagesData;
-		});
-	};
-
-	const replaceMessageInCache = (messageId: string, nextMessage: ClientMessage) => {
-		queryClient.setQueryData<InfiniteMessagesData>(chatKey, (old) => {
-			const pages = old?.pages;
-			if (!pages) return old;
-
-			const { nextPages, hasChanges } = updateMessageInPages(
-				pages,
-				messageId,
-				() => nextMessage,
-			);
-
-			if (!hasChanges) return old;
-			return { ...old, pages: nextPages } satisfies InfiniteMessagesData;
-		});
-	};
-
 	const messages = useMemo<ClientMessage[]>(
 		() => data?.pages.flatMap((p) => p.items) ?? [],
 		[data],
@@ -135,11 +72,10 @@ export function useMessages({ chatId }: UseMessagesQueryProps) {
 
 	return {
 		messages,
+		isPending,
 		hasNextPage,
 		isFetchingNextPage,
 		fetchNextPage,
 		pushMessagesToCache,
-		setMessageClientStatus,
-		replaceMessageInCache,
 	};
 }

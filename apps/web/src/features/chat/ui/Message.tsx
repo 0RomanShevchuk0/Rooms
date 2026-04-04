@@ -1,13 +1,16 @@
-import type { MessageWithSender } from "@rooms/contracts/message";
+import { getClientMessageStatus, type ClientMessage } from "@/entities/message";
 
 import { format, isToday, isYesterday } from "date-fns";
 
 interface MessageProps {
-	message: MessageWithSender;
+	message: ClientMessage;
 }
 
 export function Message({ message }: MessageProps) {
 	const messageDate = message.createdAt ? new Date(message.createdAt) : new Date();
+	const status = getClientMessageStatus(message);
+	const isSending = status === "sending";
+	const isFailed = status === "failed";
 
 	const getFromattedDate = () => {
 		if (isToday(messageDate)) {
@@ -24,9 +27,11 @@ export function Message({ message }: MessageProps) {
 			<div className="flex items-center gap-2 text-muted-foreground">
 				<strong className="text-md">{message.sender.username}</strong>
 				<span className="text-xs">{getFromattedDate()}</span>
+				{isSending ? <span className="text-xs">Sending...</span> : null}
+				{isFailed ? <span className="text-xs text-destructive">Failed to send</span> : null}
 			</div>
 
-			{message.content}
+			<div className={isFailed ? "text-destructive" : undefined}>{message.content}</div>
 		</div>
 	);
 }

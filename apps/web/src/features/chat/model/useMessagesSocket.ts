@@ -1,6 +1,6 @@
 import { useChatSocket } from "@/shared/lib/realtime";
 import { CHAT_SOCKET_EVENTS, type ChatMessagePayload } from "@rooms/contracts/chat";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface UseMessagesSocketProps {
 	onMessage: (message: ChatMessagePayload) => void;
@@ -8,12 +8,21 @@ interface UseMessagesSocketProps {
 
 export function useMessagesSocket({ onMessage }: UseMessagesSocketProps) {
 	const { socket } = useChatSocket();
+	const onMessageRef = useRef(onMessage);
 
 	useEffect(() => {
-		socket.on(CHAT_SOCKET_EVENTS.MESSAGE, onMessage);
+		onMessageRef.current = onMessage;
+	}, [onMessage]);
+
+	useEffect(() => {
+		const handler = (message: ChatMessagePayload) => {
+			onMessageRef.current(message);
+		};
+
+		socket.on(CHAT_SOCKET_EVENTS.MESSAGE, handler);
 
 		return () => {
-			socket.off(CHAT_SOCKET_EVENTS.MESSAGE, onMessage);
+			socket.off(CHAT_SOCKET_EVENTS.MESSAGE, handler);
 		};
-	}, [socket, onMessage]);
+	}, [socket]);
 }

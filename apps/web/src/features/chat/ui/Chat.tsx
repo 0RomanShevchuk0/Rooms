@@ -3,6 +3,7 @@ import { Input } from "@/shared/ui/input";
 import { SendHorizonal } from "lucide-react";
 import { useChatSocket } from "@/shared/lib/realtime";
 import { useRef, useState } from "react";
+import type { ClientMessage } from "@/entities/message";
 import {
 	CHAT_SOCKET_EVENTS,
 	ChatMessagePayloadSchema,
@@ -13,7 +14,7 @@ import type { WsErrorResponse } from "@rooms/contracts/ws";
 import { useMeQuery } from "@/entities/user/model/useMeQuery";
 import { Message } from "./Message";
 import { useMessagesSocket } from "../model/useMessagesSocket";
-import { useMessagesQuery } from "../model/useMessages";
+import { useMessages } from "../model/useMessages";
 import { useChatScrollToBottom } from "../model/useChatScrollToBottom";
 import { useChatScrollPagination } from "../model/useChatScrollPagination";
 import toast from "react-hot-toast";
@@ -37,10 +38,15 @@ export function Chat({ chatId }: ChatProps) {
 
 	const { socket } = useChatSocket();
 
-	const { messages, hasNextPage, isFetchingNextPage, pushMessagesToCache, fetchNextPage } =
-		useMessagesQuery({
-			chatId,
-		});
+	const {
+		messages,
+		hasNextPage,
+		isFetchingNextPage,
+		pushMessagesToCache,
+		fetchNextPage,
+		setMessageClientStatus,
+		replaceMessageInCache,
+	} = useMessages({ chatId });
 	useMessagesSocket({ onMessage: (m) => pushMessagesToCache([m]) });
 	useChatScrollToBottom({ messages, chatContainerRef, shouldScrollToBottomRef });
 	useChatScrollPagination({
@@ -60,6 +66,21 @@ export function Chat({ chatId }: ChatProps) {
 		const payload: ChatSendMessagePayload = { chatId, content };
 
 		setMessage("");
+		const optimisticId = `optimistic-${Date.now()}`;
+
+		const optimisticMessage: ClientMessage = {
+			id: optimisticId,
+			chatId,
+			senderId: user.id,
+			sender: user,
+			content,
+			createdAt: new Date().toISOString(),
+			clientStatus: "sending",
+		};
+
+		shouldScrollToBottomRef.current = true;
+		pushMessagesToCache([optimisticMessage]);
+
 		socket.emit(
 			CHAT_SOCKET_EVENTS.MESSAGE,
 			payload,
@@ -72,6 +93,7 @@ export function Chat({ chatId }: ChatProps) {
 							: firstIssue.message
 						: null;
 
+					setMessageClientStatus(optimisticId, "failed");
 					toast.error(validationMessage ?? getWsErrorMessage(response));
 					setMessage((prev) => prev || content);
 					return;
@@ -79,13 +101,13 @@ export function Chat({ chatId }: ChatProps) {
 
 				const parsedResponse = ChatMessagePayloadSchema.safeParse(response);
 				if (!parsedResponse.success) {
+					setMessageClientStatus(optimisticId, "failed");
 					toast.error("Failed to send message");
 					setMessage((prev) => prev || content);
 					return;
 				}
 
-				shouldScrollToBottomRef.current = true;
-				pushMessagesToCache([parsedResponse.data]);
+				replaceMessageInCache(optimisticId, parsedResponse.data);
 			},
 		);
 	};

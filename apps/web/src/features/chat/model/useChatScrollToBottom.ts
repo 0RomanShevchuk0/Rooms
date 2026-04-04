@@ -1,8 +1,8 @@
-import type { MessageWithSender } from "@rooms/contracts/message";
+import type { ClientMessage } from "@/entities/message";
 import { useLayoutEffect } from "react";
 
 interface UseChatScrollProps {
-	messages: MessageWithSender[];
+	messages: ClientMessage[];
 	chatContainerRef: React.RefObject<HTMLDivElement | null>;
 	shouldScrollToBottomRef: React.RefObject<boolean>;
 }

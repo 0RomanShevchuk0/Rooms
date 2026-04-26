@@ -12,6 +12,7 @@ export type RoomWithParticipantsAndChat = Prisma.RoomGetPayload<{
 	include: {
 		participants: { select: typeof roomParticipantWithUserSelect };
 		chat: true;
+		snakeSettings: true;
 	};
 }>;
 

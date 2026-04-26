@@ -8,6 +8,7 @@ import {
 	RoomWithParticipants,
 	RoomWithParticipantsAndChat,
 } from './rooms.types';
+import { DEFAULT_SNAKE_GAME_SETTINGS } from './room-settings/room-settings.constants';
 import { roomParticipantWithUserSelect } from './participants/room-participants.select';
 import { RoomParticipantsService } from './participants/room-participants.service';
 import { DomainError } from 'src/shared/errors/domain.error';
@@ -36,6 +37,7 @@ export class RoomsService {
 			include: {
 				participants: { select: roomParticipantWithUserSelect },
 				chat: true,
+				snakeSettings: true,
 			},
 		});
 	}
@@ -109,10 +111,17 @@ export class RoomsService {
 				chat: {
 					create: {},
 				},
+				snakeSettings: {
+					create: {
+						fieldWidth: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.width,
+						fieldHeight: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.height,
+					},
+				},
 			},
 			include: {
 				participants: { select: roomParticipantWithUserSelect },
 				chat: true,
+				snakeSettings: true,
 			},
 		});
 	}

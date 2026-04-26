@@ -10,6 +10,7 @@ import type {
 	RoomWithParticipants as RoomWithParticipantsEntity,
 	RoomWithParticipantsAndChat as RoomWithParticipantsAndChatEntity,
 } from './rooms.types';
+import { toSnakeGameSettings } from './room-settings/room-settings.mapper';
 import { DomainError } from 'src/shared/errors/domain.error';
 import { toRestUser } from '../users/users.mapper';
 
@@ -52,6 +53,7 @@ export function toRoomWithParticipantsAndChat(
 			roomId: room.chat.roomId,
 			createdAt: room.chat.createdAt.toISOString(),
 		},
+		snakeSettings: toSnakeGameSettings(room.snakeSettings),
 	};
 }
 

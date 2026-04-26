@@ -1,38 +1,77 @@
 import { SnakeCanvasRenderer } from "../core";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { codeDirectionMap } from "./constansts";
 import {
 	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeRoomPayload,
 	type SnakeChangeDirectionPayload,
+	type SnakeGameSettings,
 	type SnakeGameState,
 } from "@rooms/contracts/snake-game";
 
+type SnakeFieldSize = SnakeGameSettings["fieldSize"];
+
 interface UseSnakeGameProps {
 	roomId: string;
+	snakeFieldSize: SnakeFieldSize;
 }
 
 type SnakeGameStatus = "idle" | "running" | "over";
 
+interface SnakeGameRoomState {
+	roomId: string;
+	gameOverState: SnakeGameState | null;
+	snakeLength: number;
+	gameStatus: SnakeGameStatus;
+}
+
+function createDefaultGameState(roomId: string): SnakeGameRoomState {
+	return {
+		roomId,
+		gameOverState: null,
+		snakeLength: 1,
+		gameStatus: "idle",
+	};
+}
+
 function isEditableTarget(target: EventTarget | null): target is HTMLElement {
 	if (!(target instanceof HTMLElement)) return false;
 	const tagName = target.tagName.toLowerCase();
-	return tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable;
+	return (
+		tagName === "input" ||
+		tagName === "textarea" ||
+		tagName === "select" ||
+		target.isContentEditable
+	);
 }
 
-export function useSnakeGame({ roomId }: UseSnakeGameProps) {
+export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
-	const [gameOverState, setGameOverState] = useState<SnakeGameState | null>(null);
-	const [snakeLength, setSnakeLength] = useState(1);
-	const [gameStatus, setGameStatus] = useState<SnakeGameStatus>("idle");
+	const [roomState, setRoomState] = useState<SnakeGameRoomState>(() =>
+		createDefaultGameState(roomId),
+	);
+	const currentRoomState =
+		roomState.roomId === roomId ? roomState : createDefaultGameState(roomId);
+	const setCurrentRoomState = useCallback(
+		(updater: (state: SnakeGameRoomState) => SnakeGameRoomState) => {
+			setRoomState((previousState) => {
+				const baseState =
+					previousState.roomId === roomId ? previousState : createDefaultGameState(roomId);
+				return updater(baseState);
+			});
+		},
+		[roomId],
+	);
 	const gameStatusRef = useRef<SnakeGameStatus>("idle");
+	const snakeFieldWidth = snakeFieldSize.width;
+	const snakeFieldHeight = snakeFieldSize.height;
 
 	const { socket: snakeGameSocket } = useSnakeGameSocket();
 
 	useEffect(() => {
-		gameStatusRef.current = gameStatus;
-	}, [gameStatus]);
+		gameStatusRef.current = currentRoomState.gameStatus;
+	}, [currentRoomState.gameStatus]);
 
 	useEffect(() => {
 		const canvasContainer = canvasContainerRef.current;
@@ -42,19 +81,28 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 			container: canvasContainer,
 			width: 500,
 			height: 500,
-			fieldSize: 20,
+			fieldSize: {
+				width: snakeFieldWidth,
+				height: snakeFieldHeight,
+			},
 		});
 
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
-			setSnakeLength(gameState.snakeSegments.length);
-			setGameStatus("running");
+			setCurrentRoomState((state) => ({
+				...state,
+				snakeLength: gameState.snakeSegments.length,
+				gameStatus: "running",
+			}));
 			snakeGame.render(gameState);
 		};
 
 		const handleGameOver = (gameState: SnakeGameState) => {
-			setSnakeLength(gameState.snakeSegments.length);
-			setGameOverState(gameState);
-			setGameStatus("over");
+			setCurrentRoomState((state) => ({
+				...state,
+				snakeLength: gameState.snakeSegments.length,
+				gameOverState: gameState,
+				gameStatus: "over",
+			}));
 		};
 
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
@@ -82,17 +130,23 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 
 			snakeGame.destroy();
 		};
-	}, [snakeGameSocket, roomId]);
+	}, [snakeGameSocket, roomId, snakeFieldWidth, snakeFieldHeight, setCurrentRoomState]);
 
 	const closeGameOverModal = () => {
-		setGameOverState(null);
-		setGameStatus((currentStatus) => (currentStatus === "over" ? "idle" : currentStatus));
+		setCurrentRoomState((state) => ({
+			...state,
+			gameOverState: null,
+			gameStatus: state.gameStatus === "over" ? "idle" : state.gameStatus,
+		}));
 	};
 
 	const startGame = () => {
-		setGameOverState(null);
-		setSnakeLength(1);
-		setGameStatus("running");
+		setCurrentRoomState((state) => ({
+			...state,
+			gameOverState: null,
+			snakeLength: 1,
+			gameStatus: "running",
+		}));
 
 		const payload: SnakeRoomPayload = { roomId };
 		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.START_GAME, payload);
@@ -100,9 +154,9 @@ export function useSnakeGame({ roomId }: UseSnakeGameProps) {
 
 	return {
 		canvasContainerRef,
-		snakeLength,
-		gameStatus,
-		gameOverState,
+		snakeLength: currentRoomState.snakeLength,
+		gameStatus: currentRoomState.gameStatus,
+		gameOverState: currentRoomState.gameOverState,
 		closeGameOverModal,
 		startGame,
 	};

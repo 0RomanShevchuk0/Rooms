@@ -1,13 +1,25 @@
-import { useRoomFromParamsQuery } from "@/app/(protected)/rooms/[id]/useRoomFromParamsQuery";
+import type { SnakeGameSettings } from "@rooms/contracts/snake-game";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { useSnakeGame } from "../model/useSnakeGame";
 import { SnakeGameOverDialog } from "./SnakeGameOverDialog";
 
-export function SnakeGame() {
-	const { roomId } = useRoomFromParamsQuery();
-	const { canvasContainerRef, snakeLength, gameStatus, gameOverState, closeGameOverModal, startGame } =
-		useSnakeGame({ roomId });
+type SnakeFieldSize = SnakeGameSettings["fieldSize"];
+
+interface SnakeGameProps {
+	roomId: string;
+	snakeFieldSize: SnakeFieldSize;
+}
+
+export function SnakeGame({ roomId, snakeFieldSize }: SnakeGameProps) {
+	const {
+		canvasContainerRef,
+		snakeLength,
+		gameStatus,
+		gameOverState,
+		closeGameOverModal,
+		startGame,
+	} = useSnakeGame({ roomId, snakeFieldSize });
 
 	return (
 		<>

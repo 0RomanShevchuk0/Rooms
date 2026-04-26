@@ -1,5 +1,6 @@
 import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { Chat } from "@/features/chat";
+import { SnakeSettingsCard, type SnakeFieldSize } from "@/features/snake-settings";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { RoomParticipantsList } from "@/widgets/room-participants-list";
@@ -10,9 +11,18 @@ type RightPanelView = "info" | "chat";
 interface RoomSidebarProps {
 	room: RoomWithParticipantsAndChat;
 	onlineParticipantIds: Set<string>;
+	snakeFieldSize: SnakeFieldSize;
+	isSnakeGameInProgress: boolean;
+	onSnakeFieldSizeChange: (fieldSize: SnakeFieldSize) => void;
 }
 
-export function RoomSidebar({ room, onlineParticipantIds }: RoomSidebarProps) {
+export function RoomSidebar({
+	room,
+	onlineParticipantIds,
+	snakeFieldSize,
+	isSnakeGameInProgress,
+	onSnakeFieldSizeChange,
+}: RoomSidebarProps) {
 	const [rightPanelView, setRightPanelView] = useState<RightPanelView>("info");
 
 	return (
@@ -38,19 +48,16 @@ export function RoomSidebar({ room, onlineParticipantIds }: RoomSidebarProps) {
 
 			{rightPanelView === "info" ? (
 				<>
-					<RoomParticipantsList participants={room.participants} onlineParticipantIds={onlineParticipantIds} />
+					<RoomParticipantsList
+						participants={room.participants}
+						onlineParticipantIds={onlineParticipantIds}
+					/>
 
-					<Card className="border-border/60">
-						<CardHeader>
-							<CardTitle>Room settings</CardTitle>
-						</CardHeader>
-						<CardContent className="grid gap-2 text-xs text-muted-foreground">
-							<div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-2">Speed: medium</div>
-							<div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-2">Grid: 12x6</div>
-							<div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-2">Play to 3</div>
-							<div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-2">Fruits: 1</div>
-						</CardContent>
-					</Card>
+					<SnakeSettingsCard
+						snakeFieldSize={snakeFieldSize}
+						isGameInProgress={isSnakeGameInProgress}
+						onSnakeFieldSizeChange={onSnakeFieldSizeChange}
+					/>
 				</>
 			) : (
 				<Card className="flex flex-col border-border/60 h-[min(72vh,780px)]">

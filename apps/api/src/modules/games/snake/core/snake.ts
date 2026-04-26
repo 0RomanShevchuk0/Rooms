@@ -1,15 +1,15 @@
 import { directionPositions } from './constants';
 import { directionOpposites, SnakeDirection } from './direction';
-import { Position } from './types';
+import { FieldSize, Position } from './types';
 
 interface SnakeProps {
-	fieldSize: number;
+	fieldSize: FieldSize;
 	initialDirection: SnakeDirection;
 	initialSegments: Position[];
 }
 
 export class Snake {
-	private readonly fieldSize: number;
+	private readonly fieldSize: FieldSize;
 	segments: Position[];
 	direction: SnakeDirection;
 
@@ -51,9 +51,9 @@ export class Snake {
 
 	private checkFieldCollision(nextHead: Position): boolean {
 		const isBordersCollision =
-			nextHead.x >= this.fieldSize ||
+			nextHead.x >= this.fieldSize.width ||
 			nextHead.x < 0 ||
-			nextHead.y >= this.fieldSize ||
+			nextHead.y >= this.fieldSize.height ||
 			nextHead.y < 0;
 
 		return isBordersCollision;

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ChatSchema } from "../chat/base.js";
+import { SnakeGameSettingsSchema } from "../snake-game/base.js";
 import { UserSchema } from "../user/rest.js";
 import { RoomIdSchema, RoomParticipantIdSchema } from "./base.js";
 
@@ -27,6 +28,7 @@ export const RoomWithParticipantsSchema = RoomSchema.extend({
 export const RoomWithParticipantsAndChatSchema = RoomWithParticipantsSchema.extend(
 	{
 		chat: ChatSchema,
+		snakeSettings: SnakeGameSettingsSchema,
 	},
 );
 

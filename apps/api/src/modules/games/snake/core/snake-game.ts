@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events';
 import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
-import { type SnakeGameState } from './types';
+import { type SnakeGameSettings, type SnakeGameState } from './types';
 import { Food } from './food';
 import { Snake } from './snake';
 
@@ -9,20 +9,37 @@ type SnakeGameEvents = {
 	gameOver: [state: SnakeGameState];
 };
 
+const DEFAULT_GAME_SETTINGS: SnakeGameSettings = {
+	fieldSize: { width: 20, height: 20 },
+};
+
 export class SnakeGame extends EventEmitter<SnakeGameEvents> {
-	private readonly fieldSize: number;
+	private settings: SnakeGameSettings;
 	private readonly tickMs: number;
 	private gameLoop?: NodeJS.Timeout;
 	private food: Food;
 	private snake: Snake;
 	private gameOver: boolean;
 
-	constructor() {
+	constructor(settings: SnakeGameSettings = DEFAULT_GAME_SETTINGS) {
 		super();
 
-		this.fieldSize = 20;
+		this.settings = settings;
 		this.tickMs = this.resolveTickMs();
-		this.resetGameState();
+		this.gameOver = false;
+
+		const fieldSize = this.settings.fieldSize;
+		this.snake = new Snake({
+			fieldSize,
+			initialDirection: SNAKE_DIRECTION.UP,
+			initialSegments: [
+				{
+					x: Math.floor(fieldSize.width / 2),
+					y: Math.floor(fieldSize.height / 2),
+				},
+			],
+		});
+		this.food = new Food({ fieldSize });
 	}
 
 	changeSnakeDirection(direction: SnakeDirection) {
@@ -30,26 +47,21 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	startGame() {
-		this.dispose(false);
-		this.resetGameState();
-
 		this.gameLoop = setInterval(() => this.tick(), this.tickMs);
 	}
 
 	endGame() {
 		this.gameOver = true;
-		this.dispose(false);
 		this.emit('gameOver', this.getGameState());
+		this.destroy();
 	}
 
-	dispose(removeListeners = true) {
+	destroy() {
 		if (this.gameLoop) {
 			clearInterval(this.gameLoop);
 			this.gameLoop = undefined;
 		}
-		if (removeListeners) {
-			this.removeAllListeners();
-		}
+		this.removeAllListeners();
 	}
 
 	private tick() {
@@ -76,16 +88,6 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			snakeSegments: this.snake.segments,
 			foodPosition: this.food.getPosition(),
 		};
-	}
-
-	private resetGameState() {
-		this.gameOver = false;
-		this.food = new Food({ fieldSize: this.fieldSize });
-		this.snake = new Snake({
-			initialSegments: [{ x: this.fieldSize / 2, y: this.fieldSize / 2 }],
-			initialDirection: SNAKE_DIRECTION.UP,
-			fieldSize: this.fieldSize,
-		});
 	}
 
 	private resolveTickMs(): number {

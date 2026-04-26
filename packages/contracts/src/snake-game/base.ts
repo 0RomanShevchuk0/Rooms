@@ -21,6 +21,15 @@ export const SnakePositionSchema = z.object({
 	y: z.number(),
 });
 
+export const SnakeFieldSizeSchema = z.object({
+	width: z.number().int().min(6).max(80),
+	height: z.number().int().min(6).max(80),
+});
+
+export const SnakeGameSettingsSchema = z.object({
+	fieldSize: SnakeFieldSizeSchema,
+});
+
 export const SnakeGameStateSchema = z.object({
 	snakeDirection: SnakeDirectionSchema,
 	snakeSegments: z.array(SnakePositionSchema),
@@ -31,3 +40,5 @@ export const SnakeGameStateSchema = z.object({
 export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
 export type SnakePosition = z.infer<typeof SnakePositionSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
+export type SnakeFieldSize = z.infer<typeof SnakeFieldSizeSchema>;
+export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;

@@ -37,8 +37,21 @@ model Room {
    participants RoomParticipant[] @relation("RoomParticipants")
 
    chat Chat? @relation("RoomChat")
+   snakeSettings RoomSnakeSettings?
 
    createdAt DateTime @default(now())
+}
+
+model RoomSnakeSettings {
+   roomId String @id
+
+   fieldWidth Int @default(20)
+   fieldHeight Int @default(20)
+
+   room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
 }
 
 model RoomParticipant {

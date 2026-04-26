@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { type SnakeDirection, SnakeGame } from './core';
 import { DomainError } from 'src/shared/errors/domain.error';
+import { RoomSettingsService } from 'src/modules/rooms/room-settings/room-settings.service';
 
 @Injectable()
 export class SnakeService {
+	constructor(private readonly roomSettingsService: RoomSettingsService) {}
+
 	private roomGameMap = new Map<string, SnakeGame>();
 
-	startGame(roomId: string) {
+	async startGame(roomId: string) {
 		const existingGame = this.roomGameMap.get(roomId);
-		existingGame?.dispose();
+		existingGame?.destroy();
 
-		const game = new SnakeGame();
+		const settings = await this.roomSettingsService.getSnakeSettings(roomId);
+		const game = new SnakeGame(settings);
 		this.roomGameMap.set(roomId, game);
 		game.startGame();
 		return game;

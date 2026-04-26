@@ -8,6 +8,7 @@ import { ChatsModule } from './modules/chats/chats.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { SnakeModule } from './modules/games/snake/snake.module';
+import { RoomSettingsModule } from './modules/rooms/room-settings/room-settings.module';
 
 @Module({
 	imports: [
@@ -20,6 +21,7 @@ import { SnakeModule } from './modules/games/snake/snake.module';
 		MessagesModule,
 		AuthModule,
 		SnakeModule,
+		RoomSettingsModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

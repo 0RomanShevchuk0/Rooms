@@ -1,11 +1,11 @@
-import { Position } from './types';
+import { FieldSize, Position } from './types';
 
 interface FoodProps {
-	fieldSize: number;
+	fieldSize: FieldSize;
 }
 
 export class Food {
-	private readonly fieldSize: number;
+	private readonly fieldSize: FieldSize;
 	private position: Position;
 
 	constructor({ fieldSize }: FoodProps) {
@@ -28,8 +28,8 @@ export class Food {
 
 	private generateFoodPosition(): Position {
 		return {
-			x: Math.floor(Math.random() * this.fieldSize),
-			y: Math.floor(Math.random() * this.fieldSize),
+			x: Math.floor(Math.random() * this.fieldSize.width),
+			y: Math.floor(Math.random() * this.fieldSize.height),
 		};
 	}
 }

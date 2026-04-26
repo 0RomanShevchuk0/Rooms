@@ -7,8 +7,10 @@
 ### Code Quality
 - [ ] No tests (unit or e2e)
 - [ ] No tests for Room WS presence edge cases (multi-tab/device, repeated CONNECT, HTTP leave with active socket)
+- [ ] Test Winston logger flow for snake settings errors
 
 ### Features
+- [ ] OAuth
 - [ ] Room WS presence: support multiple tabs/devices per participant, clean previous socket context on repeated CONNECT, and sync in-memory presence on HTTP leave (no ghost online users)
 - [ ] No typing indicators
 - [ ] No user profile page

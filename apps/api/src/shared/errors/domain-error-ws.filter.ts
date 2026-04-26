@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import type { WsErrorResponse } from '@rooms/contracts/ws';
 import type { Socket } from 'socket.io';
@@ -11,10 +11,20 @@ import {
 
 @Catch()
 export class DomainErrorWsFilter implements ExceptionFilter {
+	private readonly logger = new Logger(DomainErrorWsFilter.name);
+
 	catch(exception: unknown, host: ArgumentsHost) {
 		if (host.getType() !== 'ws') {
 			throw exception;
 		}
+
+		const client = host.switchToWs().getClient<Socket>();
+		const message =
+			exception instanceof Error ? exception.message : String(exception);
+		this.logger.error(
+			`WS exception for socket ${client.id}: ${message}`,
+			exception instanceof Error ? exception.stack : undefined,
+		);
 
 		let payload: WsErrorResponse = mapUnknownErrorToWsResponse();
 		if (isDomainError(exception)) {
@@ -28,7 +38,6 @@ export class DomainErrorWsFilter implements ExceptionFilter {
 			return;
 		}
 
-		const client = host.switchToWs().getClient<Socket>();
 		client.emit('exception', payload);
 	}
 }

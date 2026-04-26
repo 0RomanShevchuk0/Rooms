@@ -17,6 +17,9 @@ import {
 	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeChangeDirectionPayload,
 	SnakeChangeDirectionPayloadSchema,
+	type SnakeChangeSettingsPayload,
+	SnakeChangeSettingsPayloadSchema,
+	type SnakeSettingsChangedPayload,
 	type SnakeRoomPayload,
 	SnakeRoomPayloadSchema,
 } from '@rooms/contracts/snake-game';
@@ -24,6 +27,7 @@ import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter'
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 import { toSnakeGameStatePayload } from './snake.mapper';
+import { RoomSettingsService } from 'src/modules/rooms/room-settings/room-settings.service';
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 
@@ -42,6 +46,7 @@ export class SnakeGateway {
 	constructor(
 		private readonly snakeService: SnakeService,
 		private readonly roomsService: RoomsService,
+		private readonly roomSettingsService: RoomSettingsService,
 	) {}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CONNECT)
@@ -73,12 +78,11 @@ export class SnakeGateway {
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.START_GAME)
-	startGame(
-		@ConnectedSocket() client: SocketWithAuth,
+	async startGame(
 		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
 		payload: SnakeRoomPayload,
 	) {
-		const game = this.snakeService.startGame(payload.roomId);
+		const game = await this.snakeService.startGame(payload.roomId);
 
 		const onTick = (state: CoreSnakeGameState) => {
 			const gameStatePayload = toSnakeGameStatePayload(state);
@@ -101,7 +105,6 @@ export class SnakeGateway {
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION)
 	changeDirection(
-		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody(new ZodValidationPipe(SnakeChangeDirectionPayloadSchema))
 		payload: SnakeChangeDirectionPayload,
 	) {
@@ -112,5 +115,29 @@ export class SnakeGateway {
 		);
 		this.snakeService.changeDirection(payload.roomId, direction);
 		return { ok: true, message: 'Direction changed!' };
+	}
+
+	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_SETTINGS)
+	async changeSettings(
+		@MessageBody(new ZodValidationPipe(SnakeChangeSettingsPayloadSchema))
+		payload: SnakeChangeSettingsPayload,
+	) {
+		await this.roomSettingsService.updateSnakeSettings(
+			payload.roomId,
+			payload.settings,
+		);
+
+		const settingsChangedPayload: SnakeSettingsChangedPayload = {
+			roomId: payload.roomId,
+			settings: payload.settings,
+		};
+
+		this.server
+			.to(payload.roomId)
+			.emit(
+				SNAKE_GAME_SOCKET_EVENTS.SETTINGS_CHANGED,
+				settingsChangedPayload,
+			);
+		return { ok: true, message: 'Settings changed!' };
 	}
 }

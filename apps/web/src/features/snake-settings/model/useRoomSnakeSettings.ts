@@ -3,32 +3,52 @@
 import {
 	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeChangeSettingsPayload,
+	type SnakeGameSettings,
 	type SnakeSettingsChangedPayload,
 } from "@rooms/contracts/snake-game";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
 import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_SNAKE_FIELD_SIZE, type SnakeFieldSize } from "./constants";
+import {
+	DEFAULT_SNAKE_GAME_SETTINGS,
+	type SnakeFieldSize,
+	type SnakeFoodAmount,
+} from "./constants";
 
 interface UseRoomSnakeSettingsProps {
 	roomId: string;
-	initialFieldSize?: SnakeFieldSize;
+	initialSettings?: SnakeGameSettings;
 }
 
 interface RoomSnakeSettingsState {
 	roomId: string;
-	snakeFieldSizeOverride: SnakeFieldSize | null;
+	snakeSettingsOverride: SnakeGameSettings | null;
 	isGameInProgress: boolean;
+}
+
+export interface RoomSnakeSettingsActions {
+	setSettings: (settings: SnakeGameSettings) => void;
+	setFieldSize: (fieldSize: SnakeFieldSize) => void;
+	setFoodAmount: (foodAmount: SnakeFoodAmount) => void;
+}
+
+export interface RoomSnakeSettingsModel {
+	snakeSettings: SnakeGameSettings;
+	isGameInProgress: boolean;
+	actions: RoomSnakeSettingsActions;
 }
 
 function createDefaultRoomState(roomId: string): RoomSnakeSettingsState {
 	return {
 		roomId,
-		snakeFieldSizeOverride: null,
+		snakeSettingsOverride: null,
 		isGameInProgress: false,
 	};
 }
 
-export function useRoomSnakeSettings({ roomId, initialFieldSize }: UseRoomSnakeSettingsProps) {
+export function useRoomSnakeSettings({
+	roomId,
+	initialSettings,
+}: UseRoomSnakeSettingsProps): RoomSnakeSettingsModel {
 	const { socket: snakeGameSocket } = useSnakeGameSocket();
 	const [roomState, setRoomState] = useState<RoomSnakeSettingsState>(() =>
 		createDefaultRoomState(roomId),
@@ -56,7 +76,7 @@ export function useRoomSnakeSettings({ roomId, initialFieldSize }: UseRoomSnakeS
 
 			setCurrentRoomState((state) => ({
 				...state,
-				snakeFieldSizeOverride: payload.settings.fieldSize,
+				snakeSettingsOverride: payload.settings,
 			}));
 		};
 
@@ -84,23 +104,39 @@ export function useRoomSnakeSettings({ roomId, initialFieldSize }: UseRoomSnakeS
 		};
 	}, [snakeGameSocket, setCurrentRoomState]);
 
-	const snakeFieldSize =
-		currentRoomState.snakeFieldSizeOverride ?? initialFieldSize ?? DEFAULT_SNAKE_FIELD_SIZE;
+	const snakeSettings =
+		currentRoomState.snakeSettingsOverride ?? initialSettings ?? DEFAULT_SNAKE_GAME_SETTINGS;
 
-	const changeFieldSize = (fieldSize: SnakeFieldSize) => {
+	const setSettings = useCallback((settings: SnakeGameSettings) => {
 		const payload: SnakeChangeSettingsPayload = {
 			roomId,
-			settings: {
-				fieldSize,
-			},
+			settings,
 		};
 
 		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_SETTINGS, payload);
-	};
+	}, [roomId, snakeGameSocket]);
+
+	const setFieldSize = useCallback((fieldSize: SnakeFieldSize) => {
+		setSettings({
+			fieldSize,
+			foodAmount: snakeSettings.foodAmount,
+		});
+	}, [setSettings, snakeSettings.foodAmount]);
+
+	const setFoodAmount = useCallback((foodAmount: SnakeFoodAmount) => {
+		setSettings({
+			fieldSize: snakeSettings.fieldSize,
+			foodAmount,
+		});
+	}, [setSettings, snakeSettings.fieldSize]);
 
 	return {
-		snakeFieldSize,
+		snakeSettings,
 		isGameInProgress: currentRoomState.isGameInProgress,
-		changeFieldSize,
+		actions: {
+			setSettings,
+			setFieldSize,
+			setFoodAmount,
+		},
 	};
 }

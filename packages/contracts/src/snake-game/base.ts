@@ -28,12 +28,13 @@ export const SnakeFieldSizeSchema = z.object({
 
 export const SnakeGameSettingsSchema = z.object({
 	fieldSize: SnakeFieldSizeSchema,
+	foodAmount: z.number().int().min(1),
 });
 
 export const SnakeGameStateSchema = z.object({
 	snakeDirection: SnakeDirectionSchema,
 	snakeSegments: z.array(SnakePositionSchema),
-	foodPosition: SnakePositionSchema,
+	foodPositions: z.array(SnakePositionSchema),
 	gameOver: z.boolean(),
 });
 

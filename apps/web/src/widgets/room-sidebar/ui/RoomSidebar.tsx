@@ -1,6 +1,6 @@
 import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { Chat } from "@/features/chat";
-import { SnakeSettingsCard, type SnakeFieldSize } from "@/features/snake-settings";
+import { SnakeSettingsCards, type RoomSnakeSettingsModel } from "@/features/snake-settings";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { RoomParticipantsList } from "@/widgets/room-participants-list";
@@ -11,17 +11,13 @@ type RightPanelView = "info" | "chat";
 interface RoomSidebarProps {
 	room: RoomWithParticipantsAndChat;
 	onlineParticipantIds: Set<string>;
-	snakeFieldSize: SnakeFieldSize;
-	isSnakeGameInProgress: boolean;
-	onSnakeFieldSizeChange: (fieldSize: SnakeFieldSize) => void;
+	snakeSettingsModel: RoomSnakeSettingsModel;
 }
 
 export function RoomSidebar({
 	room,
 	onlineParticipantIds,
-	snakeFieldSize,
-	isSnakeGameInProgress,
-	onSnakeFieldSizeChange,
+	snakeSettingsModel,
 }: RoomSidebarProps) {
 	const [rightPanelView, setRightPanelView] = useState<RightPanelView>("info");
 
@@ -53,11 +49,7 @@ export function RoomSidebar({
 						onlineParticipantIds={onlineParticipantIds}
 					/>
 
-					<SnakeSettingsCard
-						snakeFieldSize={snakeFieldSize}
-						isGameInProgress={isSnakeGameInProgress}
-						onSnakeFieldSizeChange={onSnakeFieldSizeChange}
-					/>
+					<SnakeSettingsCards model={snakeSettingsModel} />
 				</>
 			) : (
 				<Card className="flex flex-col border-border/60 h-[min(72vh,780px)]">

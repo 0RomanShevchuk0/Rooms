@@ -14,7 +14,7 @@ export class SnakeCanvasRenderer {
 	private stage: Konva.Stage;
 	private layer: Konva.Layer;
 	private snakeSegments: Konva.Rect[];
-	private foodRect: Konva.Rect;
+	private foodRects: Konva.Rect[];
 	private fieldSize: SnakeFieldSize;
 	private cellSize: number;
 	private gridOffsetX: number;
@@ -45,15 +45,12 @@ export class SnakeCanvasRenderer {
 		this.layer.add(grid);
 
 		this.snakeSegments = [];
-
-		this.foodRect = this.createFood({ x: 0, y: 0 });
-		this.foodRect.hide();
-
-		this.layer.add(this.foodRect);
+		this.foodRects = [];
 	}
 
 	render(state: SnakeGameState) {
 		this.snakeSegments.forEach((segment) => segment.destroy());
+		this.foodRects.forEach((foodRect) => foodRect.destroy());
 
 		this.snakeSegments = state.snakeSegments.map((segment) => {
 			const snakeSegmentRect = this.createSnakeSegment(segment);
@@ -61,11 +58,12 @@ export class SnakeCanvasRenderer {
 			return snakeSegmentRect;
 		});
 
-		this.foodRect = this.foodRect.position({
-			x: this.gridOffsetX + state.foodPosition.x * this.cellSize,
-			y: this.gridOffsetY + state.foodPosition.y * this.cellSize,
+		this.foodRects = state.foodPositions.map((position) => {
+			const foodRect = this.createFood(position);
+			this.layer.add(foodRect);
+			return foodRect;
 		});
-		this.foodRect.show();
+
 		this.layer.batchDraw();
 	}
 

@@ -115,6 +115,7 @@ export class RoomsService {
 					create: {
 						fieldWidth: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.width,
 						fieldHeight: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.height,
+						foodAmount: DEFAULT_SNAKE_GAME_SETTINGS.foodAmount,
 					},
 				},
 			},

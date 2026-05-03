@@ -13,7 +13,8 @@ export class SnakeService {
 		const existingGame = this.roomGameMap.get(roomId);
 		existingGame?.destroy();
 
-		const settings = await this.roomSettingsService.getSnakeSettings(roomId);
+		const settings =
+			await this.roomSettingsService.getOrCreateSnakeSettings(roomId);
 		const game = new SnakeGame(settings);
 		this.roomGameMap.set(roomId, game);
 		game.startGame();

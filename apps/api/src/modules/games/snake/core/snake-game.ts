@@ -1,27 +1,23 @@
 import EventEmitter from 'node:events';
 import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
 import { type SnakeGameSettings, type SnakeGameState } from './types';
-import { Food } from './food';
 import { Snake } from './snake';
+import { FoodManager } from './food-manager';
 
 type SnakeGameEvents = {
 	tick: [state: SnakeGameState];
 	gameOver: [state: SnakeGameState];
 };
 
-const DEFAULT_GAME_SETTINGS: SnakeGameSettings = {
-	fieldSize: { width: 20, height: 20 },
-};
-
 export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private settings: SnakeGameSettings;
 	private readonly tickMs: number;
 	private gameLoop?: NodeJS.Timeout;
-	private food: Food;
+	private foodManager: FoodManager;
 	private snake: Snake;
 	private gameOver: boolean;
 
-	constructor(settings: SnakeGameSettings = DEFAULT_GAME_SETTINGS) {
+	constructor(settings: SnakeGameSettings) {
 		super();
 
 		this.settings = settings;
@@ -39,7 +35,10 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 				},
 			],
 		});
-		this.food = new Food({ fieldSize });
+		this.foodManager = new FoodManager({
+			foodAmount: this.settings.foodAmount,
+			fieldSize: this.settings.fieldSize,
+		});
 	}
 
 	changeSnakeDirection(direction: SnakeDirection) {
@@ -66,7 +65,8 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 	private tick() {
 		const nextHead = this.snake.calculateNextPosition();
-		const ateFood = this.food.isFoodAt(nextHead);
+		const eatenFood = this.foodManager.findFoodByPosition(nextHead);
+		const ateFood = !!eatenFood;
 		const hasCollision = this.snake.hasCollision(nextHead, ateFood);
 
 		if (hasCollision) {
@@ -76,7 +76,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 		this.snake.move(nextHead, ateFood);
 
-		if (ateFood) this.food.respawnFood();
+		if (eatenFood) eatenFood.respawnFood();
 
 		this.emit('tick', this.getGameState());
 	}
@@ -86,7 +86,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			gameOver: this.gameOver,
 			snakeDirection: this.snake.direction,
 			snakeSegments: this.snake.segments,
-			foodPosition: this.food.getPosition(),
+			foodPositions: this.foodManager.getFoodPositions(),
 		};
 	}
 

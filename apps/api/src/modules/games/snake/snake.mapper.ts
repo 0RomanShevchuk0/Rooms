@@ -10,10 +10,10 @@ export function toSnakeGameStatePayload(
 			x: segment.x,
 			y: segment.y,
 		})),
-		foodPosition: {
-			x: state.foodPosition.x,
-			y: state.foodPosition.y,
-		},
+		foodPositions: state.foodPositions.map((position) => ({
+			x: position.x,
+			y: position.y,
+		})),
 		gameOver: state.gameOver,
 	};
 }

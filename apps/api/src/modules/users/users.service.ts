@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma/prisma.service';
-import type { CreateUserInput } from './inputs/create-user.input';
+import type {
+	CreateOauthUserInput,
+	CreateUserInput,
+} from './inputs/create-user.input';
 import type { UpdateUserInput } from './inputs/update-user.input';
 import { PasswordsService } from '../auth/passwords.service';
 import { UserForAuth } from './types/user-for-auth.type';
 import { publicUserSelect, type PublicUser } from './users.select';
 import { DomainError } from 'src/shared/errors/domain.error';
+import { OAuthProvider } from 'generated/prisma/enums';
 
 @Injectable()
 export class UsersService {
@@ -61,6 +65,50 @@ export class UsersService {
 	async findMany(): Promise<PublicUser[]> {
 		return this.prisma.user.findMany({
 			select: publicUserSelect,
+		});
+	}
+
+	async findOauthUser(
+		provider: OAuthProvider,
+		oauthId: string,
+	): Promise<PublicUser | null> {
+		return this.prisma.user.findFirst({
+			where: {
+				oauthProvider: provider,
+				oauthId: oauthId,
+			},
+			select: publicUserSelect,
+		});
+	}
+
+	async createOauthUser(userData: CreateOauthUserInput): Promise<PublicUser> {
+		const { oauthId, email, provider, name } = userData;
+		return this.prisma.user.create({
+			data: {
+				oauthProvider: provider,
+				oauthId: oauthId,
+				email: email,
+				name: name,
+				username: email ?? `user_${oauthId.slice(0, 8)}`,
+			},
+			select: publicUserSelect,
+		});
+	}
+
+	async findOrCreateByOAuth(
+		userData: CreateOauthUserInput,
+	): Promise<PublicUser> {
+		const { provider, oauthId } = userData;
+		const existingUser = await this.findOauthUser(provider, oauthId);
+		if (existingUser) {
+			return existingUser;
+		}
+
+		return this.createOauthUser({
+			provider,
+			oauthId,
+			email: userData.email,
+			name: userData.name,
 		});
 	}
 

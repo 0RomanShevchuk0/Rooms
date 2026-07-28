@@ -81,7 +81,7 @@ export class AuthService {
 			return null;
 		}
 
-		if (user.deletedAt) {
+		if (!user || user.deletedAt || !user.password) {
 			return null;
 		}
 

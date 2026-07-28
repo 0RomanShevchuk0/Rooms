@@ -14,19 +14,27 @@ datasource db {
    provider = "postgresql"
 }
 
+enum OAuthProvider {
+   google
+}
+
 model User {
-   id        String    @id @default(uuid())
-   email     String?   @unique
-   name      String?
-   username  String    @unique
-   password  String
-   deletedAt DateTime?
+   id            String         @id @default(uuid())
+   email         String?        @unique
+   name          String?
+   username      String         @unique
+   password      String?
+   deletedAt     DateTime?
+   oauthProvider OAuthProvider?
+   oauthId       String?
 
    participants RoomParticipant[] @relation("UserParticipants")
 
    messages Message[] @relation("MessageSender")
 
    createdAt DateTime @default(now())
+
+   @@unique([oauthProvider, oauthId])
 }
 
 model Room {
@@ -36,7 +44,7 @@ model Room {
 
    participants RoomParticipant[] @relation("RoomParticipants")
 
-   chat Chat? @relation("RoomChat")
+   chat          Chat?              @relation("RoomChat")
    snakeSettings RoomSnakeSettings?
 
    createdAt DateTime @default(now())
@@ -45,9 +53,9 @@ model Room {
 model RoomSnakeSettings {
    roomId String @id
 
-   fieldWidth Int @default(20)
+   fieldWidth  Int @default(20)
    fieldHeight Int @default(20)
-   foodAmount Int @default(1)
+   foodAmount  Int @default(1)
 
    room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
@@ -59,10 +67,6 @@ model RoomParticipant {
    id      String  @id @default(uuid())
    isReady Boolean @default(false)
 
-   @@unique([roomId, userId])
-   @@index([roomId])
-   @@index([userId])
-
    userId String
    user   User   @relation("UserParticipants", fields: [userId], references: [id])
 
@@ -70,6 +74,10 @@ model RoomParticipant {
    room   Room   @relation("RoomParticipants", fields: [roomId], references: [id], onDelete: Cascade)
 
    createdAt DateTime @default(now())
+
+   @@unique([roomId, userId])
+   @@index([roomId])
+   @@index([userId])
 }
 
 model Chat {

@@ -18,6 +18,7 @@ export const mutationKeys = {
 		refreshToken: () => ["session", "refresh-token"] as const,
 	},
 	auth: {
+		oAuth: () => ["auth", "o-auth"] as const,
 		login: () => ["auth", "login"] as const,
 		register: () => ["auth", "register"] as const,
 		logout: () => ["auth", "logout"] as const,

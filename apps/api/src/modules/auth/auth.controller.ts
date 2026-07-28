@@ -1,10 +1,19 @@
-import { Controller, Post, Body, UseGuards, Res, Req } from '@nestjs/common';
+import {
+	Controller,
+	Post,
+	Body,
+	UseGuards,
+	Res,
+	Req,
+	Get,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user.type';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import {
 	AuthCredentialsSchema,
 	type AuthCredentials,
@@ -93,5 +102,22 @@ export class AuthController {
 
 		this.setAuthCookies(res, tokens);
 		return { access_token: tokens.access_token };
+	}
+
+	@Get('google')
+	@UseGuards(GoogleAuthGuard)
+	googleOauth() {}
+
+	@Get('google-redirect')
+	@UseGuards(GoogleAuthGuard)
+	async googleOauthCallback(
+		@CurrentUser() user: AuthUser,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const tokens = await this.authService.login(user);
+		this.setAuthCookies(res, tokens);
+
+		const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
+		res.redirect(clientUrl);
 	}
 }

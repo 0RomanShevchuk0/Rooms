@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Button } from "@/shared/ui/button";
 import { FieldSeparator } from "@/shared/ui/field";
 
-import type { OAuthProvider } from "../model/types";
+import { OAuthProvider } from "../model/types";
 
 function GoogleIcon({ className }: { className?: string }) {
 	return (
@@ -29,17 +29,36 @@ function GoogleIcon({ className }: { className?: string }) {
 	);
 }
 
-const OAUTH_PROVIDERS: Array<{
-	id: OAuthProvider;
-	label: string;
-	icon: ReactNode;
-}> = [
+function DiscordIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+			<path
+				fill="currentColor"
+				d="M20.317 4.369A19.791 19.791 0 0016.885 3c-.227.38-.485.88-.664 1.263-1.976-.297-3.95-.297-5.889 0-.18-.384-.438-.884-.665-1.263A19.736 19.736 0 003.684 4.37C1.75 9.042.94 13.563 1.373 18.03a20.3 20.3 0 006.006 2.98c.45-.62.854-1.27 1.21-1.94-1.9-.57-3.68-1.45-4.9-2.6 0 0 .413-.3 1.134-.92 2.06 1.16 4.22 1.84 6.34 1.84 2.12 0 4.28-.68 6.34-1.84.72.62 1.133.92 1.133.92-1.22 1.15-2.99 2.03-4.9 2.6.356.67.76 1.32 1.21 1.94a20.32 20.32 0 006.006-2.98c.434-4.467-.378-8.988-2.312-13.661zM9.545 15.568c-1.184 0-2.157-1.087-2.157-2.424 0-1.338.951-2.424 2.157-2.424 1.216 0 2.18 1.096 2.157 2.424 0 1.337-.94 2.424-2.157 2.424zm4.91 0c-1.184 0-2.157-1.087-2.157-2.424 0-1.338.951-2.424 2.157-2.424 1.216 0 2.18 1.096 2.157 2.424 0 1.337-.941 2.424-2.157 2.424z"
+			/>
+		</svg>
+	);
+}
+
+const OAUTH_PROVIDERS: Record<
+	OAuthProvider,
 	{
-		id: "google",
+		id: OAuthProvider;
+		label: string;
+		icon: ReactNode;
+	}
+> = {
+	[OAuthProvider.google]: {
+		id: OAuthProvider.google,
 		label: "Continue with Google",
 		icon: <GoogleIcon className="size-4" />,
 	},
-];
+	[OAuthProvider.discord]: {
+		id: OAuthProvider.discord,
+		label: "Continue with Discord",
+		icon: <DiscordIcon className="size-4" />,
+	},
+};
 
 interface OAuthButtonsProps {
 	disabled?: boolean;
@@ -52,7 +71,7 @@ export function OAuthButtons({ disabled, onOAuth }: OAuthButtonsProps) {
 			<FieldSeparator>Or continue with</FieldSeparator>
 
 			<div className="grid gap-2">
-				{OAUTH_PROVIDERS.map((provider) => (
+				{Object.values(OAUTH_PROVIDERS).map((provider) => (
 					<Button
 						key={provider.id}
 						type="button"

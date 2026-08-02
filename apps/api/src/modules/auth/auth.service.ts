@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
@@ -7,6 +7,9 @@ import { AuthUser } from './types/auth-user.type';
 import { JwtPayload } from './types/jwt-payload.type';
 import { DomainError } from 'src/shared/errors/domain.error';
 import type { AuthCredentialsInput } from './inputs/auth-credentials.input';
+import { randomBytes } from 'node:crypto';
+import { OAuthProvider } from 'generated/prisma/enums';
+import { DiscordTokenResponse, DiscordUser } from './types/discord-oauth.type';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +17,7 @@ export class AuthService {
 		private readonly usersService: UsersService,
 		private readonly passwordsService: PasswordsService,
 		private readonly configService: ConfigService,
-		private jwtService: JwtService,
+		private readonly jwtService: JwtService,
 	) {}
 
 	private async createTokens(payload: JwtPayload) {
@@ -77,9 +80,6 @@ export class AuthService {
 		password: string,
 	): Promise<AuthUser | null> {
 		const user = await this.usersService.findByUsernameForAuth(username);
-		if (!user) {
-			return null;
-		}
 
 		if (!user || user.deletedAt || !user.password) {
 			return null;
@@ -136,5 +136,101 @@ export class AuthService {
 		});
 
 		return { access_token, refresh_token };
+	}
+
+	getDiscordAuthorizationUrl() {
+		const clientId =
+			this.configService.getOrThrow<string>('DISCORD_CLIENT_ID');
+
+		const redirectUri = this.configService.getOrThrow<string>(
+			'DISCORD_CALLBACK_URL',
+		);
+
+		const state = randomBytes(32).toString('hex');
+
+		const params = new URLSearchParams({
+			response_type: 'code',
+			client_id: clientId,
+			scope: 'identify email',
+			state,
+			redirect_uri: redirectUri,
+			prompt: 'consent',
+		});
+
+		const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
+
+		return {
+			url,
+			state,
+		};
+	}
+
+	private async getDiscordUser(accessToken: string): Promise<DiscordUser> {
+		const response = await fetch('https://discord.com/api/v10/users/@me', {
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+			},
+		});
+
+		if (!response.ok) {
+			throw new UnauthorizedException('Failed to fetch Discord user');
+		}
+
+		return (await response.json()) as DiscordUser;
+	}
+
+	private async exchangeDiscordCode(
+		code: string,
+	): Promise<DiscordTokenResponse> {
+		const clientId =
+			this.configService.getOrThrow<string>('DISCORD_CLIENT_ID');
+
+		const clientSecret = this.configService.getOrThrow<string>(
+			'DISCORD_CLIENT_SECRET',
+		);
+
+		const redirectUri = this.configService.getOrThrow<string>(
+			'DISCORD_CALLBACK_URL',
+		);
+
+		const response = await fetch('https://discord.com/api/oauth2/token', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			body: new URLSearchParams({
+				client_id: clientId,
+				client_secret: clientSecret,
+				grant_type: 'authorization_code',
+				code,
+				redirect_uri: redirectUri,
+			}),
+		});
+
+		if (!response.ok) {
+			throw new UnauthorizedException(
+				'Failed to exchange Discord authorization code',
+			);
+		}
+
+		return (await response.json()) as DiscordTokenResponse;
+	}
+
+	async loginWithDiscord(code: string): Promise<AuthUser> {
+		const tokenData = await this.exchangeDiscordCode(code);
+
+		const discordUser = await this.getDiscordUser(tokenData.access_token);
+
+		const user = await this.usersService.findOrCreateByOAuth({
+			provider: OAuthProvider.discord,
+			oauthId: discordUser.id,
+			email: discordUser.email,
+			name: discordUser.global_name ?? discordUser.username,
+		});
+
+		return {
+			id: user.id,
+			username: user.username,
+		};
 	}
 }

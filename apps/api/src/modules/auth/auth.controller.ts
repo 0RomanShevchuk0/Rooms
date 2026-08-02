@@ -6,6 +6,8 @@ import {
 	Res,
 	Req,
 	Get,
+	Query,
+	UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
@@ -104,6 +106,7 @@ export class AuthController {
 		return { access_token: tokens.access_token };
 	}
 
+	// OAuth routes
 	@Get('google')
 	@UseGuards(GoogleAuthGuard)
 	googleOauth() {}
@@ -119,5 +122,45 @@ export class AuthController {
 
 		const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
 		res.redirect(clientUrl);
+	}
+
+	@Get('discord')
+	discordOauth(@Res({ passthrough: true }) res: Response) {
+		const { url, state } = this.authService.getDiscordAuthorizationUrl();
+
+		res.cookie('discord_oauth_state', state, {
+			httpOnly: true,
+			secure: this.configService.getOrThrow('NODE_ENV') === 'production',
+			sameSite: 'lax',
+			maxAge: 10 * 60 * 1000, // 10 minutes
+		});
+
+		return res.redirect(url);
+	}
+
+	@Get('discord-redirect')
+	async discordOauthCallback(
+		@Query('code') code: string,
+		@Query('state') state: string,
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		const savedState = req.cookies.discord_oauth_state as string | undefined;
+
+		if (!state || !savedState || state !== savedState) {
+			throw new UnauthorizedException('Invalid OAuth state');
+		}
+
+		res.clearCookie('discord_oauth_state');
+
+		const user = await this.authService.loginWithDiscord(code);
+
+		const tokens = await this.authService.login(user);
+
+		this.setAuthCookies(res, tokens);
+
+		const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
+
+		return res.redirect(clientUrl);
 	}
 }

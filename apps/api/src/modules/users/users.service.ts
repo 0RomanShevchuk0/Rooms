@@ -139,7 +139,12 @@ export class UsersService {
 			if (userWithSameEmail) {
 				throw DomainError.conflict(
 					'Email is already linked to another sign-in method',
-					{ field: 'email' },
+					{
+						field: 'email',
+						// Lets the UI point at the method that actually works.
+						// Null for accounts registered with a password.
+						linkedProvider: userWithSameEmail.oauthProvider,
+					},
 				);
 			}
 		}

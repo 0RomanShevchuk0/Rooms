@@ -32,10 +32,22 @@ export class GoogleCallbackGuard extends AuthGuard('google') {
 	}
 
 	handleRequest<TUser>(err: unknown, user: TUser): TUser {
-		if (err || !user) {
+		// Errors raised by the strategy carry their own classification (an
+		// already-linked email, for one). Rethrow them so the callback filter
+		// can map them, instead of flattening everything into a generic failure.
+		if (err) {
+			throw err instanceof Error
+				? err
+				: new OAuthCallbackError(
+						OAUTH_ERROR_CODES.failed,
+						'Google authentication failed',
+					);
+		}
+
+		if (!user) {
 			throw new OAuthCallbackError(
 				OAUTH_ERROR_CODES.failed,
-				err instanceof Error ? err.message : 'Google authentication failed',
+				'Google authentication failed',
 			);
 		}
 

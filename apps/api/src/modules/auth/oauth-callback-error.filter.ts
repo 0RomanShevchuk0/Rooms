@@ -39,8 +39,26 @@ export class OAuthCallbackErrorFilter implements ExceptionFilter {
 			.getOrThrow<string>('CLIENT_URL')
 			.replace(/\/$/, '');
 
-		response.redirect(`${clientUrl}${LOGIN_PATH}?error=${code}`);
+		const params = new URLSearchParams({ error: code });
+
+		const linkedProvider = resolveLinkedProvider(exception);
+		if (linkedProvider) {
+			params.set('provider', linkedProvider);
+		}
+
+		response.redirect(`${clientUrl}${LOGIN_PATH}?${params.toString()}`);
 	}
+}
+
+/** Which sign-in method already owns the email, when we know it. */
+function resolveLinkedProvider(exception: unknown): string | null {
+	if (!isDomainError(exception)) {
+		return null;
+	}
+
+	const linkedProvider = exception.metadata?.linkedProvider;
+
+	return typeof linkedProvider === 'string' ? linkedProvider : null;
 }
 
 function resolveErrorCode(exception: unknown): OAuthErrorCode {

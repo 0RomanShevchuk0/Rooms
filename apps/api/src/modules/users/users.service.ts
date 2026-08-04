@@ -9,6 +9,7 @@ import { PasswordsService } from '../auth/passwords.service';
 import { UserForAuth } from './types/user-for-auth.type';
 import { publicUserSelect, type PublicUser } from './users.select';
 import { DomainError } from 'src/shared/errors/domain.error';
+import { isUniqueConstraintError } from 'src/shared/errors/prisma-error';
 import { OAuthProvider } from 'generated/prisma/enums';
 
 @Injectable()
@@ -104,12 +105,32 @@ export class UsersService {
 			return existingUser;
 		}
 
-		return this.createOauthUser({
-			provider,
-			oauthId,
-			email: userData.email,
-			name: userData.name,
-		});
+		if (userData.email) {
+			const userWithSameEmail = await this.findByEmail(userData.email);
+			if (userWithSameEmail) {
+				throw DomainError.conflict(
+					'Email is already linked to another sign-in method',
+					{ field: 'email' },
+				);
+			}
+		}
+
+		try {
+			return await this.createOauthUser({
+				provider,
+				oauthId,
+				email: userData.email,
+				name: userData.name,
+			});
+		} catch (error) {
+			// Another request may have claimed the same email or username in between.
+			if (isUniqueConstraintError(error)) {
+				throw DomainError.conflict(
+					'Account already exists for this email or username',
+				);
+			}
+			throw error;
+		}
 	}
 
 	async create(createUserDto: CreateUserInput): Promise<PublicUser> {

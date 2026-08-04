@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ChatIdSchema } from "./base.js";
+import { PublicUserSchema } from "../user/rest.js";
 
 export const CHAT_SOCKET_EVENTS = {
 	CONNECT: "chat:connect",
@@ -16,13 +17,7 @@ export const ChatSendMessagePayloadSchema = z.object({
 	content: z.string().min(1),
 });
 
-export const ChatMessageSenderSchema = z.object({
-	id: z.string().uuid(),
-	username: z.string(),
-	email: z.string().email().nullable(),
-	name: z.string().nullable(),
-	deletedAt: z.string().datetime().nullable(),
-});
+export const ChatMessageSenderSchema = PublicUserSchema;
 
 export const ChatMessagePayloadSchema = z.object({
 	id: z.string().uuid(),

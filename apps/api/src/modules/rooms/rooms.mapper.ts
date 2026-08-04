@@ -12,7 +12,7 @@ import type {
 } from './rooms.types';
 import { toSnakeGameSettings } from './room-settings/room-settings.mapper';
 import { DomainError } from 'src/shared/errors/domain.error';
-import { toRestUser } from '../users/users.mapper';
+import { toPublicRestUser } from '../users/users.mapper';
 
 export function toRoomParticipantPayload(
 	participant: RoomParticipantWithUser,
@@ -21,7 +21,7 @@ export function toRoomParticipantPayload(
 		id: participant.id,
 		isReady: participant.isReady,
 		userId: participant.userId,
-		user: toRestUser(participant.user),
+		user: toPublicRestUser(participant.user),
 	};
 }
 

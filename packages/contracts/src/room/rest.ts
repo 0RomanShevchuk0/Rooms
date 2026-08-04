@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ChatSchema } from "../chat/base.js";
 import { SnakeGameSettingsSchema } from "../snake-game/base.js";
-import { UserSchema } from "../user/rest.js";
+import { PublicUserSchema } from "../user/rest.js";
 import { RoomIdSchema, RoomParticipantIdSchema } from "./base.js";
 
 export const RoomSchema = z.object({
@@ -18,7 +18,7 @@ export const RoomParticipantSchema = z.object({
 	id: RoomParticipantIdSchema,
 	isReady: z.boolean(),
 	userId: z.string().uuid(),
-	user: UserSchema,
+	user: PublicUserSchema,
 });
 
 export const RoomWithParticipantsSchema = RoomSchema.extend({

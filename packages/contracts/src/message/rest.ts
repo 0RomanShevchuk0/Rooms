@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ChatIdSchema } from "../chat/base.js";
-import { UserSchema } from "../user/rest.js";
+import { PublicUserSchema } from "../user/rest.js";
 
 export const MessageIdSchema = z.string().uuid();
 
@@ -13,7 +13,7 @@ export const MessageSchema = z.object({
 });
 
 export const MessageWithSenderSchema = MessageSchema.extend({
-	sender: UserSchema,
+	sender: PublicUserSchema,
 });
 
 export const GetMessageByIdParamsSchema = z.object({

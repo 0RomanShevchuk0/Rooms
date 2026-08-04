@@ -3,6 +3,7 @@ import {
 	RoomIdSchema,
 	RoomParticipantIdSchema,
 } from "./base.js";
+import { PublicUserSchema } from "../user/rest.js";
 
 export const ROOM_SOCKET_EVENTS = {
 	CONNECT: "room:connect",
@@ -21,13 +22,7 @@ export const RoomPresencePayloadSchema = z.object({
 	onlineParticipantIds: z.array(RoomParticipantIdSchema),
 });
 
-export const RoomParticipantUserPayloadSchema = z.object({
-	id: z.string().uuid(),
-	username: z.string(),
-	email: z.string().email().nullable(),
-	name: z.string().nullable(),
-	deletedAt: z.string().datetime().nullable(),
-});
+export const RoomParticipantUserPayloadSchema = PublicUserSchema;
 
 export const RoomParticipantPayloadSchema = z.object({
 	id: RoomParticipantIdSchema,

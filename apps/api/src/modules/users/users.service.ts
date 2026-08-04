@@ -92,16 +92,6 @@ export class UsersService {
 		return account?.user ?? null;
 	}
 
-	/** Which providers can already reach this account. */
-	async findLinkedProviders(userId: string): Promise<OAuthProvider[]> {
-		const accounts = await this.prisma.oAuthAccount.findMany({
-			where: { userId },
-			select: { provider: true },
-		});
-
-		return accounts.map((account) => account.provider);
-	}
-
 	/**
 	 * Usernames are shown to everyone in a room, so an OAuth signup must never
 	 * fall back to the email address.

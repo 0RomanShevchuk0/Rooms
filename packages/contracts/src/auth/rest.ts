@@ -26,6 +26,7 @@ export const OAUTH_ERROR_CODES = {
 	cancelled: "oauth_cancelled",
 	invalidState: "oauth_invalid_state",
 	accountExists: "oauth_account_exists",
+	accountDeleted: "oauth_account_deleted",
 	failed: "oauth_failed",
 } as const;
 
@@ -33,6 +34,7 @@ export const OAuthErrorCodeSchema = z.enum([
 	OAUTH_ERROR_CODES.cancelled,
 	OAUTH_ERROR_CODES.invalidState,
 	OAUTH_ERROR_CODES.accountExists,
+	OAUTH_ERROR_CODES.accountDeleted,
 	OAUTH_ERROR_CODES.failed,
 ]);
 

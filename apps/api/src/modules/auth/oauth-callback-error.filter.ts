@@ -70,7 +70,9 @@ function resolveErrorCode(exception: unknown): OAuthErrorCode {
 		isDomainError(exception) &&
 		exception.code === DOMAIN_ERROR_CODES.CONFLICT
 	) {
-		return OAUTH_ERROR_CODES.accountExists;
+		return exception.metadata?.deleted === true
+			? OAUTH_ERROR_CODES.accountDeleted
+			: OAUTH_ERROR_CODES.accountExists;
 	}
 
 	return OAUTH_ERROR_CODES.failed;

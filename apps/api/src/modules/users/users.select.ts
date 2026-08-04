@@ -10,7 +10,6 @@ export const userRecordSelect = {
 	email: true,
 	username: true,
 	deletedAt: true,
-	oauthProvider: true,
 } satisfies Prisma.UserSelect;
 
 /** What other users are allowed to see — no contact details. */

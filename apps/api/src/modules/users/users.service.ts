@@ -84,13 +84,22 @@ export class UsersService {
 		provider: OAuthProvider,
 		oauthId: string,
 	): Promise<UserRecord | null> {
-		return this.prisma.user.findFirst({
-			where: {
-				oauthProvider: provider,
-				oauthId: oauthId,
-			},
-			select: userRecordSelect,
+		const account = await this.prisma.oAuthAccount.findUnique({
+			where: { provider_oauthId: { provider, oauthId } },
+			select: { user: { select: userRecordSelect } },
 		});
+
+		return account?.user ?? null;
+	}
+
+	/** Which providers can already reach this account. */
+	async findLinkedProviders(userId: string): Promise<OAuthProvider[]> {
+		const accounts = await this.prisma.oAuthAccount.findMany({
+			where: { userId },
+			select: { provider: true },
+		});
+
+		return accounts.map((account) => account.provider);
 	}
 
 	/**
@@ -115,49 +124,69 @@ export class UsersService {
 		const { oauthId, email, provider, name } = userData;
 		return this.prisma.user.create({
 			data: {
-				oauthProvider: provider,
-				oauthId: oauthId,
 				email: email,
 				name: name,
 				username: await this.generateUsername(name),
+				oauthAccounts: { create: { provider, oauthId } },
 			},
 			select: userRecordSelect,
 		});
 	}
 
+	private async linkOauthAccount(
+		userId: string,
+		provider: OAuthProvider,
+		oauthId: string,
+	): Promise<UserRecord> {
+		const account = await this.prisma.oAuthAccount.create({
+			data: { provider, oauthId, userId },
+			select: { user: { select: userRecordSelect } },
+		});
+
+		return account.user;
+	}
+
+	/**
+	 * A verified email proves control of the mailbox, so a second provider
+	 * reporting one we already know about is the same person — attach it to the
+	 * existing account instead of leaving them locked out.
+	 *
+	 * Callers must only pass an email the provider marked as verified.
+	 */
 	async findOrCreateByOAuth(
 		userData: CreateOauthUserInput,
 	): Promise<UserRecord> {
-		const { provider, oauthId } = userData;
-		const existingUser = await this.findOauthUser(provider, oauthId);
-		if (existingUser) {
-			return existingUser;
+		const { provider, oauthId, email, name } = userData;
+
+		const linkedUser = await this.findOauthUser(provider, oauthId);
+		if (linkedUser) {
+			return linkedUser;
 		}
 
-		if (userData.email) {
-			const userWithSameEmail = await this.findByEmail(userData.email);
+		if (email) {
+			const userWithSameEmail = await this.findByEmail(email);
+
+			if (userWithSameEmail?.deletedAt) {
+				throw DomainError.conflict('Account for this email was deleted', {
+					field: 'email',
+					deleted: true,
+				});
+			}
+
 			if (userWithSameEmail) {
-				throw DomainError.conflict(
-					'Email is already linked to another sign-in method',
-					{
-						field: 'email',
-						// Lets the UI point at the method that actually works.
-						// Null for accounts registered with a password.
-						linkedProvider: userWithSameEmail.oauthProvider,
-					},
+				return this.linkOauthAccount(
+					userWithSameEmail.id,
+					provider,
+					oauthId,
 				);
 			}
 		}
 
 		try {
-			return await this.createOauthUser({
-				provider,
-				oauthId,
-				email: userData.email,
-				name: userData.name,
-			});
+			return await this.createOauthUser({ provider, oauthId, email, name });
 		} catch (error) {
-			// Another request may have claimed the same email or username in between.
+			// A concurrent first sign-in may have claimed the same email or
+			// username in between.
 			if (isUniqueConstraintError(error)) {
 				throw DomainError.conflict(
 					'Account already exists for this email or username',

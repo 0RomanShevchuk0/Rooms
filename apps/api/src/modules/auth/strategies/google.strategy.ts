@@ -25,21 +25,22 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
 		_refreshToken: string,
 		profile: Profile,
 	): Promise<AuthUser> {
-		const { name, emails } = profile;
-		const userData = {
-			email: emails?.[0]?.value,
-			name: `${name?.givenName} ${name?.familyName}`,
-		};
+		const { name, emails, displayName } = profile;
+		const primaryEmail = emails?.[0];
 
-		if (!userData.email) {
+		if (!primaryEmail) {
 			throw new UnauthorizedException('Email is required');
 		}
 
 		const user = await this.usersService.findOrCreateByOAuth({
 			provider: OAuthProvider.google,
 			oauthId: profile.id,
-			email: userData.email,
-			name: userData.name,
+			// Only a verified address may reach an existing account.
+			email: primaryEmail.verified ? primaryEmail.value : undefined,
+			name:
+				[name?.givenName, name?.familyName].filter(Boolean).join(' ') ||
+				displayName ||
+				undefined,
 		});
 
 		return {

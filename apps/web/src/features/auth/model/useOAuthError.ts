@@ -9,6 +9,8 @@ const OAUTH_ERROR_MESSAGES: Record<OAuthErrorCode, string> = {
 	[OAUTH_ERROR_CODES.invalidState]: "Sign-in request expired. Please try again",
 	[OAUTH_ERROR_CODES.accountExists]:
 		"This email is already linked to another sign-in method. Use that one instead.",
+	[OAUTH_ERROR_CODES.accountDeleted]:
+		"The account for this email was deleted and cannot be used to sign in.",
 	[OAUTH_ERROR_CODES.failed]: "Sign-in failed. Please try again",
 };
 

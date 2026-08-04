@@ -20,22 +20,36 @@ enum OAuthProvider {
 }
 
 model User {
-   id            String         @id @default(uuid())
-   email         String?        @unique
-   name          String?
-   username      String         @unique
-   password      String?
-   deletedAt     DateTime?
-   oauthProvider OAuthProvider?
-   oauthId       String?
+   id        String    @id @default(uuid())
+   email     String?   @unique
+   name      String?
+   username  String    @unique
+   password  String?
+   deletedAt DateTime?
+
+   oauthAccounts OAuthAccount[] @relation("UserOAuthAccounts")
 
    participants RoomParticipant[] @relation("UserParticipants")
 
    messages Message[] @relation("MessageSender")
 
    createdAt DateTime @default(now())
+}
 
-   @@unique([oauthProvider, oauthId])
+/// One row per provider a user can sign in with, so a single account can be
+/// reached through several of them.
+model OAuthAccount {
+   id       String        @id @default(uuid())
+   provider OAuthProvider
+   oauthId  String
+
+   userId String
+   user   User   @relation("UserOAuthAccounts", fields: [userId], references: [id], onDelete: Cascade)
+
+   createdAt DateTime @default(now())
+
+   @@unique([provider, oauthId])
+   @@index([userId])
 }
 
 model Room {

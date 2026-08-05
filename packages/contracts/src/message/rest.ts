@@ -2,14 +2,14 @@ import { z } from "zod";
 import { ChatIdSchema } from "../chat/base.js";
 import { PublicUserSchema } from "../user/rest.js";
 
-export const MessageIdSchema = z.string().uuid();
+export const MessageIdSchema = z.uuid();
 
 export const MessageSchema = z.object({
 	id: MessageIdSchema,
 	content: z.string(),
 	chatId: ChatIdSchema,
-	senderId: z.string().uuid(),
-	createdAt: z.string().datetime(),
+	senderId: z.uuid(),
+	createdAt: z.iso.datetime(),
 });
 
 export const MessageWithSenderSchema = MessageSchema.extend({

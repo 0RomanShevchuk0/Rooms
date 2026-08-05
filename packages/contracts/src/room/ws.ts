@@ -27,7 +27,7 @@ export const RoomParticipantUserPayloadSchema = PublicUserSchema;
 export const RoomParticipantPayloadSchema = z.object({
 	id: RoomParticipantIdSchema,
 	isReady: z.boolean(),
-	userId: z.string().uuid(),
+	userId: z.uuid(),
 	user: RoomParticipantUserPayloadSchema,
 });
 

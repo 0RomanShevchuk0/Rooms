@@ -20,11 +20,11 @@ export const ChatSendMessagePayloadSchema = z.object({
 export const ChatMessageSenderSchema = PublicUserSchema;
 
 export const ChatMessagePayloadSchema = z.object({
-	id: z.string().uuid(),
+	id: z.uuid(),
 	content: z.string(),
 	chatId: ChatIdSchema,
-	senderId: z.string().uuid(),
-	createdAt: z.string().datetime(),
+	senderId: z.uuid(),
+	createdAt: z.iso.datetime(),
 	sender: ChatMessageSenderSchema,
 });
 

@@ -22,6 +22,8 @@ import {
 	type SnakeSettingsChangedPayload,
 	type SnakeRoomPayload,
 	SnakeRoomPayloadSchema,
+	SnakeStartGamePayloadSchema,
+	type SnakeStartGamePayload,
 } from '@rooms/contracts/snake-game';
 import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
@@ -79,8 +81,8 @@ export class SnakeGateway {
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.START_GAME)
 	async startGame(
-		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
-		payload: SnakeRoomPayload,
+		@MessageBody(new ZodValidationPipe(SnakeStartGamePayloadSchema))
+		payload: SnakeStartGamePayload,
 	) {
 		const game = await this.snakeService.startGame(payload.roomId);
 

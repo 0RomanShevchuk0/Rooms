@@ -11,23 +11,23 @@ export const UsernameSchema = z
 
 /** What other users are allowed to see. Never carries contact details. */
 export const PublicUserSchema = z.object({
-	id: z.string().uuid(),
+	id: z.uuid(),
 	username: z.string(),
 	name: z.string().nullable(),
 });
 
 /** The full profile, only ever returned to the owner of the account. */
 export const UserSchema = PublicUserSchema.extend({
-	email: z.string().email().nullable(),
-	deletedAt: z.string().datetime().nullable(),
+	email: z.email().nullable(),
+	deletedAt: z.iso.datetime().nullable(),
 });
 
 export const UserIdParamsSchema = z.object({
-	id: z.string().uuid(),
+	id: z.uuid(),
 });
 
 export const UpdateUserPayloadSchema = z.object({
-	email: z.string().email().optional(),
+	email: z.email().optional(),
 	name: z.string().min(4).optional(),
 	username: UsernameSchema.optional(),
 });

@@ -19,16 +19,18 @@ export const SNAKE_GAME_SOCKET_EVENTS = {
 } as const;
 
 export const SnakeRoomPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 });
 
+export const SnakeStartGamePayloadSchema = SnakeRoomPayloadSchema;
+
 export const SnakeChangeDirectionPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 	direction: SnakeDirectionSchema,
 });
 
 export const SnakeChangeSettingsPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 	settings: SnakeGameSettingsSchema,
 });
 
@@ -40,6 +42,7 @@ export type SnakePosition = z.infer<typeof SnakePositionSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
 export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;
 export type SnakeRoomPayload = z.infer<typeof SnakeRoomPayloadSchema>;
+export type SnakeStartGamePayload = z.infer<typeof SnakeStartGamePayloadSchema>;
 export type SnakeChangeDirectionPayload = z.infer<typeof SnakeChangeDirectionPayloadSchema>;
 export type SnakeChangeSettingsPayload = z.infer<typeof SnakeChangeSettingsPayloadSchema>;
 export type SnakeSettingsChangedPayload = z.infer<typeof SnakeSettingsChangedPayloadSchema>;

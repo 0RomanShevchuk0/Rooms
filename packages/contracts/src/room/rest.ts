@@ -17,7 +17,7 @@ export const RoomIdParamsSchema = z.object({
 export const RoomParticipantSchema = z.object({
 	id: RoomParticipantIdSchema,
 	isReady: z.boolean(),
-	userId: z.string().uuid(),
+	userId: z.uuid(),
 	user: PublicUserSchema,
 });
 
@@ -35,7 +35,7 @@ export const RoomWithParticipantsAndChatSchema = RoomWithParticipantsSchema.exte
 export const CreateRoomPayloadSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().optional(),
-	userIds: z.array(z.string().uuid()).min(1),
+	userIds: z.array(z.uuid()).min(1),
 });
 
 export const UpdateRoomPayloadSchema = CreateRoomPayloadSchema.partial();

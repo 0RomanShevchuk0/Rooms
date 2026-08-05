@@ -39,7 +39,12 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 
 	constructor(private readonly participantsService: RoomParticipantsService) {}
 
-	private roomParticipants = new Map<string, Set<string>>();
+	/**
+	 * A participant may hold the room open from several tabs or devices at once,
+	 * so presence tracks their live sockets rather than a single flag: they go
+	 * offline when the last one goes away.
+	 */
+	private roomParticipants = new Map<string, Map<string, Set<string>>>();
 	private socketContexts = new Map<string, RoomsSocketData>();
 
 	handleDisconnect(client: RoomsSocketWithAuth) {
@@ -48,19 +53,21 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 			return;
 		}
 
-		this.removeParticipantFromRoom(context.roomId, context.participantId);
+		this.removeParticipantSocket(
+			context.roomId,
+			context.participantId,
+			client.id,
+		);
 		this.clearSocketContextIfSessionMatches(
 			client.id,
 			context.sessionVersion,
 		);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			context.roomId,
 			context.participantId,
-			this.getOnlineParticipantIds(context.roomId),
+			ROOM_SOCKET_EVENTS.DISCONNECT,
 		);
-		this.server
-			.to(context.roomId)
-			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
@@ -81,6 +88,10 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 			return { ok: false, error: 'Participant not found in the room' };
 		}
 
+		// A socket that connects again without disconnecting first would
+		// otherwise stay counted in whichever room it was in before.
+		await this.detachSocket(client);
+
 		const sessionVersion = this.getNextSessionVersion(client.id);
 		const context: RoomsSocketData = {
 			participantId: body.participantId,
@@ -89,41 +100,35 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		};
 		this.socketContexts.set(client.id, context);
 
-		this.addParticipantToRoom(body.roomId, body.participantId);
+		this.addParticipantSocket(body.roomId, body.participantId, client.id);
 		await client.join(body.roomId);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			body.roomId,
 			body.participantId,
-			this.getOnlineParticipantIds(body.roomId),
+			ROOM_SOCKET_EVENTS.CONNECT,
 		);
-
-		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, payload);
 
 		return { ok: true };
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromRoom(@ConnectedSocket() client: RoomsSocketWithAuth) {
-		const context = this.socketContexts.get(client.id);
+		const context = await this.detachSocket(client);
 		if (!context) {
 			return { ok: true };
 		}
 
-		this.removeParticipantFromRoom(context.roomId, context.participantId);
-		await client.leave(context.roomId);
 		this.clearSocketContextIfSessionMatches(
 			client.id,
 			context.sessionVersion,
 		);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			context.roomId,
 			context.participantId,
-			this.getOnlineParticipantIds(context.roomId),
+			ROOM_SOCKET_EVENTS.DISCONNECT,
 		);
-
-		this.server
-			.to(context.roomId)
-			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 
 		return { ok: true };
 	}
@@ -145,6 +150,10 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		roomId: string,
 		participant: RoomParticipantWithUser,
 	) {
+		// Leaving over HTTP does not close the sockets, so presence has to be
+		// dropped here or the participant lingers online in the room they left.
+		this.evictParticipant(roomId, participant.id);
+
 		const payload = toRoomPresencePayload(
 			participant.id,
 			this.getOnlineParticipantIds(roomId),
@@ -153,22 +162,101 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	}
 
 	public getOnlineParticipantIds(roomId: string): string[] {
-		return Array.from(this.roomParticipants.get(roomId) ?? []);
+		return Array.from(this.roomParticipants.get(roomId)?.keys() ?? []);
 	}
 
-	private addParticipantToRoom(roomId: string, participantId: string) {
-		if (!this.roomParticipants.has(roomId)) {
-			this.roomParticipants.set(roomId, new Set());
+	/** Removes every socket a participant holds in a room, online or not. */
+	private evictParticipant(roomId: string, participantId: string) {
+		const socketIds = this.roomParticipants.get(roomId)?.get(participantId);
+		if (!socketIds) {
+			return;
 		}
-		this.roomParticipants.get(roomId)!.add(participantId);
+
+		for (const socketId of socketIds) {
+			this.socketContexts.delete(socketId);
+			this.server.in(socketId).socketsLeave(roomId);
+		}
+
+		this.dropParticipant(roomId, participantId);
 	}
 
-	private removeParticipantFromRoom(roomId: string, participantId: string) {
+	private async detachSocket(
+		client: RoomsSocketWithAuth,
+	): Promise<RoomsSocketData | null> {
+		const context = this.socketContexts.get(client.id);
+		if (!context) {
+			return null;
+		}
+
+		this.removeParticipantSocket(
+			context.roomId,
+			context.participantId,
+			client.id,
+		);
+		await client.leave(context.roomId);
+
+		return context;
+	}
+
+	private broadcastPresence(
+		roomId: string,
+		participantId: string,
+		event:
+			| typeof ROOM_SOCKET_EVENTS.CONNECT
+			| typeof ROOM_SOCKET_EVENTS.DISCONNECT,
+	) {
+		const payload = toRoomPresencePayload(
+			participantId,
+			this.getOnlineParticipantIds(roomId),
+		);
+
+		this.server.to(roomId).emit(event, payload);
+	}
+
+	private addParticipantSocket(
+		roomId: string,
+		participantId: string,
+		socketId: string,
+	) {
+		let room = this.roomParticipants.get(roomId);
+		if (!room) {
+			room = new Map();
+			this.roomParticipants.set(roomId, room);
+		}
+
+		const socketIds = room.get(participantId);
+		if (socketIds) {
+			socketIds.add(socketId);
+			return;
+		}
+
+		room.set(participantId, new Set([socketId]));
+	}
+
+	private removeParticipantSocket(
+		roomId: string,
+		participantId: string,
+		socketId: string,
+	) {
+		const socketIds = this.roomParticipants.get(roomId)?.get(participantId);
+		if (!socketIds) {
+			return;
+		}
+
+		socketIds.delete(socketId);
+		if (socketIds.size === 0) {
+			this.dropParticipant(roomId, participantId);
+		}
+	}
+
+	private dropParticipant(roomId: string, participantId: string) {
 		const room = this.roomParticipants.get(roomId);
-		if (!room) return;
+		if (!room) {
+			return;
+		}
 
 		room.delete(participantId);
-		if (room?.size === 0) {
+		if (room.size === 0) {
 			this.roomParticipants.delete(roomId);
 		}
 	}

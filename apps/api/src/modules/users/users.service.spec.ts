@@ -19,10 +19,7 @@ interface FakeAccount {
 	userId: string;
 }
 
-/**
- * The OAuth paths are mostly branching over what already exists in the
- * database, so an in-memory stand-in keeps the cases readable.
- */
+/** The OAuth paths mostly branch over existing rows, so this stands in for them. */
 function createPrisma(users: FakeUser[] = [], accounts: FakeAccount[] = []) {
 	const state = {
 		users: [...users],
@@ -139,9 +136,8 @@ describe('UsersService.findOrCreateByOAuth', () => {
 		expect(state.createdUsers).toBe(0);
 	});
 
-	// A second provider reporting a verified address we already know about is
-	// the same person, so they must land on the existing account rather than a
-	// duplicate they can never merge.
+	// A verified address we already know about belongs to the same person, and a
+	// duplicate account could never be merged back.
 	it('attaches a second provider to the account owning the email', async () => {
 		const { service, state } = createService([GOOGLE_USER], [GOOGLE_ACCOUNT]);
 
@@ -171,8 +167,8 @@ describe('UsersService.findOrCreateByOAuth', () => {
 		expect(state.accounts).toHaveLength(2);
 	});
 
-	// An unverified address proves nothing, so callers withhold it — and without
-	// it we must not reach into somebody else's account.
+	// Callers withhold an unverified address, and without one we must not reach
+	// into somebody else's account.
 	it('creates a separate account when no email is supplied', async () => {
 		const { service, state } = createService([GOOGLE_USER], [GOOGLE_ACCOUNT]);
 

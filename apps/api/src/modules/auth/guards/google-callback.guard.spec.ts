@@ -20,9 +20,8 @@ describe('GoogleCallbackGuard.handleRequest', () => {
 		expect(createGuard().handleRequest(null, user)).toBe(user);
 	});
 
-	// Regression: flattening every strategy error into a generic failure hid the
-	// reason a sign-in was refused, so the login page showed "try again" for a
-	// conflict the user could do nothing about.
+	// Flattening strategy errors into a generic failure made the login page say
+	// "try again" for a conflict the user could do nothing about.
 	it('preserves an error raised by the strategy', () => {
 		const conflict = DomainError.conflict('Email is already linked');
 

@@ -2,6 +2,7 @@ import type { Server } from 'socket.io';
 import { ROOM_SOCKET_EVENTS } from '@rooms/contracts/room';
 import type { RoomParticipantsService } from '../participants/room-participants.service';
 import type { RoomParticipantWithUser } from '../participants/room-participants.select';
+import { RoomPresenceService } from '../presence/room-presence.service';
 import { RoomsWsGateway } from './rooms-ws.gateway';
 import type { RoomsSocketWithAuth } from './rooms-ws.types';
 
@@ -16,7 +17,8 @@ interface Emitted {
 	payload: { participantId: string; onlineParticipantIds: string[] };
 }
 
-function createGateway() {
+/** Bookkeeping is covered in RoomPresenceService; these cases are the wire. */
+function createGateway({ isParticipant = true } = {}) {
 	const emitted: Emitted[] = [];
 	const socketsLeft: { socketId: string; room: string }[] = [];
 
@@ -34,13 +36,14 @@ function createGateway() {
 	} as unknown as Server;
 
 	const participantsService = {
-		isUserParticipantInRoom: () => Promise.resolve({ id: 'ok' }),
+		isUserParticipantInRoom: () => Promise.resolve(isParticipant),
 	} as unknown as RoomParticipantsService;
 
-	const gateway = new RoomsWsGateway(participantsService);
+	const presence = new RoomPresenceService();
+	const gateway = new RoomsWsGateway(participantsService, presence);
 	gateway.server = server;
 
-	return { gateway, emitted, socketsLeft };
+	return { gateway, presence, emitted, socketsLeft };
 }
 
 function createSocket(id: string) {
@@ -56,8 +59,8 @@ function lastPayload(emitted: Emitted[]) {
 	return emitted[emitted.length - 1].payload;
 }
 
-describe('RoomsWsGateway presence', () => {
-	it('marks a participant online while their socket is connected', async () => {
+describe('RoomsWsGateway', () => {
+	it('announces a connection with the current online list', async () => {
 		const { gateway, emitted } = createGateway();
 
 		await gateway.connectToRoom(createSocket('s1'), {
@@ -65,48 +68,122 @@ describe('RoomsWsGateway presence', () => {
 			participantId: ALICE,
 		});
 
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([ALICE]);
-		expect(emitted).toHaveLength(1);
-		expect(emitted[0].event).toBe(ROOM_SOCKET_EVENTS.CONNECT);
-		expect(lastPayload(emitted).onlineParticipantIds).toEqual([ALICE]);
+		expect(emitted).toEqual([
+			{
+				room: ROOM,
+				event: ROOM_SOCKET_EVENTS.CONNECT,
+				payload: {
+					participantId: ALICE,
+					onlineParticipantIds: [ALICE],
+				},
+			},
+		]);
 	});
 
-	it('takes them offline once that socket goes away', async () => {
-		const { gateway } = createGateway();
+	it('announces a departure with whoever is left', async () => {
+		const { gateway, emitted } = createGateway();
 		const socket = createSocket('s1');
 
 		await gateway.connectToRoom(socket, {
 			roomId: ROOM,
 			participantId: ALICE,
 		});
+		await gateway.connectToRoom(createSocket('s2'), {
+			roomId: ROOM,
+			participantId: BOB,
+		});
 		gateway.handleDisconnect(socket);
 
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
+		expect(lastPayload(emitted)).toEqual({
+			participantId: ALICE,
+			onlineParticipantIds: [BOB],
+		});
 	});
 
-	// Closing one of two tabs used to remove the participant outright, so a
-	// person still sitting in the room dropped off everyone else's list.
-	describe('with the same participant on several sockets', () => {
-		it('keeps them online while any socket remains', async () => {
-			const { gateway } = createGateway();
-			const firstTab = createSocket('s1');
-			const secondTab = createSocket('s2');
+	it('refuses a socket whose user is not in the room', async () => {
+		const { gateway, emitted } = createGateway({ isParticipant: false });
 
-			await gateway.connectToRoom(firstTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			await gateway.connectToRoom(secondTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			gateway.handleDisconnect(firstTab);
-
-			expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([ALICE]);
+		const result = await gateway.connectToRoom(createSocket('s1'), {
+			roomId: ROOM,
+			participantId: ALICE,
 		});
 
-		it('reports them online only once', async () => {
-			const { gateway } = createGateway();
+		expect(result).toEqual({
+			ok: false,
+			error: 'Participant not found in the room',
+		});
+		expect(emitted).toHaveLength(0);
+	});
+
+	// Reconnecting without disconnecting first has to release the previous room.
+	it('takes a reconnecting socket out of the room it came from', async () => {
+		const { gateway, presence } = createGateway();
+		const socket = createSocket('s1');
+
+		await gateway.connectToRoom(socket, {
+			roomId: ROOM,
+			participantId: ALICE,
+		});
+		await gateway.connectToRoom(socket, {
+			roomId: OTHER_ROOM,
+			participantId: ALICE,
+		});
+
+		expect(presence.getOnlineParticipantIds(ROOM)).toEqual([]);
+		expect(presence.getOnlineParticipantIds(OTHER_ROOM)).toEqual([ALICE]);
+	});
+
+	it('says nothing when a socket that never joined disconnects', () => {
+		const { gateway, emitted } = createGateway();
+
+		gateway.handleDisconnect(createSocket('stranger'));
+
+		expect(emitted).toHaveLength(0);
+	});
+
+	it('still announces a leave while the participant has other tabs open', async () => {
+		const { gateway, emitted } = createGateway();
+		const firstTab = createSocket('s1');
+
+		await gateway.connectToRoom(firstTab, {
+			roomId: ROOM,
+			participantId: ALICE,
+		});
+		await gateway.connectToRoom(createSocket('s2'), {
+			roomId: ROOM,
+			participantId: ALICE,
+		});
+		gateway.handleDisconnect(firstTab);
+
+		// Clients render this list, and the other tab keeps them on it.
+		expect(lastPayload(emitted).onlineParticipantIds).toEqual([ALICE]);
+	});
+
+	describe('notifyParticipantLeft', () => {
+		const participant = { id: ALICE } as RoomParticipantWithUser;
+
+		it('leaves them out of the broadcast announcing the departure', async () => {
+			const { gateway, emitted } = createGateway();
+
+			await gateway.connectToRoom(createSocket('s1'), {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			await gateway.connectToRoom(createSocket('s2'), {
+				roomId: ROOM,
+				participantId: BOB,
+			});
+			gateway.notifyParticipantLeft(ROOM, participant);
+
+			expect(lastPayload(emitted)).toEqual({
+				participantId: ALICE,
+				onlineParticipantIds: [BOB],
+			});
+		});
+
+		// Their sockets survive an HTTP leave and would keep receiving events.
+		it('pulls every socket they held out of the room', async () => {
+			const { gateway, socketsLeft } = createGateway();
 
 			await gateway.connectToRoom(createSocket('s1'), {
 				roomId: ROOM,
@@ -116,168 +193,12 @@ describe('RoomsWsGateway presence', () => {
 				roomId: ROOM,
 				participantId: ALICE,
 			});
+			gateway.notifyParticipantLeft(ROOM, participant);
 
-			expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([ALICE]);
+			expect(socketsLeft).toEqual([
+				{ socketId: 's1', room: ROOM },
+				{ socketId: 's2', room: ROOM },
+			]);
 		});
-
-		it('takes them offline when the last socket closes', async () => {
-			const { gateway } = createGateway();
-			const firstTab = createSocket('s1');
-			const secondTab = createSocket('s2');
-
-			await gateway.connectToRoom(firstTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			await gateway.connectToRoom(secondTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			gateway.handleDisconnect(firstTab);
-			gateway.handleDisconnect(secondTab);
-
-			expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
-		});
-
-		it('survives an explicit leave followed by the socket closing', async () => {
-			const { gateway } = createGateway();
-			const firstTab = createSocket('s1');
-			const secondTab = createSocket('s2');
-
-			await gateway.connectToRoom(firstTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			await gateway.connectToRoom(secondTab, {
-				roomId: ROOM,
-				participantId: ALICE,
-			});
-			await gateway.disconnectFromRoom(firstTab);
-			gateway.handleDisconnect(firstTab);
-
-			expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([ALICE]);
-		});
-	});
-
-	// Without cleanup the socket stayed counted in the room it came from, which
-	// left somebody online in a room nobody was watching.
-	it('stops counting a socket in the room it connected to before', async () => {
-		const { gateway } = createGateway();
-		const socket = createSocket('s1');
-
-		await gateway.connectToRoom(socket, {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		await gateway.connectToRoom(socket, {
-			roomId: OTHER_ROOM,
-			participantId: ALICE,
-		});
-
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
-		expect(gateway.getOnlineParticipantIds(OTHER_ROOM)).toEqual([ALICE]);
-	});
-
-	it('keeps participants of different rooms apart', async () => {
-		const { gateway } = createGateway();
-
-		await gateway.connectToRoom(createSocket('s1'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		await gateway.connectToRoom(createSocket('s2'), {
-			roomId: OTHER_ROOM,
-			participantId: BOB,
-		});
-
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([ALICE]);
-		expect(gateway.getOnlineParticipantIds(OTHER_ROOM)).toEqual([BOB]);
-	});
-
-	it('ignores a socket that never connected to a room', () => {
-		const { gateway, emitted } = createGateway();
-
-		gateway.handleDisconnect(createSocket('stranger'));
-
-		expect(emitted).toHaveLength(0);
-	});
-});
-
-describe('RoomsWsGateway.notifyParticipantLeft', () => {
-	const participant = { id: ALICE } as RoomParticipantWithUser;
-
-	// Leaving over HTTP leaves the socket open, so presence had to be dropped
-	// explicitly or the participant stayed online in a room they had left.
-	it('drops presence for someone who left over HTTP', async () => {
-		const { gateway } = createGateway();
-
-		await gateway.connectToRoom(createSocket('s1'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		gateway.notifyParticipantLeft(ROOM, participant);
-
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
-	});
-
-	it('leaves them out of the broadcast that announces the departure', async () => {
-		const { gateway, emitted } = createGateway();
-
-		await gateway.connectToRoom(createSocket('s1'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		await gateway.connectToRoom(createSocket('s2'), {
-			roomId: ROOM,
-			participantId: BOB,
-		});
-		gateway.notifyParticipantLeft(ROOM, participant);
-
-		expect(lastPayload(emitted)).toEqual({
-			participantId: ALICE,
-			onlineParticipantIds: [BOB],
-		});
-	});
-
-	it('drops every tab they had open, not just one', async () => {
-		const { gateway } = createGateway();
-
-		await gateway.connectToRoom(createSocket('s1'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		await gateway.connectToRoom(createSocket('s2'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		gateway.notifyParticipantLeft(ROOM, participant);
-
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
-	});
-
-	it('pulls their sockets out of the room so they stop receiving its events', async () => {
-		const { gateway, socketsLeft } = createGateway();
-
-		await gateway.connectToRoom(createSocket('s1'), {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		gateway.notifyParticipantLeft(ROOM, participant);
-
-		expect(socketsLeft).toEqual([{ socketId: 's1', room: ROOM }]);
-	});
-
-	it('does not resurrect presence when the stale socket finally closes', async () => {
-		const { gateway } = createGateway();
-		const socket = createSocket('s1');
-
-		await gateway.connectToRoom(socket, {
-			roomId: ROOM,
-			participantId: ALICE,
-		});
-		gateway.notifyParticipantLeft(ROOM, participant);
-		gateway.handleDisconnect(socket);
-
-		expect(gateway.getOnlineParticipantIds(ROOM)).toEqual([]);
 	});
 });

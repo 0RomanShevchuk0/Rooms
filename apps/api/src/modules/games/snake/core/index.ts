@@ -6,5 +6,6 @@ export type {
 	Position,
 	SnakeGameSettings,
 	SnakeGameState,
+	SnakePlayerState,
 } from './types';
 export { directionPositions } from './constants';

@@ -54,14 +54,20 @@ export class RoomParticipantsService {
 		});
 	}
 
-	removeByRoomAndUser(
-		roomId: string,
-		userId: string,
-	): Promise<RoomParticipantWithUser> {
-		return this.prisma.roomParticipant.delete({
-			where: { roomId_userId: { roomId, userId } },
+	findByRoom(roomId: string): Promise<RoomParticipantWithUser[]> {
+		return this.prisma.roomParticipant.findMany({
+			where: { roomId },
 			select: roomParticipantWithUserSelect,
 		});
+	}
+
+	async findReadyIdsByRoom(roomId: string): Promise<string[]> {
+		const participants = await this.prisma.roomParticipant.findMany({
+			where: { roomId, isReady: true },
+			select: { id: true },
+		});
+
+		return participants.map((participant) => participant.id);
 	}
 
 	findByRoomAndUser(
@@ -69,6 +75,16 @@ export class RoomParticipantsService {
 		userId: string,
 	): Promise<RoomParticipantWithUser | null> {
 		return this.prisma.roomParticipant.findUnique({
+			where: { roomId_userId: { roomId, userId } },
+			select: roomParticipantWithUserSelect,
+		});
+	}
+
+	removeByRoomAndUser(
+		roomId: string,
+		userId: string,
+	): Promise<RoomParticipantWithUser> {
+		return this.prisma.roomParticipant.delete({
 			where: { roomId_userId: { roomId, userId } },
 			select: roomParticipantWithUserSelect,
 		});

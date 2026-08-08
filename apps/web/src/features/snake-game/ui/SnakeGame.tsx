@@ -9,9 +9,10 @@ type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 interface SnakeGameProps {
 	roomId: string;
 	snakeFieldSize: SnakeFieldSize;
+	ownParticipantId: string | null;
 }
 
-export function SnakeGame({ roomId, snakeFieldSize }: SnakeGameProps) {
+export function SnakeGame({ roomId, snakeFieldSize, ownParticipantId }: SnakeGameProps) {
 	const {
 		canvasContainerRef,
 		snakeLength,
@@ -19,7 +20,7 @@ export function SnakeGame({ roomId, snakeFieldSize }: SnakeGameProps) {
 		gameOverState,
 		closeGameOverModal,
 		startGame,
-	} = useSnakeGame({ roomId, snakeFieldSize });
+	} = useSnakeGame({ roomId, snakeFieldSize, ownParticipantId });
 
 	return (
 		<>
@@ -43,7 +44,7 @@ export function SnakeGame({ roomId, snakeFieldSize }: SnakeGameProps) {
 
 			<SnakeGameOverDialog
 				open={Boolean(gameOverState)}
-				finalSnakeLength={gameOverState?.snakeSegments.length ?? snakeLength}
+				finalSnakeLength={snakeLength}
 				onClose={closeGameOverModal}
 				onPlayAgain={startGame}
 			/>

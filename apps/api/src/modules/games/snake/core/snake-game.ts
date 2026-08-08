@@ -9,40 +9,53 @@ type SnakeGameEvents = {
 	gameOver: [state: SnakeGameState];
 };
 
+interface SnakeGameProps {
+	participantIds: string[];
+	settings: SnakeGameSettings;
+}
 export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private settings: SnakeGameSettings;
 	private readonly tickMs: number;
 	private gameLoop?: NodeJS.Timeout;
 	private foodManager: FoodManager;
-	private snake: Snake;
-	private gameOver: boolean;
 
-	constructor(settings: SnakeGameSettings) {
+	private readonly snakes = new Map<string, Snake>();
+	private gameOver = false;
+
+	constructor({ participantIds, settings }: SnakeGameProps) {
 		super();
 
 		this.settings = settings;
 		this.tickMs = this.resolveTickMs();
-		this.gameOver = false;
 
 		const fieldSize = this.settings.fieldSize;
-		this.snake = new Snake({
-			fieldSize,
-			initialDirection: SNAKE_DIRECTION.UP,
-			initialSegments: [
+
+		participantIds.forEach((participantId, index) => {
+			const initialDirection = SNAKE_DIRECTION.UP;
+			const initialSegments = [
 				{
 					x: Math.floor(fieldSize.width / 2),
-					y: Math.floor(fieldSize.height / 2),
+					y: Math.floor(fieldSize.height / 2) + index,
 				},
-			],
+			];
+
+			this.snakes.set(
+				participantId,
+				new Snake({ fieldSize, initialDirection, initialSegments }),
+			);
 		});
+
 		this.foodManager = new FoodManager({
 			foodAmount: this.settings.foodAmount,
 			fieldSize: this.settings.fieldSize,
 		});
 	}
 
-	changeSnakeDirection(direction: SnakeDirection) {
-		this.snake.changeDirection(direction);
+	changeSnakeDirection(participantId: string, direction: SnakeDirection) {
+		const snake = this.snakes.get(participantId);
+		if (!snake?.alive) return;
+
+		snake.changeDirection(direction);
 	}
 
 	startGame() {
@@ -64,19 +77,31 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	private tick() {
-		const nextHead = this.snake.calculateNextPosition();
-		const eatenFood = this.foodManager.findFoodByPosition(nextHead);
-		const ateFood = !!eatenFood;
-		const hasCollision = this.snake.hasCollision(nextHead, ateFood);
+		this.snakes.forEach((snake) => {
+			if (!snake.alive) return;
 
-		if (hasCollision) {
+			const nextHead = snake.calculateNextPosition();
+			const eatenFood = this.foodManager.findFoodByPosition(nextHead);
+			const ateFood = !!eatenFood;
+			const hasCollision = snake.hasCollision(nextHead, ateFood);
+
+			if (hasCollision) {
+				snake.kill();
+				return;
+			}
+
+			snake.move(nextHead, ateFood);
+
+			if (eatenFood) eatenFood.respawnFood();
+		});
+
+		const hasAliveSnakes = [...this.snakes.values()].some(
+			(snake) => snake.alive,
+		);
+		if (!hasAliveSnakes) {
 			this.endGame();
 			return;
 		}
-
-		this.snake.move(nextHead, ateFood);
-
-		if (eatenFood) eatenFood.respawnFood();
 
 		this.emit('tick', this.getGameState());
 	}
@@ -84,8 +109,12 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private getGameState(): SnakeGameState {
 		return {
 			gameOver: this.gameOver,
-			snakeDirection: this.snake.direction,
-			snakeSegments: this.snake.segments,
+			snakes: [...this.snakes].map(([participantId, snake]) => ({
+				participantId,
+				direction: snake.direction,
+				segments: snake.segments,
+				alive: snake.alive,
+			})),
 			foodPositions: this.foodManager.getFoodPositions(),
 		};
 	}

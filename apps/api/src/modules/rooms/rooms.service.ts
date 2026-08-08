@@ -9,8 +9,12 @@ import {
 	RoomWithParticipantsAndChat,
 } from './rooms.types';
 import { DEFAULT_SNAKE_GAME_SETTINGS } from './room-settings/room-settings.constants';
-import { roomParticipantWithUserSelect } from './participants/room-participants.select';
+import {
+	roomParticipantWithUserSelect,
+	type RoomParticipantWithUser,
+} from './participants/room-participants.select';
 import { RoomParticipantsService } from './participants/room-participants.service';
+import { RoomPresenceService } from './presence/room-presence.service';
 import { DomainError } from 'src/shared/errors/domain.error';
 
 @Injectable()
@@ -18,6 +22,7 @@ export class RoomsService {
 	constructor(
 		private prisma: PrismaService,
 		private readonly participantsService: RoomParticipantsService,
+		private readonly presenceService: RoomPresenceService,
 	) {}
 
 	findMany(filters?: { userId?: string }): Promise<RoomWithParticipants[]> {
@@ -63,6 +68,25 @@ export class RoomsService {
 		}
 
 		return room;
+	}
+
+	async getRoomParticipants(
+		roomId: string,
+	): Promise<RoomParticipantWithUser[]> {
+		await this.findByIdOrThrow(roomId);
+		return this.participantsService.findByRoom(roomId);
+	}
+
+	async getReadyParticipantIds(roomId: string): Promise<string[]> {
+		await this.findByIdOrThrow(roomId);
+
+		const online = new Set(
+			this.presenceService.getOnlineParticipantIds(roomId),
+		);
+		const readyIds =
+			await this.participantsService.findReadyIdsByRoom(roomId);
+
+		return readyIds.filter((participantId) => online.has(participantId));
 	}
 
 	async findMyParticipant(roomId: string, userId: string) {

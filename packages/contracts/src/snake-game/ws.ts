@@ -4,6 +4,7 @@ import {
 	SnakeDirectionSchema,
 	SnakeGameSettingsSchema,
 	SnakeGameStateSchema,
+	SnakePlayerStateSchema,
 	SnakePositionSchema,
 } from "./base.js";
 
@@ -36,9 +37,16 @@ export const SnakeChangeSettingsPayloadSchema = z.object({
 
 export const SnakeSettingsChangedPayloadSchema = SnakeChangeSettingsPayloadSchema;
 
-export { SnakeDirectionEnum, SnakeDirectionSchema, SnakeGameStateSchema, SnakePositionSchema };
+export {
+	SnakeDirectionEnum,
+	SnakeDirectionSchema,
+	SnakeGameStateSchema,
+	SnakePlayerStateSchema,
+	SnakePositionSchema,
+};
 export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
 export type SnakePosition = z.infer<typeof SnakePositionSchema>;
+export type SnakePlayerState = z.infer<typeof SnakePlayerStateSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
 export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;
 export type SnakeRoomPayload = z.infer<typeof SnakeRoomPayloadSchema>;

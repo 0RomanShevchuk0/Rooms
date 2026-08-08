@@ -15,6 +15,7 @@ type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 interface UseSnakeGameProps {
 	roomId: string;
 	snakeFieldSize: SnakeFieldSize;
+	ownParticipantId: string | null;
 }
 
 type SnakeGameStatus = "idle" | "running" | "over";
@@ -35,6 +36,11 @@ function createDefaultGameState(roomId: string): SnakeGameRoomState {
 	};
 }
 
+function getOwnSnakeLength(gameState: SnakeGameState, ownParticipantId: string | null) {
+	const ownSnake = gameState.snakes.find((snake) => snake.participantId === ownParticipantId);
+	return ownSnake?.segments.length ?? 0;
+}
+
 function isEditableTarget(target: EventTarget | null): target is HTMLElement {
 	if (!(target instanceof HTMLElement)) return false;
 	const tagName = target.tagName.toLowerCase();
@@ -46,7 +52,7 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
 	);
 }
 
-export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
+export function useSnakeGame({ roomId, snakeFieldSize, ownParticipantId }: UseSnakeGameProps) {
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
 	const [roomState, setRoomState] = useState<SnakeGameRoomState>(() =>
 		createDefaultGameState(roomId),
@@ -85,12 +91,13 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 				width: snakeFieldWidth,
 				height: snakeFieldHeight,
 			},
+			ownParticipantId,
 		});
 
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
 			setCurrentRoomState((state) => ({
 				...state,
-				snakeLength: gameState.snakeSegments.length,
+				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
 				gameStatus: "running",
 			}));
 			snakeGame.render(gameState);
@@ -99,10 +106,11 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 		const handleGameOver = (gameState: SnakeGameState) => {
 			setCurrentRoomState((state) => ({
 				...state,
-				snakeLength: gameState.snakeSegments.length,
+				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
 				gameOverState: gameState,
 				gameStatus: "over",
 			}));
+			snakeGame.render(gameState);
 		};
 
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
@@ -130,7 +138,14 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 
 			snakeGame.destroy();
 		};
-	}, [snakeGameSocket, roomId, snakeFieldWidth, snakeFieldHeight, setCurrentRoomState]);
+	}, [
+		snakeGameSocket,
+		roomId,
+		snakeFieldWidth,
+		snakeFieldHeight,
+		ownParticipantId,
+		setCurrentRoomState,
+	]);
 
 	const closeGameOverModal = () => {
 		setCurrentRoomState((state) => ({

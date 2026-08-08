@@ -27,6 +27,7 @@ import {
 } from '@rooms/contracts/snake-game';
 import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
+import { DomainError } from 'src/shared/errors/domain.error';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 import { toSnakeGameStatePayload } from './snake.mapper';
 import { RoomSettingsService } from 'src/modules/rooms/room-settings/room-settings.service';
@@ -84,7 +85,13 @@ export class SnakeGateway {
 		@MessageBody(new ZodValidationPipe(SnakeStartGamePayloadSchema))
 		payload: SnakeStartGamePayload,
 	) {
-		const game = await this.snakeService.startGame(payload.roomId);
+		const participantIdsToPlay =
+			await this.roomsService.getReadyParticipantIds(payload.roomId);
+
+		const game = await this.snakeService.startGame(
+			payload.roomId,
+			participantIdsToPlay,
+		);
 
 		const onTick = (state: CoreSnakeGameState) => {
 			const gameStatePayload = toSnakeGameStatePayload(state);
@@ -106,16 +113,28 @@ export class SnakeGateway {
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION)
-	changeDirection(
+	async changeDirection(
+		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody(new ZodValidationPipe(SnakeChangeDirectionPayloadSchema))
 		payload: SnakeChangeDirectionPayload,
 	) {
-		const direction: SnakeDirection = payload.direction;
-		console.log(
-			'🚀 ~ SnakeGateway ~ changeDirection ~ direction:',
-			payload.direction,
+		const userId = requireWsUser(client).sub;
+		const participant = await this.roomsService.findMyParticipant(
+			payload.roomId,
+			userId,
 		);
-		this.snakeService.changeDirection(payload.roomId, direction);
+		if (!participant) {
+			throw DomainError.accessDenied(
+				`User is not a participant of room: ${payload.roomId}`,
+			);
+		}
+
+		const direction: SnakeDirection = payload.direction;
+		this.snakeService.changeDirection(
+			payload.roomId,
+			participant.id,
+			direction,
+		);
 		return { ok: true, message: 'Direction changed!' };
 	}
 

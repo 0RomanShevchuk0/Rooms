@@ -15,9 +15,15 @@ export type Position = {
 	y: number;
 };
 
+export interface SnakePlayerState {
+	participantId: string;
+	direction: SnakeDirection;
+	segments: Position[];
+	alive: boolean;
+}
+
 export interface SnakeGameState {
-	snakeSegments: Position[];
-	snakeDirection: SnakeDirection;
+	snakes: SnakePlayerState[];
 	foodPositions: Position[];
 	gameOver: boolean;
 }

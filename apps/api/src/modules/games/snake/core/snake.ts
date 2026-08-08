@@ -12,11 +12,16 @@ export class Snake {
 	private readonly fieldSize: FieldSize;
 	segments: Position[];
 	direction: SnakeDirection;
+	alive = true;
 
 	constructor({ fieldSize, initialDirection, initialSegments }: SnakeProps) {
 		this.fieldSize = fieldSize;
 		this.segments = initialSegments;
 		this.direction = initialDirection;
+	}
+
+	kill() {
+		this.alive = false;
 	}
 
 	changeDirection(newDirection: SnakeDirection) {

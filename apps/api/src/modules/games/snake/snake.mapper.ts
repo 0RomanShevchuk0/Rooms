@@ -5,10 +5,14 @@ export function toSnakeGameStatePayload(
 	state: CoreSnakeGameState,
 ): SnakeGameState {
 	return {
-		snakeDirection: state.snakeDirection,
-		snakeSegments: state.snakeSegments.map((segment) => ({
-			x: segment.x,
-			y: segment.y,
+		snakes: state.snakes.map((snake) => ({
+			participantId: snake.participantId,
+			direction: snake.direction,
+			segments: snake.segments.map((segment) => ({
+				x: segment.x,
+				y: segment.y,
+			})),
+			alive: snake.alive,
 		})),
 		foodPositions: state.foodPositions.map((position) => ({
 			x: position.x,

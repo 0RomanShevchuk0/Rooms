@@ -1,4 +1,6 @@
 import { RoomsService } from './../../rooms/rooms.service';
+import { Logger, type OnModuleInit } from '@nestjs/common';
+import { RoomLobbyService } from '../../rooms/lobby/room-lobby.service';
 import {
 	WebSocketGateway,
 	SubscribeMessage,
@@ -42,15 +44,24 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 		credentials: true,
 	},
 })
-export class SnakeGateway {
+export class SnakeGateway implements OnModuleInit {
 	@WebSocketServer()
 	server!: Server;
+
+	private readonly logger = new Logger(SnakeGateway.name);
 
 	constructor(
 		private readonly snakeService: SnakeService,
 		private readonly roomsService: RoomsService,
 		private readonly roomSettingsService: RoomSettingsService,
+		private readonly lobby: RoomLobbyService,
 	) {}
+
+	onModuleInit() {
+		this.lobby.on('matchStart', (roomId, playerIds) => {
+			void this.runMatch(roomId, playerIds);
+		});
+	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
@@ -85,31 +96,52 @@ export class SnakeGateway {
 		@MessageBody(new ZodValidationPipe(SnakeStartGamePayloadSchema))
 		payload: SnakeStartGamePayload,
 	) {
-		const participantIdsToPlay =
-			await this.roomsService.getReadyParticipantIds(payload.roomId);
-
-		const game = await this.snakeService.startGame(
+		const playerIds = await this.roomsService.getReadyParticipantIds(
 			payload.roomId,
-			participantIdsToPlay,
 		);
 
-		const onTick = (state: CoreSnakeGameState) => {
-			const gameStatePayload = toSnakeGameStatePayload(state);
-			this.server
-				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, gameStatePayload);
-		};
-		const onGameOver = (state: CoreSnakeGameState) => {
-			const gameStatePayload = toSnakeGameStatePayload(state);
-			this.server
-				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, gameStatePayload);
-		};
-
-		game.on('tick', onTick);
-		game.on('gameOver', onGameOver);
+		await this.runMatch(payload.roomId, playerIds);
 
 		return { ok: true, message: 'Game started!' };
+	}
+
+	private async runMatch(roomId: string, playerIds: string[]) {
+		try {
+			const game = await this.snakeService.startGame(roomId, playerIds);
+
+			game.on('tick', (state: CoreSnakeGameState) => {
+				this.emitGameState(
+					roomId,
+					SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED,
+					state,
+				);
+			});
+			game.on('gameOver', (state: CoreSnakeGameState) => {
+				this.emitGameState(
+					roomId,
+					SNAKE_GAME_SOCKET_EVENTS.GAME_OVER,
+					state,
+				);
+				this.lobby.endMatch(roomId);
+			});
+		} catch (error) {
+			// A room stuck in the running phase could never reach the lobby again.
+			this.lobby.endMatch(roomId);
+			this.logger.error(
+				`Failed to start the game for roomId: ${roomId}`,
+				error,
+			);
+		}
+	}
+
+	private emitGameState(
+		roomId: string,
+		event:
+			| typeof SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED
+			| typeof SNAKE_GAME_SOCKET_EVENTS.GAME_OVER,
+		state: CoreSnakeGameState,
+	) {
+		this.server.to(roomId).emit(event, toSnakeGameStatePayload(state));
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION)

@@ -1,10 +1,12 @@
 import type {
+	RoomLobbyStatePayload,
 	RoomParticipant,
 	RoomParticipantJoinedPayload,
 	RoomPresencePayload,
 	RoomWithParticipants,
 	RoomWithParticipantsAndChat,
 } from '@rooms/contracts/room';
+import type { RoomLobbyState } from './lobby/room-lobby.service';
 import type { RoomParticipantWithUser } from './participants/room-participants.select';
 import type {
 	RoomWithParticipants as RoomWithParticipantsEntity,
@@ -64,6 +66,16 @@ export function toRoomPresencePayload(
 	return {
 		participantId,
 		onlineParticipantIds,
+	};
+}
+
+export function toRoomLobbyStatePayload(
+	state: RoomLobbyState,
+): RoomLobbyStatePayload {
+	return {
+		phase: state.phase,
+		readyParticipantIds: [...state.readyParticipantIds],
+		windowSecondsLeft: state.windowSecondsLeft,
 	};
 }
 

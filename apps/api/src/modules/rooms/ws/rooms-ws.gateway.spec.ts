@@ -3,6 +3,7 @@ import { ROOM_SOCKET_EVENTS } from '@rooms/contracts/room';
 import type { RoomParticipantsService } from '../participants/room-participants.service';
 import type { RoomParticipantWithUser } from '../participants/room-participants.select';
 import { RoomPresenceService } from '../presence/room-presence.service';
+import { RoomLobbyService } from '../lobby/room-lobby.service';
 import { RoomsWsGateway } from './rooms-ws.gateway';
 import type { RoomsSocketWithAuth } from './rooms-ws.types';
 
@@ -14,7 +15,13 @@ const BOB = 'participant-bob';
 interface Emitted {
 	room: string;
 	event: string;
-	payload: { participantId: string; onlineParticipantIds: string[] };
+	payload: {
+		participantId?: string;
+		onlineParticipantIds?: string[];
+		phase?: string;
+		readyParticipantIds?: string[];
+		windowSecondsLeft?: number | null;
+	};
 }
 
 /** Bookkeeping is covered in RoomPresenceService; these cases are the wire. */
@@ -40,17 +47,22 @@ function createGateway({ isParticipant = true } = {}) {
 	} as unknown as RoomParticipantsService;
 
 	const presence = new RoomPresenceService();
-	const gateway = new RoomsWsGateway(participantsService, presence);
+	const lobby = new RoomLobbyService();
+	const gateway = new RoomsWsGateway(participantsService, presence, lobby);
 	gateway.server = server;
+	gateway.onModuleInit();
 
-	return { gateway, presence, emitted, socketsLeft };
+	return { gateway, presence, lobby, emitted, socketsLeft };
 }
 
-function createSocket(id: string) {
+function createSocket(id: string, sink: Emitted[] = []) {
 	return {
 		id,
 		join: () => Promise.resolve(),
 		leave: () => Promise.resolve(),
+		emit: (event: string, payload: Emitted['payload']) => {
+			sink.push({ room: id, event, payload });
+		},
 		data: { user: { sub: 'user-1' } },
 	} as unknown as RoomsSocketWithAuth;
 }
@@ -60,6 +72,15 @@ function lastPayload(emitted: Emitted[]) {
 }
 
 describe('RoomsWsGateway', () => {
+	// A gathering window left open would outlive the test that opened it.
+	beforeEach(() => {
+		jest.useFakeTimers();
+	});
+
+	afterEach(() => {
+		jest.useRealTimers();
+	});
+
 	it('announces a connection with the current online list', async () => {
 		const { gateway, emitted } = createGateway();
 
@@ -157,6 +178,92 @@ describe('RoomsWsGateway', () => {
 
 		// Clients render this list, and the other tab keeps them on it.
 		expect(lastPayload(emitted).onlineParticipantIds).toEqual([ALICE]);
+	});
+
+	describe('lobby', () => {
+		it('hands the current lobby state to a socket that just connected', async () => {
+			const { gateway } = createGateway();
+			const ownEmits: Emitted[] = [];
+
+			await gateway.connectToRoom(createSocket('s1', ownEmits), {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+
+			expect(ownEmits).toEqual([
+				{
+					room: 's1',
+					event: ROOM_SOCKET_EVENTS.LOBBY_STATE,
+					payload: {
+						phase: 'lobby',
+						readyParticipantIds: [],
+						windowSecondsLeft: null,
+					},
+				},
+			]);
+		});
+
+		it('broadcasts the open window when someone readies up', async () => {
+			const { gateway, emitted } = createGateway();
+			const socket = createSocket('s1');
+
+			await gateway.connectToRoom(socket, {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			await gateway.connectToRoom(createSocket('s2'), {
+				roomId: ROOM,
+				participantId: BOB,
+			});
+			gateway.setReady(socket, { roomId: ROOM, isReady: true });
+
+			expect(emitted[emitted.length - 1]).toEqual({
+				room: ROOM,
+				event: ROOM_SOCKET_EVENTS.LOBBY_STATE,
+				payload: {
+					phase: 'gathering',
+					readyParticipantIds: [ALICE],
+					windowSecondsLeft: 15,
+				},
+			});
+		});
+
+		// The socket says who it is; the payload only says which room.
+		it('refuses ready from a socket that never joined the room', () => {
+			const { gateway, lobby } = createGateway();
+
+			const result = gateway.setReady(createSocket('stranger'), {
+				roomId: ROOM,
+				isReady: true,
+			});
+
+			expect(result).toEqual({
+				ok: false,
+				error: 'Not connected to the room',
+			});
+			expect(lobby.getState(ROOM).phase).toBe('lobby');
+		});
+
+		it('gives up their spot in the next match when the socket drops', async () => {
+			const { gateway, lobby, emitted } = createGateway();
+			const socket = createSocket('s1');
+
+			await gateway.connectToRoom(socket, {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			await gateway.connectToRoom(createSocket('s2'), {
+				roomId: ROOM,
+				participantId: BOB,
+			});
+			gateway.setReady(socket, { roomId: ROOM, isReady: true });
+			gateway.handleDisconnect(socket);
+
+			expect(lobby.getState(ROOM).readyParticipantIds).toEqual([]);
+			expect(emitted.map((entry) => entry.event)).toContain(
+				ROOM_SOCKET_EVENTS.LOBBY_STATE,
+			);
+		});
 	});
 
 	describe('notifyParticipantLeft', () => {

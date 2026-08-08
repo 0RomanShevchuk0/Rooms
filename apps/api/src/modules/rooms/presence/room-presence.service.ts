@@ -20,6 +20,11 @@ export class RoomPresenceService {
 		return Array.from(this.roomParticipants.get(roomId)?.keys() ?? []);
 	}
 
+	/** Who a live socket belongs to, so handlers never take that on trust. */
+	getContext(socketId: string): RoomPresenceContext | null {
+		return this.socketContexts.get(socketId) ?? null;
+	}
+
 	attach(
 		socketId: string,
 		roomId: string,

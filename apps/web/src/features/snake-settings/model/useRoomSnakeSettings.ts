@@ -17,12 +17,13 @@ import {
 interface UseRoomSnakeSettingsProps {
 	roomId: string;
 	initialSettings?: SnakeGameSettings;
+	/** Comes from the room phase; the client no longer guesses from game events. */
+	isGameRunning: boolean;
 }
 
 interface RoomSnakeSettingsState {
 	roomId: string;
 	snakeSettingsOverride: SnakeGameSettings | null;
-	isGameInProgress: boolean;
 }
 
 export interface RoomSnakeSettingsActions {
@@ -41,13 +42,13 @@ function createDefaultRoomState(roomId: string): RoomSnakeSettingsState {
 	return {
 		roomId,
 		snakeSettingsOverride: null,
-		isGameInProgress: false,
 	};
 }
 
 export function useRoomSnakeSettings({
 	roomId,
 	initialSettings,
+	isGameRunning,
 }: UseRoomSnakeSettingsProps): RoomSnakeSettingsModel {
 	const { socket: snakeGameSocket } = useSnakeGameSocket();
 	const [roomState, setRoomState] = useState<RoomSnakeSettingsState>(() =>
@@ -87,23 +88,6 @@ export function useRoomSnakeSettings({
 		};
 	}, [snakeGameSocket, roomId, setCurrentRoomState]);
 
-	useEffect(() => {
-		const handleSnakeMoved = () => {
-			setCurrentRoomState((state) => ({ ...state, isGameInProgress: true }));
-		};
-		const handleGameOver = () => {
-			setCurrentRoomState((state) => ({ ...state, isGameInProgress: false }));
-		};
-
-		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
-		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, handleGameOver);
-
-		return () => {
-			snakeGameSocket.off(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
-			snakeGameSocket.off(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, handleGameOver);
-		};
-	}, [snakeGameSocket, setCurrentRoomState]);
-
 	const snakeSettings =
 		currentRoomState.snakeSettingsOverride ?? initialSettings ?? DEFAULT_SNAKE_GAME_SETTINGS;
 
@@ -132,7 +116,7 @@ export function useRoomSnakeSettings({
 
 	return {
 		snakeSettings,
-		isGameInProgress: currentRoomState.isGameInProgress,
+		isGameInProgress: isGameRunning,
 		actions: {
 			setSettings,
 			setFieldSize,

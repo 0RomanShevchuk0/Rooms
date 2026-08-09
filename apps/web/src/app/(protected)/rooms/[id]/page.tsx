@@ -2,6 +2,8 @@
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { RoomHeader } from "@/widgets/room-header";
 import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presence";
+import { useRoomLobby } from "@/features/room-lobby";
+import { useMyRoomParticipantQuery } from "@/entities/room";
 import { NotFoundScreen } from "@/shared/ui/not-found-screen";
 import { RoomRealtimeContent } from "@/widgets/room-realtime-content";
 import { useRoomFromParamsQuery } from "./useRoomFromParamsQuery";
@@ -11,6 +13,10 @@ export default function RoomPage() {
 
 	useRoomRealtimeChannels({ roomId, chatId: room?.chat.id });
 	const { onlineParticipantIds } = useRoomPresence({ roomId });
+	// Subscribed above the loading state: the server sends the lobby snapshot
+	// right after the socket joins, which can land before the room query does.
+	const { participantId: ownParticipantId } = useMyRoomParticipantQuery(roomId);
+	const lobby = useRoomLobby({ roomId, ownParticipantId });
 
 	if (isPending) return <FullscreenSpinnerLoader />;
 
@@ -26,6 +32,8 @@ export default function RoomPage() {
 				<RoomRealtimeContent
 					room={room}
 					onlineParticipantIds={onlineParticipantIds}
+					ownParticipantId={ownParticipantId}
+					lobby={lobby}
 				/>
 			</div>
 		</div>

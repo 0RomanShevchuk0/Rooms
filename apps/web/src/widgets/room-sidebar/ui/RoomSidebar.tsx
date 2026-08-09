@@ -11,12 +11,14 @@ type RightPanelView = "info" | "chat";
 interface RoomSidebarProps {
 	room: RoomWithParticipantsAndChat;
 	onlineParticipantIds: Set<string>;
+	readyParticipantIds: Set<string>;
 	snakeSettingsModel: RoomSnakeSettingsModel;
 }
 
 export function RoomSidebar({
 	room,
 	onlineParticipantIds,
+	readyParticipantIds,
 	snakeSettingsModel,
 }: RoomSidebarProps) {
 	const [rightPanelView, setRightPanelView] = useState<RightPanelView>("info");
@@ -47,6 +49,7 @@ export function RoomSidebar({
 					<RoomParticipantsList
 						participants={room.participants}
 						onlineParticipantIds={onlineParticipantIds}
+						readyParticipantIds={readyParticipantIds}
 					/>
 
 					<SnakeSettingsCards model={snakeSettingsModel} />

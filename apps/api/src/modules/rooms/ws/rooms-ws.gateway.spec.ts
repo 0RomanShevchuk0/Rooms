@@ -244,6 +244,45 @@ describe('RoomsWsGateway', () => {
 			expect(lobby.getState(ROOM).phase).toBe('lobby');
 		});
 
+		// Presence keeps them online while another tab holds the room.
+		it('keeps their spot while they still have another tab open', async () => {
+			const { gateway, lobby } = createGateway();
+			const firstTab = createSocket('s1');
+
+			await gateway.connectToRoom(firstTab, {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			await gateway.connectToRoom(createSocket('s2'), {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			gateway.setReady(firstTab, { roomId: ROOM, isReady: true });
+			gateway.handleDisconnect(firstTab);
+
+			expect(lobby.getState(ROOM).readyParticipantIds).toEqual([ALICE]);
+		});
+
+		it('gives up their spot when they leave the room outright', async () => {
+			const { gateway, lobby } = createGateway();
+			const socket = createSocket('s1');
+
+			await gateway.connectToRoom(socket, {
+				roomId: ROOM,
+				participantId: ALICE,
+			});
+			await gateway.connectToRoom(createSocket('s2'), {
+				roomId: ROOM,
+				participantId: BOB,
+			});
+			gateway.setReady(socket, { roomId: ROOM, isReady: true });
+			gateway.notifyParticipantLeft(ROOM, {
+				id: ALICE,
+			} as RoomParticipantWithUser);
+
+			expect(lobby.getState(ROOM).readyParticipantIds).toEqual([]);
+		});
+
 		it('gives up their spot in the next match when the socket drops', async () => {
 			const { gateway, lobby, emitted } = createGateway();
 			const socket = createSocket('s1');

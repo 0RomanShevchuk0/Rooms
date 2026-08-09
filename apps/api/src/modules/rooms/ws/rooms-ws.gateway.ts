@@ -67,8 +67,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect, OnModuleInit {
 		}
 
 		this.presence.releaseContext(client.id, context.sessionVersion);
-		// Their spot in the next match goes with their last socket.
-		this.lobby.clearReady(context.roomId, context.participantId);
+		this.clearReadyIfOffline(context.roomId, context.participantId);
 
 		this.broadcastPresence(
 			context.roomId,
@@ -165,6 +164,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect, OnModuleInit {
 
 		await client.leave(context.roomId);
 		this.presence.releaseContext(client.id, context.sessionVersion);
+		this.clearReadyIfOffline(context.roomId, context.participantId);
 
 		this.broadcastPresence(
 			context.roomId,
@@ -198,11 +198,28 @@ export class RoomsWsGateway implements OnGatewayDisconnect, OnModuleInit {
 			this.server.in(socketId).socketsLeave(roomId);
 		}
 
+		// Leaving the room gives up the spot too, tabs or no tabs.
+		this.lobby.clearReady(roomId, participant.id);
+
 		const payload = toRoomPresencePayload(
 			participant.id,
 			this.presence.getOnlineParticipantIds(roomId),
 		);
 		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PARTICIPANT_LEFT, payload);
+	}
+
+	/**
+	 * Another tab still holding the room keeps the spot: presence counts sockets
+	 * per participant, and only the last one leaving takes them offline.
+	 */
+	private clearReadyIfOffline(roomId: string, participantId: string) {
+		const isStillOnline = this.presence
+			.getOnlineParticipantIds(roomId)
+			.includes(participantId);
+
+		if (!isStillOnline) {
+			this.lobby.clearReady(roomId, participantId);
+		}
 	}
 
 	/** The socket's own presence context, never the room id it claims. */

@@ -111,7 +111,14 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			const nextHead = snake.calculateNextPosition();
 			const eatenFood = this.foodManager.findFoodByPosition(nextHead);
 			const ateFood = !!eatenFood;
-			const hasCollision = snake.hasCollision(nextHead, ateFood);
+			const otherSnakes = [...this.snakes.values()].filter(
+				(otherSnake) => otherSnake !== snake,
+			);
+			const hasCollision = snake.hasCollision(
+				nextHead,
+				ateFood,
+				otherSnakes,
+			);
 
 			if (hasCollision) {
 				snake.kill();
@@ -159,8 +166,11 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		const step = directionPositions[direction];
 		const head = snake.segments[0];
 		const nextHead = { x: head.x + step.x, y: head.y + step.y };
+		const otherSnakes = [...this.snakes.values()].filter(
+			(otherSnake) => otherSnake !== snake,
+		);
 
-		return !snake.hasCollision(nextHead, false);
+		return !snake.hasCollision(nextHead, false, otherSnakes);
 	}
 
 	private getGameState(): SnakeGameState {

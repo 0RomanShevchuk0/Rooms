@@ -1,8 +1,20 @@
 import EventEmitter from 'node:events';
-import { SNAKE_DIRECTION, type SnakeDirection } from './direction';
+import {
+	directionOpposites,
+	SNAKE_DIRECTION,
+	type SnakeDirection,
+} from './direction';
+import { directionPositions } from './constants';
 import { type SnakeGameSettings, type SnakeGameState } from './types';
 import { Snake } from './snake';
 import { FoodManager } from './food-manager';
+import {
+	chooseMockPlayerDirection,
+	createMockPlayerSegments,
+	isMockPlayerEnabled,
+	MOCK_PLAYER_ID,
+	MOCK_PLAYER_INITIAL_DIRECTION,
+} from './mock-player';
 
 type SnakeGameEvents = {
 	tick: [state: SnakeGameState];
@@ -45,6 +57,20 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			);
 		});
 
+		if (isMockPlayerEnabled()) {
+			// Below everyone else, so it does not spawn on top of a player.
+			const row = Math.floor(fieldSize.height / 2) + participantIds.length;
+
+			this.snakes.set(
+				MOCK_PLAYER_ID,
+				new Snake({
+					fieldSize,
+					initialDirection: MOCK_PLAYER_INITIAL_DIRECTION,
+					initialSegments: createMockPlayerSegments(fieldSize, row),
+				}),
+			);
+		}
+
 		this.foodManager = new FoodManager({
 			foodAmount: this.settings.foodAmount,
 			fieldSize: this.settings.fieldSize,
@@ -77,6 +103,8 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	private tick() {
+		this.steerMockPlayer();
+
 		this.snakes.forEach((snake) => {
 			if (!snake.alive) return;
 
@@ -95,15 +123,45 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			if (eatenFood) eatenFood.respawnFood();
 		});
 
-		const hasAliveSnakes = [...this.snakes.values()].some(
-			(snake) => snake.alive,
+		// The mock player is scenery: it must not hold a match open by itself.
+		const hasAlivePlayers = [...this.snakes].some(
+			([participantId, snake]) =>
+				snake.alive && participantId !== MOCK_PLAYER_ID,
 		);
-		if (!hasAliveSnakes) {
+		if (!hasAlivePlayers) {
 			this.endGame();
 			return;
 		}
 
 		this.emit('tick', this.getGameState());
+	}
+
+	private steerMockPlayer() {
+		const snake = this.snakes.get(MOCK_PLAYER_ID);
+		if (!snake?.alive) return;
+
+		snake.changeDirection(
+			chooseMockPlayerDirection({
+				currentDirection: snake.direction,
+				isSurvivable: (direction) =>
+					this.isDirectionSurvivable(snake, direction),
+			}),
+		);
+	}
+
+	private isDirectionSurvivable(
+		snake: Snake,
+		direction: SnakeDirection,
+	): boolean {
+		if (directionOpposites[direction] === snake.direction) {
+			return false;
+		}
+
+		const step = directionPositions[direction];
+		const head = snake.segments[0];
+		const nextHead = { x: head.x + step.x, y: head.y + step.y };
+
+		return !snake.hasCollision(nextHead, false);
 	}
 
 	private getGameState(): SnakeGameState {

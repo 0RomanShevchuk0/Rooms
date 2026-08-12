@@ -1,5 +1,5 @@
 import { SnakeGame } from './snake-game';
-import { MOCK_PLAYER_ID, MOCK_PLAYER_LENGTH } from './mock-player';
+import { MOCK_PLAYER_ID, MOCK_PLAYER_SNAKE_LENGTH } from './mock-player';
 import type { SnakeGameState } from './types';
 
 const ALICE = 'participant-alice';
@@ -70,14 +70,14 @@ describe('SnakeGame with the mock player', () => {
 		jest.advanceTimersByTime(TICK_MS);
 
 		expect(snakeOf(lastState(), MOCK_PLAYER_ID)?.segments).toHaveLength(
-			MOCK_PLAYER_LENGTH,
+			MOCK_PLAYER_SNAKE_LENGTH,
 		);
 		expect(snakeOf(lastState(), ALICE)?.segments).toHaveLength(1);
 		game.destroy();
 	});
 
-	// The lap is drawn for a roomy field; a small one has to be survived by turning.
-	it('turns away from the wall on a field too small for its lap', () => {
+	// A wanderer with no wall sense would be dead within a few ticks in here.
+	it('keeps itself alive on a field with barely any room', () => {
 		const game = new SnakeGame({
 			participantIds: [ALICE],
 			settings: { fieldSize: { width: 8, height: 8 }, foodAmount: 1 },

@@ -32,6 +32,8 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	private foodManager: FoodManager;
 
 	private readonly snakes = new Map<string, Snake>();
+	/** Null when the mock player is switched off; it is scenery, not a player. */
+	private readonly mockPlayerSnake: Snake | null = null;
 	private gameOver = false;
 
 	constructor({ participantIds, settings }: SnakeGameProps) {
@@ -61,14 +63,12 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			// Below everyone else, so it does not spawn on top of a player.
 			const row = Math.floor(fieldSize.height / 2) + participantIds.length;
 
-			this.snakes.set(
-				MOCK_PLAYER_ID,
-				new Snake({
-					fieldSize,
-					initialDirection: MOCK_PLAYER_INITIAL_DIRECTION,
-					initialSegments: createMockPlayerSegments(fieldSize, row),
-				}),
-			);
+			this.mockPlayerSnake = new Snake({
+				fieldSize,
+				initialDirection: MOCK_PLAYER_INITIAL_DIRECTION,
+				initialSegments: createMockPlayerSegments(fieldSize, row),
+			});
+			this.snakes.set(MOCK_PLAYER_ID, this.mockPlayerSnake);
 		}
 
 		this.foodManager = new FoodManager({
@@ -124,9 +124,8 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		});
 
 		// The mock player is scenery: it must not hold a match open by itself.
-		const hasAlivePlayers = [...this.snakes].some(
-			([participantId, snake]) =>
-				snake.alive && participantId !== MOCK_PLAYER_ID,
+		const hasAlivePlayers = [...this.snakes.values()].some(
+			(snake) => snake.alive && snake !== this.mockPlayerSnake,
 		);
 		if (!hasAlivePlayers) {
 			this.endGame();
@@ -137,7 +136,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	private steerMockPlayer() {
-		const snake = this.snakes.get(MOCK_PLAYER_ID);
+		const snake = this.mockPlayerSnake;
 		if (!snake?.alive) return;
 
 		snake.changeDirection(

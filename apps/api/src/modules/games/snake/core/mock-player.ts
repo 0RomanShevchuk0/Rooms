@@ -8,7 +8,7 @@ import type { FieldSize, Position } from './types';
  */
 export const MOCK_PLAYER_ID = 'mock-player';
 
-export const MOCK_PLAYER_LENGTH = 6;
+export const MOCK_PLAYER_SNAKE_LENGTH = 6;
 
 export const MOCK_PLAYER_INITIAL_DIRECTION = SNAKE_DIRECTION.RIGHT;
 
@@ -65,7 +65,7 @@ export function createMockPlayerSegments(
 	row: number,
 ): Position[] {
 	const headX = Math.floor(fieldSize.width / 2);
-	const length = Math.max(1, Math.min(MOCK_PLAYER_LENGTH, headX + 1));
+	const length = Math.max(1, Math.min(MOCK_PLAYER_SNAKE_LENGTH, headX + 1));
 
 	return Array.from({ length }, (_, index) => ({ x: headX - index, y: row }));
 }

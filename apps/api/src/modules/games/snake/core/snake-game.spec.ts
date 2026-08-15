@@ -1,5 +1,6 @@
 import { SnakeGame } from './snake-game';
 import { MOCK_PLAYER_ID, MOCK_PLAYER_SNAKE_LENGTH } from './mock-player';
+import { SNAKE_DIRECTION } from './direction';
 import type { SnakeGameState } from './types';
 
 const ALICE = 'participant-alice';
@@ -110,6 +111,41 @@ describe('SnakeGame with the mock player', () => {
 
 		expect(snakeOf(lastState(), MOCK_PLAYER_ID)?.alive).toBe(true);
 		game.destroy();
+	});
+
+	describe('with two players on the field', () => {
+		const BOB = 'participant-bob';
+
+		beforeEach(() => {
+			process.env.SNAKE_MOCK_PLAYER = 'false';
+		});
+
+		// They used to spawn in a column, all facing up, so the one behind drove
+		// into the one ahead the moment both were resolved against the same board.
+		it('does not kill anyone off the spawn', () => {
+			const { game, lastState } = createGame([ALICE, BOB]);
+			jest.advanceTimersByTime(TICK_MS * 3);
+
+			expect(snakeOf(lastState(), ALICE)?.alive).toBe(true);
+			expect(snakeOf(lastState(), BOB)?.alive).toBe(true);
+			game.destroy();
+		});
+
+		// Neither sees anything in the cell they both aim for, so only comparing
+		// the two intentions catches it.
+		it('takes out both when they go for the same cell', () => {
+			const { game, getGameOverState } = createGame([ALICE, BOB]);
+
+			game.changeSnakeDirection(ALICE, SNAKE_DIRECTION.RIGHT);
+			game.changeSnakeDirection(BOB, SNAKE_DIRECTION.LEFT);
+			jest.advanceTimersByTime(TICK_MS);
+
+			const finalState = getGameOverState();
+			expect(finalState).not.toBeNull();
+			expect(snakeOf(finalState!, ALICE)?.alive).toBe(false);
+			expect(snakeOf(finalState!, BOB)?.alive).toBe(false);
+			game.destroy();
+		});
 	});
 
 	// Otherwise an immortal bot would keep the room in the running phase forever.

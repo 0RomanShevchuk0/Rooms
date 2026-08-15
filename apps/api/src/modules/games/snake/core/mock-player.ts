@@ -25,7 +25,6 @@ interface ChooseMockPlayerDirectionProps {
 	currentDirection: SnakeDirection;
 	/** Whether heading that way survives the next tick — walls, tail and all. */
 	isSurvivable: (direction: SnakeDirection) => boolean;
-	random?: () => number;
 }
 
 /**
@@ -36,7 +35,6 @@ interface ChooseMockPlayerDirectionProps {
 export function chooseMockPlayerDirection({
 	currentDirection,
 	isSurvivable,
-	random = Math.random,
 }: ChooseMockPlayerDirectionProps): SnakeDirection {
 	const survivable = ALL_DIRECTIONS.filter(isSurvivable);
 	if (survivable.length === 0) {
@@ -44,7 +42,7 @@ export function chooseMockPlayerDirection({
 	}
 
 	const canCarryOn = survivable.includes(currentDirection);
-	if (canCarryOn && random() >= TURN_CHANCE) {
+	if (canCarryOn && Math.random() >= TURN_CHANCE) {
 		return currentDirection;
 	}
 
@@ -53,7 +51,7 @@ export function chooseMockPlayerDirection({
 	);
 	const options = turns.length > 0 ? turns : survivable;
 
-	return options[Math.floor(random() * options.length)];
+	return options[Math.floor(Math.random() * options.length)];
 }
 
 /**

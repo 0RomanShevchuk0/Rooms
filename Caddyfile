@@ -1,0 +1,13 @@
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Everything under /api goes straight to the Nest service, including
+	# /api/socket.io — Caddy proxies the WebSocket upgrade natively.
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

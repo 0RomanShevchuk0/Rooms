@@ -9,6 +9,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { SnakeModule } from './modules/games/snake/snake.module';
 import { RoomSettingsModule } from './modules/rooms/room-settings/room-settings.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
 	imports: [
@@ -22,6 +23,7 @@ import { RoomSettingsModule } from './modules/rooms/room-settings/room-settings.
 		AuthModule,
 		SnakeModule,
 		RoomSettingsModule,
+		HealthModule,
 	],
 	controllers: [AppController],
 	providers: [AppService],

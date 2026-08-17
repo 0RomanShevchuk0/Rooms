@@ -1,0 +1,90 @@
+# Production stack: only Caddy is reachable from the internet. The app services
+# and the database talk to each other over the private compose network and
+# publish no ports of their own.
+
+services:
+   caddy:
+      image: caddy:2-alpine
+      restart: always
+      ports:
+         - "80:80"
+         - "443:443"
+      environment:
+         DOMAIN: ${DOMAIN}
+      volumes:
+         - ./Caddyfile:/etc/caddy/Caddyfile:ro
+         - caddy_data:/data
+         - caddy_config:/config
+      depends_on:
+         - web
+         - api
+
+   web:
+      image: ghcr.io/0romanshevchuk0/rooms-web:latest
+      build:
+         context: .
+         dockerfile: ./apps/web/Dockerfile
+         args:
+            NEXT_PUBLIC_API_URL: /api
+            NEXT_PUBLIC_SOCKET_IO_URL: /api
+      restart: always
+      depends_on:
+         - api
+
+   api:
+      image: ghcr.io/0romanshevchuk0/rooms-api:latest
+      build:
+         context: .
+         dockerfile: ./apps/api/Dockerfile
+      restart: always
+      environment:
+         NODE_ENV: production
+         PORT: 4000
+         DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+         ALLOWED_ORIGINS: ${PUBLIC_URL}
+         CLIENT_URL: ${PUBLIC_URL}
+         JWT_SECRET: ${JWT_SECRET}
+         JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+         SNAKE_TICK_MS: ${SNAKE_TICK_MS:-150}
+         GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+         GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+         GOOGLE_CALLBACK_URL: ${PUBLIC_URL}/api/auth/google-redirect
+         DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+         DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
+         DISCORD_CALLBACK_URL: ${PUBLIC_URL}/api/auth/discord-redirect
+      depends_on:
+         postgres:
+            condition: service_healthy
+      # The runtime image has no curl or wget, so the probe is run by node itself.
+      healthcheck:
+         test:
+            - CMD
+            - node
+            - -e
+            # $$ escapes the $ so Compose leaves the expression for node to evaluate.
+            - "fetch(`http://127.0.0.1:$${process.env.PORT}/api/health`).then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+         interval: 10s
+         timeout: 5s
+         retries: 12
+         # Migrations run on container start, so the first probe needs slack.
+         start_period: 40s
+
+   postgres:
+      image: postgres:16
+      restart: always
+      environment:
+         POSTGRES_DB: ${POSTGRES_DB}
+         POSTGRES_USER: ${POSTGRES_USER}
+         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      healthcheck:
+         test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+         interval: 5s
+         timeout: 5s
+         retries: 20
+      volumes:
+         - pgdata:/var/lib/postgresql/data
+
+volumes:
+   pgdata:
+   caddy_data:
+   caddy_config:

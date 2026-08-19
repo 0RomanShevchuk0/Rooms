@@ -26,9 +26,35 @@ jobs:
            run: docker build -f apps/api/Dockerfile -t ghcr.io/0romanshevchuk0/rooms-api:latest .
 
          - name: Build web image
-           run: docker build -f apps/web/Dockerfile -t ghcr.io/0romanshevchuk0/rooms-web:latest .
+           run: docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_BUILD_SHA=${{ github.sha }} -t ghcr.io/0romanshevchuk0/rooms-web:latest .
 
          - name: Push images
            run: |
               docker push ghcr.io/0romanshevchuk0/rooms-api:latest
               docker push ghcr.io/0romanshevchuk0/rooms-web:latest
+
+   deploy:
+      # Only runs if the build job finished successfully.
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Install the deploy key
+           run: |
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              echo "${{ secrets.ROOMS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+              chmod 600 ~/.ssh/deploy_key
+              # Records the server's host key so ssh does not stop to ask about it.
+              ssh-keyscan -H "${{ secrets.ROOMS_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+         - name: Pull the new images and restart
+           run: |
+              ssh -i ~/.ssh/deploy_key "${{ secrets.ROOMS_SSH_USER }}@${{ secrets.ROOMS_SSH_HOST }}" '
+                 set -eu
+                 cd ~/Rooms
+                 git pull --ff-only
+                 docker compose pull
+                 docker compose up -d
+                 docker image prune -f
+              '

@@ -23,8 +23,10 @@ COPY packages/contracts ./packages/contracts
 # have to arrive as build args — setting them at runtime has no effect.
 ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_SOCKET_IO_URL=/api
+ARG NEXT_PUBLIC_BUILD_SHA
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_SOCKET_IO_URL=$NEXT_PUBLIC_SOCKET_IO_URL
+ENV NEXT_PUBLIC_BUILD_SHA=$NEXT_PUBLIC_BUILD_SHA
 
 RUN npm run -w @rooms/contracts build
 RUN npm run -w @rooms/web build

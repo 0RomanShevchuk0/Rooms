@@ -4,7 +4,7 @@ import type {
 } from '@rooms/contracts/chat';
 import type { MessageWithSender as RestMessageWithSender } from '@rooms/contracts/message';
 import type { MessageWithSender } from '../messages/messages.types';
-import { toRestUser } from '../users/users.mapper';
+import { toPublicRestUser } from '../users/users.mapper';
 
 type ChatForResponse = {
 	id: string;
@@ -31,7 +31,7 @@ export function toMessageWithSenderPayload(
 		chatId: message.chatId,
 		senderId: message.senderId,
 		createdAt: message.createdAt.toISOString(),
-		sender: toRestUser(message.sender),
+		sender: toPublicRestUser(message.sender),
 	};
 }
 

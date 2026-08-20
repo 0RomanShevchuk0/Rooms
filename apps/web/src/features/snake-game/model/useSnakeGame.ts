@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { codeDirectionMap } from "./constansts";
 import {
 	SNAKE_GAME_SOCKET_EVENTS,
-	type SnakeRoomPayload,
 	type SnakeChangeDirectionPayload,
 	type SnakeGameSettings,
 	type SnakeGameState,
@@ -15,15 +14,14 @@ type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 interface UseSnakeGameProps {
 	roomId: string;
 	snakeFieldSize: SnakeFieldSize;
+	ownParticipantId: string | null;
+	isGameRunning: boolean;
 }
-
-type SnakeGameStatus = "idle" | "running" | "over";
 
 interface SnakeGameRoomState {
 	roomId: string;
 	gameOverState: SnakeGameState | null;
 	snakeLength: number;
-	gameStatus: SnakeGameStatus;
 }
 
 function createDefaultGameState(roomId: string): SnakeGameRoomState {
@@ -31,8 +29,12 @@ function createDefaultGameState(roomId: string): SnakeGameRoomState {
 		roomId,
 		gameOverState: null,
 		snakeLength: 1,
-		gameStatus: "idle",
 	};
+}
+
+function getOwnSnakeLength(gameState: SnakeGameState, ownParticipantId: string | null) {
+	const ownSnake = gameState.snakes.find((snake) => snake.participantId === ownParticipantId);
+	return ownSnake?.segments.length ?? 0;
 }
 
 function isEditableTarget(target: EventTarget | null): target is HTMLElement {
@@ -46,7 +48,12 @@ function isEditableTarget(target: EventTarget | null): target is HTMLElement {
 	);
 }
 
-export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
+export function useSnakeGame({
+	roomId,
+	snakeFieldSize,
+	ownParticipantId,
+	isGameRunning,
+}: UseSnakeGameProps) {
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
 	const [roomState, setRoomState] = useState<SnakeGameRoomState>(() =>
 		createDefaultGameState(roomId),
@@ -63,15 +70,15 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 		},
 		[roomId],
 	);
-	const gameStatusRef = useRef<SnakeGameStatus>("idle");
+	const isGameRunningRef = useRef(isGameRunning);
 	const snakeFieldWidth = snakeFieldSize.width;
 	const snakeFieldHeight = snakeFieldSize.height;
 
 	const { socket: snakeGameSocket } = useSnakeGameSocket();
 
 	useEffect(() => {
-		gameStatusRef.current = currentRoomState.gameStatus;
-	}, [currentRoomState.gameStatus]);
+		isGameRunningRef.current = isGameRunning;
+	}, [isGameRunning]);
 
 	useEffect(() => {
 		const canvasContainer = canvasContainerRef.current;
@@ -85,13 +92,13 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 				width: snakeFieldWidth,
 				height: snakeFieldHeight,
 			},
+			ownParticipantId,
 		});
 
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
 			setCurrentRoomState((state) => ({
 				...state,
-				snakeLength: gameState.snakeSegments.length,
-				gameStatus: "running",
+				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
 			}));
 			snakeGame.render(gameState);
 		};
@@ -99,17 +106,17 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 		const handleGameOver = (gameState: SnakeGameState) => {
 			setCurrentRoomState((state) => ({
 				...state,
-				snakeLength: gameState.snakeSegments.length,
+				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
 				gameOverState: gameState,
-				gameStatus: "over",
 			}));
+			snakeGame.render(gameState);
 		};
 
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, handleSnakeMoved);
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, handleGameOver);
 
 		const handleDirectionChange = (event: KeyboardEvent) => {
-			if (gameStatusRef.current !== "running") return;
+			if (!isGameRunningRef.current) return;
 			if (isEditableTarget(event.target)) return;
 
 			const direction = codeDirectionMap[event.code];
@@ -130,34 +137,24 @@ export function useSnakeGame({ roomId, snakeFieldSize }: UseSnakeGameProps) {
 
 			snakeGame.destroy();
 		};
-	}, [snakeGameSocket, roomId, snakeFieldWidth, snakeFieldHeight, setCurrentRoomState]);
+	}, [
+		snakeGameSocket,
+		roomId,
+		snakeFieldWidth,
+		snakeFieldHeight,
+		ownParticipantId,
+		setCurrentRoomState,
+	]);
 
 	const closeGameOverModal = () => {
-		setCurrentRoomState((state) => ({
-			...state,
-			gameOverState: null,
-			gameStatus: state.gameStatus === "over" ? "idle" : state.gameStatus,
-		}));
-	};
-
-	const startGame = () => {
-		setCurrentRoomState((state) => ({
-			...state,
-			gameOverState: null,
-			snakeLength: 1,
-			gameStatus: "running",
-		}));
-
-		const payload: SnakeRoomPayload = { roomId };
-		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.START_GAME, payload);
+		setCurrentRoomState((state) => ({ ...state, gameOverState: null }));
 	};
 
 	return {
 		canvasContainerRef,
 		snakeLength: currentRoomState.snakeLength,
-		gameStatus: currentRoomState.gameStatus,
-		gameOverState: currentRoomState.gameOverState,
+		// The last match's result has nothing to say over a running one.
+		gameOverState: isGameRunning ? null : currentRoomState.gameOverState,
 		closeGameOverModal,
-		startGame,
 	};
 }

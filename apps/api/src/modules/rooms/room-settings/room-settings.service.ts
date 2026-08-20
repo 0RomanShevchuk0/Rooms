@@ -8,7 +8,7 @@ import { toSnakeGameSettings } from './room-settings.mapper';
 export class RoomSettingsService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	async getSnakeSettings(roomId: string): Promise<SnakeGameSettings> {
+	async getOrCreateSnakeSettings(roomId: string): Promise<SnakeGameSettings> {
 		const roomSettings = await this.prisma.roomSnakeSettings.upsert({
 			where: { roomId },
 			update: {},
@@ -16,6 +16,7 @@ export class RoomSettingsService {
 				roomId,
 				fieldWidth: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.width,
 				fieldHeight: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.height,
+				foodAmount: DEFAULT_SNAKE_GAME_SETTINGS.foodAmount,
 			},
 		});
 
@@ -31,11 +32,13 @@ export class RoomSettingsService {
 			update: {
 				fieldWidth: settings.fieldSize.width,
 				fieldHeight: settings.fieldSize.height,
+				foodAmount: settings.foodAmount,
 			},
 			create: {
 				roomId,
 				fieldWidth: settings.fieldSize.width,
 				fieldHeight: settings.fieldSize.height,
+				foodAmount: settings.foodAmount,
 			},
 		});
 

@@ -33,7 +33,6 @@ export function RoomHeader({ roomId, roomName }: RoomHeaderProps) {
 					Back
 				</Button>
 				<InviteRoomDropdown roomId={roomId} />
-				<Button size="sm">Ready</Button>
 				<LeaveRoomDialog roomId={roomId}>
 					<Button variant="destructive" size="sm">
 						<LogOut className="size-4" />

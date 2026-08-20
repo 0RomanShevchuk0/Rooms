@@ -6,6 +6,7 @@ export type FieldSize = {
 };
 
 export type SnakeGameSettings = {
+	foodAmount: number;
 	fieldSize: FieldSize;
 };
 
@@ -14,9 +15,15 @@ export type Position = {
 	y: number;
 };
 
+export interface SnakePlayerState {
+	participantId: string;
+	direction: SnakeDirection;
+	segments: Position[];
+	alive: boolean;
+}
+
 export interface SnakeGameState {
-	snakeSegments: Position[];
-	snakeDirection: SnakeDirection;
-	foodPosition: Position;
+	snakes: SnakePlayerState[];
+	foodPositions: Position[];
 	gameOver: boolean;
 }

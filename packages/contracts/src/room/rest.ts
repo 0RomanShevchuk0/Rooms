@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ChatSchema } from "../chat/base.js";
 import { SnakeGameSettingsSchema } from "../snake-game/base.js";
-import { UserSchema } from "../user/rest.js";
+import { PublicUserSchema } from "../user/rest.js";
 import { RoomIdSchema, RoomParticipantIdSchema } from "./base.js";
 
 export const RoomSchema = z.object({
@@ -17,8 +17,8 @@ export const RoomIdParamsSchema = z.object({
 export const RoomParticipantSchema = z.object({
 	id: RoomParticipantIdSchema,
 	isReady: z.boolean(),
-	userId: z.string().uuid(),
-	user: UserSchema,
+	userId: z.uuid(),
+	user: PublicUserSchema,
 });
 
 export const RoomWithParticipantsSchema = RoomSchema.extend({
@@ -35,7 +35,7 @@ export const RoomWithParticipantsAndChatSchema = RoomWithParticipantsSchema.exte
 export const CreateRoomPayloadSchema = z.object({
 	name: z.string().min(1),
 	description: z.string().optional(),
-	userIds: z.array(z.string().uuid()).min(1),
+	userIds: z.array(z.uuid()).min(1),
 });
 
 export const UpdateRoomPayloadSchema = CreateRoomPayloadSchema.partial();

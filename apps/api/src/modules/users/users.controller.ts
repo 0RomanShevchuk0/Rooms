@@ -15,12 +15,13 @@ import { SelfUserGuard } from './guards/self-user.guard';
 import {
 	UpdateUserPayloadSchema,
 	UserIdParamsSchema,
+	type PublicUser as RestPublicUser,
 	type UpdateUserPayload,
 	type User as RestUser,
 	type UserIdParams,
 } from '@rooms/contracts/user';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
-import { toRestUser } from './users.mapper';
+import { toPublicRestUser, toRestUser } from './users.mapper';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -28,9 +29,9 @@ export class UsersController {
 	constructor(private usersService: UsersService) {}
 
 	@Get()
-	async fetchUsers(): Promise<RestUser[]> {
+	async fetchUsers(): Promise<RestPublicUser[]> {
 		const users = await this.usersService.findMany();
-		return users.map(toRestUser);
+		return users.map(toPublicRestUser);
 	}
 
 	@Get('me')
@@ -42,9 +43,9 @@ export class UsersController {
 	@Get(':id')
 	async findUser(
 		@Param(new ZodValidationPipe(UserIdParamsSchema)) params: UserIdParams,
-	): Promise<RestUser> {
+	): Promise<RestPublicUser> {
 		const foundUser = await this.usersService.findByIdOrThrow(params.id);
-		return toRestUser(foundUser);
+		return toPublicRestUser(foundUser);
 	}
 
 	@Patch(':id')

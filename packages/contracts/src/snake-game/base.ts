@@ -28,17 +28,25 @@ export const SnakeFieldSizeSchema = z.object({
 
 export const SnakeGameSettingsSchema = z.object({
 	fieldSize: SnakeFieldSizeSchema,
+	foodAmount: z.number().int().min(1),
+});
+
+export const SnakePlayerStateSchema = z.object({
+	participantId: z.uuid(),
+	direction: SnakeDirectionSchema,
+	segments: z.array(SnakePositionSchema),
+	alive: z.boolean(),
 });
 
 export const SnakeGameStateSchema = z.object({
-	snakeDirection: SnakeDirectionSchema,
-	snakeSegments: z.array(SnakePositionSchema),
-	foodPosition: SnakePositionSchema,
+	snakes: z.array(SnakePlayerStateSchema),
+	foodPositions: z.array(SnakePositionSchema),
 	gameOver: z.boolean(),
 });
 
 export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
 export type SnakePosition = z.infer<typeof SnakePositionSchema>;
+export type SnakePlayerState = z.infer<typeof SnakePlayerStateSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
 export type SnakeFieldSize = z.infer<typeof SnakeFieldSizeSchema>;
 export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;

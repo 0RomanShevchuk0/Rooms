@@ -3,7 +3,7 @@ import { ChatIdSchema, ChatSchema } from "./base.js";
 import { PaginatedMessagesResponseSchema } from "../message/rest.js";
 
 export const GetChatMessagesQuerySchema = z.object({
-	cursor: z.string().uuid().optional(),
+	cursor: z.uuid().optional(),
 	limit: z.coerce.number().int().positive().max(100).optional(),
 });
 

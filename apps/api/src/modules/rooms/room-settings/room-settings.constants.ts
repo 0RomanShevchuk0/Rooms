@@ -5,4 +5,5 @@ export const DEFAULT_SNAKE_GAME_SETTINGS: SnakeGameSettings = {
 		width: 20,
 		height: 20,
 	},
+	foodAmount: 1,
 };

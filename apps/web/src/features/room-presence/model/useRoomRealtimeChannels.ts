@@ -1,9 +1,7 @@
 "use client";
 
-import { useChatSocket, useRoomsSocket } from "@/shared/lib/realtime";
-import { getMeRoomParticipant } from "@/entities/room";
-import { queryKeys } from "@/shared/react-query";
-import { useQuery } from "@tanstack/react-query";
+import { SYSTEM_SOCKET_EVENTS, useChatSocket, useRoomsSocket } from "@/shared/lib/realtime";
+import { useMyRoomParticipantQuery } from "@/entities/room";
 import { useEffect } from "react";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
 import type { ChatConnectionPayload } from "@rooms/contracts/chat";
@@ -48,12 +46,7 @@ export function useRoomRealtimeChannels({ roomId, chatId }: UseRoomRealtimeChann
 		snakeGameDisconnect,
 	]);
 
-	const { data: participant } = useQuery({
-		queryKey: queryKeys.rooms.meRoomParticipant(roomId),
-		queryFn: () => getMeRoomParticipant(roomId),
-		enabled: Boolean(roomId),
-	});
-	const participantId = participant?.id;
+	const { participantId } = useMyRoomParticipantQuery(roomId);
 
 	useEffect(() => {
 		if (!participantId) return;
@@ -61,15 +54,30 @@ export function useRoomRealtimeChannels({ roomId, chatId }: UseRoomRealtimeChann
 		const roomConnectPayload: RoomConnectPayload = { roomId, participantId };
 		const snakeRoomPayload: SnakeRoomPayload = { roomId };
 
-		roomsSocket.emit(ROOM_SOCKET_EVENTS.CONNECT, roomConnectPayload);
-		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CONNECT, snakeRoomPayload);
-
-		if (chatId) {
+		const joinRoom = () => roomsSocket.emit(ROOM_SOCKET_EVENTS.CONNECT, roomConnectPayload);
+		const joinSnakeGame = () =>
+			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CONNECT, snakeRoomPayload);
+		const joinChat = () => {
+			if (!chatId) return;
 			const chatConnectPayload: ChatConnectionPayload = { chatId };
 			chatSocket.emit(CHAT_SOCKET_EVENTS.CONNECT, chatConnectPayload);
-		}
+		};
+
+		joinRoom();
+		joinSnakeGame();
+		joinChat();
+
+		// A reconnect comes back as a new socket the server has never seen, so the
+		// room has to be joined again — otherwise presence and ready silently die.
+		roomsSocket.on(SYSTEM_SOCKET_EVENTS.CONNECT, joinRoom);
+		snakeGameSocket.on(SYSTEM_SOCKET_EVENTS.CONNECT, joinSnakeGame);
+		chatSocket.on(SYSTEM_SOCKET_EVENTS.CONNECT, joinChat);
 
 		return () => {
+			roomsSocket.off(SYSTEM_SOCKET_EVENTS.CONNECT, joinRoom);
+			snakeGameSocket.off(SYSTEM_SOCKET_EVENTS.CONNECT, joinSnakeGame);
+			chatSocket.off(SYSTEM_SOCKET_EVENTS.CONNECT, joinChat);
+
 			roomsSocket.emit(ROOM_SOCKET_EVENTS.DISCONNECT);
 			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.DISCONNECT, snakeRoomPayload);
 			if (chatId) {

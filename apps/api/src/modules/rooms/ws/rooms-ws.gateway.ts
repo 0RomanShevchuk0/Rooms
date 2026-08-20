@@ -6,19 +6,30 @@ import {
 	WebSocketGateway,
 	WebSocketServer,
 } from '@nestjs/websockets';
+import type { OnModuleInit } from '@nestjs/common';
 import type { Server } from 'socket.io';
 import {
 	ROOM_SOCKET_EVENTS,
 	type RoomConnectPayload,
 	RoomConnectPayloadSchema,
+	type RoomSetReadyPayload,
+	RoomSetReadyPayloadSchema,
+	type RoomStartNowPayload,
+	RoomStartNowPayloadSchema,
 } from '@rooms/contracts/room';
-import type { RoomsSocketData, RoomsSocketWithAuth } from './rooms-ws.types';
+import type { RoomsSocketWithAuth } from './rooms-ws.types';
 import { RoomParticipantWithUser } from '../participants/room-participants.select';
 import { RoomParticipantsService } from '../participants/room-participants.service';
+import { RoomPresenceService } from '../presence/room-presence.service';
+import {
+	RoomLobbyService,
+	type RoomLobbyState,
+} from '../lobby/room-lobby.service';
 import { ApiWsHandler } from 'src/realtime/ws/api-ws-handler.decorator';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 import {
+	toRoomLobbyStatePayload,
 	toRoomParticipantJoinedPayload,
 	toRoomPresencePayload,
 } from '../rooms.mapper';
@@ -33,34 +44,36 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 		credentials: true,
 	},
 })
-export class RoomsWsGateway implements OnGatewayDisconnect {
+export class RoomsWsGateway implements OnGatewayDisconnect, OnModuleInit {
 	@WebSocketServer()
 	server!: Server;
 
-	constructor(private readonly participantsService: RoomParticipantsService) {}
+	constructor(
+		private readonly participantsService: RoomParticipantsService,
+		private readonly presence: RoomPresenceService,
+		private readonly lobby: RoomLobbyService,
+	) {}
 
-	private roomParticipants = new Map<string, Set<string>>();
-	private socketContexts = new Map<string, RoomsSocketData>();
+	onModuleInit() {
+		this.lobby.on('stateChanged', (roomId, state) => {
+			this.broadcastLobbyState(roomId, state);
+		});
+	}
 
 	handleDisconnect(client: RoomsSocketWithAuth) {
-		const context = this.socketContexts.get(client.id);
+		const context = this.presence.detach(client.id);
 		if (!context) {
 			return;
 		}
 
-		this.removeParticipantFromRoom(context.roomId, context.participantId);
-		this.clearSocketContextIfSessionMatches(
-			client.id,
-			context.sessionVersion,
-		);
+		this.presence.releaseContext(client.id, context.sessionVersion);
+		this.clearReadyIfOffline(context.roomId, context.participantId);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			context.roomId,
 			context.participantId,
-			this.getOnlineParticipantIds(context.roomId),
+			ROOM_SOCKET_EVENTS.DISCONNECT,
 		);
-		this.server
-			.to(context.roomId)
-			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.CONNECT)
@@ -71,59 +84,93 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	) {
 		const userId = requireWsUser(client).sub;
 
-		const participant =
+		const isParticipant =
 			await this.participantsService.isUserParticipantInRoom(
 				body.roomId,
 				body.participantId,
 				userId,
 			);
-		if (!participant) {
+		if (!isParticipant) {
 			return { ok: false, error: 'Participant not found in the room' };
 		}
 
-		const sessionVersion = this.getNextSessionVersion(client.id);
-		const context: RoomsSocketData = {
-			participantId: body.participantId,
-			roomId: body.roomId,
-			sessionVersion,
-		};
-		this.socketContexts.set(client.id, context);
+		// A socket may connect again without disconnecting first.
+		const previousContext = this.presence.detach(client.id);
+		if (previousContext) {
+			await client.leave(previousContext.roomId);
+		}
 
-		this.addParticipantToRoom(body.roomId, body.participantId);
+		this.presence.attach(client.id, body.roomId, body.participantId);
 		await client.join(body.roomId);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			body.roomId,
 			body.participantId,
-			this.getOnlineParticipantIds(body.roomId),
+			ROOM_SOCKET_EVENTS.CONNECT,
 		);
 
-		this.server.to(body.roomId).emit(ROOM_SOCKET_EVENTS.CONNECT, payload);
+		// A latecomer needs the current phase now, not at the next state change.
+		client.emit(
+			ROOM_SOCKET_EVENTS.LOBBY_STATE,
+			toRoomLobbyStatePayload(this.lobby.getState(body.roomId)),
+		);
+
+		return { ok: true };
+	}
+
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.SET_READY)
+	setReady(
+		@ConnectedSocket() client: RoomsSocketWithAuth,
+		@MessageBody(new ZodValidationPipe(RoomSetReadyPayloadSchema))
+		body: RoomSetReadyPayload,
+	) {
+		const context = this.requireRoomContext(client, body.roomId);
+		if (!context) {
+			return { ok: false, error: 'Not connected to the room' };
+		}
+
+		this.lobby.setReady(
+			context.roomId,
+			context.participantId,
+			body.isReady,
+			this.presence.getOnlineParticipantIds(context.roomId),
+		);
+
+		return { ok: true };
+	}
+
+	@SubscribeMessage(ROOM_SOCKET_EVENTS.START_NOW)
+	startNow(
+		@ConnectedSocket() client: RoomsSocketWithAuth,
+		@MessageBody(new ZodValidationPipe(RoomStartNowPayloadSchema))
+		body: RoomStartNowPayload,
+	) {
+		const context = this.requireRoomContext(client, body.roomId);
+		if (!context) {
+			return { ok: false, error: 'Not connected to the room' };
+		}
+
+		this.lobby.startNow(context.roomId, context.participantId);
 
 		return { ok: true };
 	}
 
 	@SubscribeMessage(ROOM_SOCKET_EVENTS.DISCONNECT)
 	async disconnectFromRoom(@ConnectedSocket() client: RoomsSocketWithAuth) {
-		const context = this.socketContexts.get(client.id);
+		const context = this.presence.detach(client.id);
 		if (!context) {
 			return { ok: true };
 		}
 
-		this.removeParticipantFromRoom(context.roomId, context.participantId);
 		await client.leave(context.roomId);
-		this.clearSocketContextIfSessionMatches(
-			client.id,
-			context.sessionVersion,
-		);
+		this.presence.releaseContext(client.id, context.sessionVersion);
+		this.clearReadyIfOffline(context.roomId, context.participantId);
 
-		const payload = toRoomPresencePayload(
+		this.broadcastPresence(
+			context.roomId,
 			context.participantId,
-			this.getOnlineParticipantIds(context.roomId),
+			ROOM_SOCKET_EVENTS.DISCONNECT,
 		);
-
-		this.server
-			.to(context.roomId)
-			.emit(ROOM_SOCKET_EVENTS.DISCONNECT, payload);
 
 		return { ok: true };
 	}
@@ -134,7 +181,7 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 	) {
 		const payload = toRoomParticipantJoinedPayload(
 			participant,
-			this.getOnlineParticipantIds(roomId),
+			this.presence.getOnlineParticipantIds(roomId),
 		);
 		this.server
 			.to(roomId)
@@ -145,45 +192,64 @@ export class RoomsWsGateway implements OnGatewayDisconnect {
 		roomId: string,
 		participant: RoomParticipantWithUser,
 	) {
+		// Their sockets outlive an HTTP leave and would keep hearing the room.
+		const evictedSocketIds = this.presence.evict(roomId, participant.id);
+		for (const socketId of evictedSocketIds) {
+			this.server.in(socketId).socketsLeave(roomId);
+		}
+
+		// Leaving the room gives up the spot too, tabs or no tabs.
+		this.lobby.clearReady(roomId, participant.id);
+
 		const payload = toRoomPresencePayload(
 			participant.id,
-			this.getOnlineParticipantIds(roomId),
+			this.presence.getOnlineParticipantIds(roomId),
 		);
 		this.server.to(roomId).emit(ROOM_SOCKET_EVENTS.PARTICIPANT_LEFT, payload);
 	}
 
-	public getOnlineParticipantIds(roomId: string): string[] {
-		return Array.from(this.roomParticipants.get(roomId) ?? []);
-	}
+	/**
+	 * Another tab still holding the room keeps the spot: presence counts sockets
+	 * per participant, and only the last one leaving takes them offline.
+	 */
+	private clearReadyIfOffline(roomId: string, participantId: string) {
+		const isStillOnline = this.presence
+			.getOnlineParticipantIds(roomId)
+			.includes(participantId);
 
-	private addParticipantToRoom(roomId: string, participantId: string) {
-		if (!this.roomParticipants.has(roomId)) {
-			this.roomParticipants.set(roomId, new Set());
-		}
-		this.roomParticipants.get(roomId)!.add(participantId);
-	}
-
-	private removeParticipantFromRoom(roomId: string, participantId: string) {
-		const room = this.roomParticipants.get(roomId);
-		if (!room) return;
-
-		room.delete(participantId);
-		if (room?.size === 0) {
-			this.roomParticipants.delete(roomId);
+		if (!isStillOnline) {
+			this.lobby.clearReady(roomId, participantId);
 		}
 	}
 
-	private getNextSessionVersion(clientId: string): number {
-		return (this.socketContexts.get(clientId)?.sessionVersion ?? 0) + 1;
+	/** The socket's own presence context, never the room id it claims. */
+	private requireRoomContext(client: RoomsSocketWithAuth, roomId: string) {
+		const context = this.presence.getContext(client.id);
+		if (!context || context.roomId !== roomId) {
+			return null;
+		}
+
+		return context;
 	}
 
-	private clearSocketContextIfSessionMatches(
-		clientId: string,
-		sessionVersion: number,
+	private broadcastLobbyState(roomId: string, state: RoomLobbyState) {
+		this.server
+			.to(roomId)
+			.emit(ROOM_SOCKET_EVENTS.LOBBY_STATE, toRoomLobbyStatePayload(state));
+	}
+
+	private broadcastPresence(
+		roomId: string,
+		participantId: string,
+		event:
+			| typeof ROOM_SOCKET_EVENTS.CONNECT
+			| typeof ROOM_SOCKET_EVENTS.DISCONNECT,
 	) {
-		const currentContext = this.socketContexts.get(clientId);
-		if (currentContext?.sessionVersion === sessionVersion) {
-			this.socketContexts.delete(clientId);
-		}
+		const payload = toRoomPresencePayload(
+			participantId,
+			this.presence.getOnlineParticipantIds(roomId),
+		);
+
+		this.server.to(roomId).emit(event, payload);
 	}
 }

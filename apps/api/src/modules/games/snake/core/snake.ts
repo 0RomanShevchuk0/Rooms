@@ -12,11 +12,16 @@ export class Snake {
 	private readonly fieldSize: FieldSize;
 	segments: Position[];
 	direction: SnakeDirection;
+	alive = true;
 
 	constructor({ fieldSize, initialDirection, initialSegments }: SnakeProps) {
 		this.fieldSize = fieldSize;
 		this.segments = initialSegments;
 		this.direction = initialDirection;
+	}
+
+	kill() {
+		this.alive = false;
 	}
 
 	changeDirection(newDirection: SnakeDirection) {
@@ -43,10 +48,29 @@ export class Snake {
 		return newPosition;
 	}
 
-	hasCollision(position: Position, considerTail: boolean): boolean {
+	/** `isGrowing` is what keeps the tail counted: a growing snake leaves it put. */
+	hasCollision(
+		position: Position,
+		isGrowing: boolean,
+		otherSnakes: Snake[],
+	): boolean {
 		const isFieldCollision = this.checkFieldCollision(position);
-		const isSelfCollision = this.isSelfCollision(position, considerTail);
-		return isFieldCollision || isSelfCollision;
+		const isSelfCollision = this.isSelfCollision(position, isGrowing);
+		const isOtherSnakeCollision = otherSnakes.some((otherSnake) =>
+			this.checkOtherSnakeCollision(position, otherSnake),
+		);
+		return isFieldCollision || isSelfCollision || isOtherSnakeCollision;
+	}
+
+	private checkOtherSnakeCollision(
+		position: Position,
+		otherSnake: Snake,
+	): boolean {
+		if (!otherSnake.alive) return false;
+
+		return otherSnake.segments.some(
+			(segment) => segment.x === position.x && segment.y === position.y,
+		);
 	}
 
 	private checkFieldCollision(nextHead: Position): boolean {
@@ -59,11 +83,13 @@ export class Snake {
 		return isBordersCollision;
 	}
 
-	private isSelfCollision(position: Position, considerTail: boolean): boolean {
+	private isSelfCollision(position: Position, isGrowing: boolean): boolean {
 		return this.segments.some(
 			(segment, index) =>
+				// The head cannot run into itself, and the tail cell is being
+				// vacated this tick unless the snake is growing into it.
 				index !== 0 &&
-				(considerTail || index !== this.segments.length - 1) &&
+				(isGrowing || index !== this.segments.length - 1) &&
 				segment.x === position.x &&
 				segment.y === position.y,
 		);

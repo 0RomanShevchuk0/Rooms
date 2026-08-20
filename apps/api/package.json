@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"@nestjs/common": "^11.0.1",
-		"@nestjs/config": "^4.0.2",
+		"@nestjs/config": "^4.0.4",
 		"@nestjs/core": "^11.0.1",
 		"@nestjs/jwt": "^11.0.2",
 		"@nestjs/passport": "^11.0.5",
@@ -34,6 +34,7 @@
 		"bcrypt": "^6.0.0",
 		"cookie-parser": "^1.4.7",
 		"passport": "^0.7.0",
+		"passport-google-oauth20": "^2.0.0",
 		"passport-jwt": "^4.0.1",
 		"passport-local": "^1.0.0",
 		"prisma": "7.6.0",
@@ -53,6 +54,7 @@
 		"@types/express": "^5.0.0",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^22.10.7",
+		"@types/passport-google-oauth20": "^2.0.17",
 		"@types/passport-jwt": "^4.0.1",
 		"@types/passport-local": "^1.0.38",
 		"@types/supertest": "^6.0.2",
@@ -86,6 +88,11 @@
 			"**/*.(t|j)s"
 		],
 		"coverageDirectory": "../coverage",
-		"testEnvironment": "node"
+		"testEnvironment": "node",
+		"moduleNameMapper": {
+			"^src/(.*)$": "<rootDir>/$1",
+			"^generated/(.*)$": "<rootDir>/../generated/$1",
+			"^(\\.{1,2}/.*)\\.js$": "$1"
+		}
 	}
 }

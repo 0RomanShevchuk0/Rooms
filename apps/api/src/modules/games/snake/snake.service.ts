@@ -9,20 +9,28 @@ export class SnakeService {
 
 	private roomGameMap = new Map<string, SnakeGame>();
 
-	async startGame(roomId: string) {
+	async startGame(
+		roomId: string,
+		participantIds: string[],
+	): Promise<SnakeGame> {
 		const existingGame = this.roomGameMap.get(roomId);
 		existingGame?.destroy();
 
-		const settings = await this.roomSettingsService.getSnakeSettings(roomId);
-		const game = new SnakeGame(settings);
+		const settings =
+			await this.roomSettingsService.getOrCreateSnakeSettings(roomId);
+		const game = new SnakeGame({ participantIds, settings });
 		this.roomGameMap.set(roomId, game);
 		game.startGame();
 		return game;
 	}
 
-	changeDirection(roomId: string, direction: SnakeDirection) {
+	changeDirection(
+		roomId: string,
+		participantId: string,
+		direction: SnakeDirection,
+	) {
 		const game = this.getGameByRoomIdOrThrow(roomId);
-		game.changeSnakeDirection(direction);
+		game.changeSnakeDirection(participantId, direction);
 	}
 
 	private getGameByRoomIdOrThrow(roomId: string): SnakeGame {

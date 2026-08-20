@@ -1,3 +1,4 @@
-export { SnakeSettingsCard } from "./ui/SnakeSettingsCard";
+export { SnakeSettingsCards } from "./ui/SnakeSettingsCards";
 export { useRoomSnakeSettings } from "./model/useRoomSnakeSettings";
-export type { SnakeFieldSize } from "./model/constants";
+export type { SnakeFieldSize, SnakeFoodAmount } from "./model/constants";
+export type { RoomSnakeSettingsModel } from "./model/useRoomSnakeSettings";

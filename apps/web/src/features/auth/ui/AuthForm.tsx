@@ -10,8 +10,9 @@ import { useId, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { AuthCredentials } from "@rooms/contracts/auth";
 
-import type { AuthFormType } from "../model/types";
+import type { AuthFormType, OAuthProvider } from "../model/types";
 import { ROUTES } from "@/shared/routes";
+import { OAuthButtons } from "./OAuthButtons";
 
 const AUTH_FORM_CONTENT: Record<
 	AuthFormType,
@@ -47,11 +48,12 @@ const AUTH_FORM_CONTENT: Record<
 interface AuthFormProps {
 	type?: AuthFormType;
 	onSubmit?: (data: AuthCredentials) => void | Promise<void>;
+	onOAuth?: (provider: OAuthProvider) => void;
 	isLoading?: boolean;
 	error?: React.ReactNode;
 }
 
-export function AuthForm({ type = "login", onSubmit, isLoading, error }: AuthFormProps) {
+export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }: AuthFormProps) {
 	const formId = useId();
 	const usernameId = `${formId}-username`;
 	const passwordId = `${formId}-password`;
@@ -153,6 +155,8 @@ export function AuthForm({ type = "login", onSubmit, isLoading, error }: AuthFor
 								) : null}
 							</div>
 						</div>
+
+						<OAuthButtons disabled={isDisabled} onOAuth={onOAuth} />
 
 						<p className="text-muted-foreground text-sm text-center">
 							{content.switchText}{" "}

@@ -1,0 +1,60 @@
+name: Build images
+
+on:
+   push:
+      branches: [main]
+   workflow_dispatch:
+
+jobs:
+   build:
+      runs-on: ubuntu-latest
+
+      # GITHUB_TOKEN is read-only by default; pushing to ghcr.io needs write.
+      permissions:
+         packages: write
+
+      steps:
+         - name: Checkout
+           uses: actions/checkout@v4
+
+         - name: Log in to ghcr.io
+           run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+         # ghcr.io rejects uppercase in image names, so the owner is spelled out
+         # in lower case instead of coming from the github context.
+         - name: Build api image
+           run: docker build -f apps/api/Dockerfile -t ghcr.io/0romanshevchuk0/rooms-api:latest .
+
+         - name: Build web image
+           run: docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_BUILD_SHA=${{ github.sha }} -t ghcr.io/0romanshevchuk0/rooms-web:latest .
+
+         - name: Push images
+           run: |
+              docker push ghcr.io/0romanshevchuk0/rooms-api:latest
+              docker push ghcr.io/0romanshevchuk0/rooms-web:latest
+
+   deploy:
+      # Only runs if the build job finished successfully.
+      needs: build
+      runs-on: ubuntu-latest
+
+      steps:
+         - name: Install the deploy key
+           run: |
+              mkdir -p ~/.ssh
+              chmod 700 ~/.ssh
+              echo "${{ secrets.ROOMS_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+              chmod 600 ~/.ssh/deploy_key
+              # Records the server's host key so ssh does not stop to ask about it.
+              ssh-keyscan -H "${{ secrets.ROOMS_SSH_HOST }}" >> ~/.ssh/known_hosts
+
+         - name: Pull the new images and restart
+           run: |
+              ssh -i ~/.ssh/deploy_key "${{ secrets.ROOMS_SSH_USER }}@${{ secrets.ROOMS_SSH_HOST }}" '
+                 set -eu
+                 cd ~/Rooms
+                 git pull --ff-only
+                 docker compose pull
+                 docker compose up -d
+                 docker image prune -f
+              '

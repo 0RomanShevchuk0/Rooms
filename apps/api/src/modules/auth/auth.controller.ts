@@ -1,12 +1,32 @@
-import { Controller, Post, Body, UseGuards, Res, Req } from '@nestjs/common';
+import {
+	Controller,
+	Post,
+	Body,
+	UseGuards,
+	UseFilters,
+	Res,
+	Req,
+	Get,
+	Query,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
+import { OAuthProvider } from 'generated/prisma/enums';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user.type';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { GoogleCallbackGuard } from './guards/google-callback.guard';
+import { OAuthStateService } from './oauth-state.service';
+import { OAuthCallbackErrorFilter } from './oauth-callback-error.filter';
+import {
+	OAuthCallbackError,
+	assertNoProviderError,
+} from './oauth-callback.error';
 import {
 	AuthCredentialsSchema,
+	OAUTH_ERROR_CODES,
 	type AuthCredentials,
 	type AuthLogoutResponse,
 	type AuthRefreshTokensResponse,
@@ -19,6 +39,7 @@ export class AuthController {
 	constructor(
 		private readonly authService: AuthService,
 		private readonly configService: ConfigService,
+		private readonly oauthState: OAuthStateService,
 	) {}
 
 	private setAuthCookies(
@@ -93,5 +114,58 @@ export class AuthController {
 
 		this.setAuthCookies(res, tokens);
 		return { access_token: tokens.access_token };
+	}
+
+	// OAuth routes
+	private async completeOAuthLogin(user: AuthUser, res: Response) {
+		const tokens = await this.authService.login(user);
+		this.setAuthCookies(res, tokens);
+
+		const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
+		res.redirect(clientUrl);
+	}
+
+	@Get('google')
+	@UseGuards(GoogleAuthGuard)
+	googleOauth() {}
+
+	@Get('google-redirect')
+	@UseFilters(OAuthCallbackErrorFilter)
+	@UseGuards(GoogleCallbackGuard)
+	async googleOauthCallback(
+		@CurrentUser() user: AuthUser,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		await this.completeOAuthLogin(user, res);
+	}
+
+	@Get('discord')
+	discordOauth(@Res({ passthrough: true }) res: Response) {
+		const state = this.oauthState.issue(res, OAuthProvider.discord);
+		const url = this.authService.getDiscordAuthorizationUrl(state);
+
+		res.redirect(url);
+	}
+
+	@Get('discord-redirect')
+	@UseFilters(OAuthCallbackErrorFilter)
+	async discordOauthCallback(
+		@Query() query: Record<string, string | undefined>,
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		assertNoProviderError(query);
+		this.oauthState.verify(req, res, OAuthProvider.discord, query.state);
+
+		if (!query.code) {
+			throw new OAuthCallbackError(
+				OAUTH_ERROR_CODES.failed,
+				'Missing Discord authorization code',
+			);
+		}
+
+		const user = await this.authService.loginWithDiscord(query.code);
+
+		await this.completeOAuthLogin(user, res);
 	}
 }

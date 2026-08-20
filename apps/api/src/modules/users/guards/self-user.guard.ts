@@ -9,7 +9,7 @@ import {
 import type { Request } from 'express';
 import { z } from 'zod';
 
-const userIdParamSchema = z.string().uuid();
+const userIdParamSchema = z.uuid();
 
 @Injectable()
 export class SelfUserGuard implements CanActivate {

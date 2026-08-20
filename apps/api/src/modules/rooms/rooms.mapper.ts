@@ -1,10 +1,12 @@
 import type {
+	RoomLobbyStatePayload,
 	RoomParticipant,
 	RoomParticipantJoinedPayload,
 	RoomPresencePayload,
 	RoomWithParticipants,
 	RoomWithParticipantsAndChat,
 } from '@rooms/contracts/room';
+import type { RoomLobbyState } from './lobby/room-lobby.service';
 import type { RoomParticipantWithUser } from './participants/room-participants.select';
 import type {
 	RoomWithParticipants as RoomWithParticipantsEntity,
@@ -12,7 +14,7 @@ import type {
 } from './rooms.types';
 import { toSnakeGameSettings } from './room-settings/room-settings.mapper';
 import { DomainError } from 'src/shared/errors/domain.error';
-import { toRestUser } from '../users/users.mapper';
+import { toPublicRestUser } from '../users/users.mapper';
 
 export function toRoomParticipantPayload(
 	participant: RoomParticipantWithUser,
@@ -21,7 +23,7 @@ export function toRoomParticipantPayload(
 		id: participant.id,
 		isReady: participant.isReady,
 		userId: participant.userId,
-		user: toRestUser(participant.user),
+		user: toPublicRestUser(participant.user),
 	};
 }
 
@@ -64,6 +66,16 @@ export function toRoomPresencePayload(
 	return {
 		participantId,
 		onlineParticipantIds,
+	};
+}
+
+export function toRoomLobbyStatePayload(
+	state: RoomLobbyState,
+): RoomLobbyStatePayload {
+	return {
+		phase: state.phase,
+		readyParticipantIds: [...state.readyParticipantIds],
+		windowSecondsLeft: state.windowSecondsLeft,
 	};
 }
 

@@ -1,4 +1,6 @@
 import { RoomsService } from './../../rooms/rooms.service';
+import { Logger, type OnModuleInit } from '@nestjs/common';
+import { RoomLobbyService } from '../../rooms/lobby/room-lobby.service';
 import {
 	WebSocketGateway,
 	SubscribeMessage,
@@ -25,6 +27,7 @@ import {
 } from '@rooms/contracts/snake-game';
 import { type SocketWithAuth } from '../../../realtime/ws/api-socket-io.adapter';
 import { requireWsUser } from 'src/realtime/ws/require-ws-user';
+import { DomainError } from 'src/shared/errors/domain.error';
 import { ZodValidationPipe } from 'src/shared/pipes/zod-validation.pipe';
 import { toSnakeGameStatePayload } from './snake.mapper';
 import { RoomSettingsService } from 'src/modules/rooms/room-settings/room-settings.service';
@@ -39,15 +42,24 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') ?? [];
 		credentials: true,
 	},
 })
-export class SnakeGateway {
+export class SnakeGateway implements OnModuleInit {
 	@WebSocketServer()
 	server!: Server;
+
+	private readonly logger = new Logger(SnakeGateway.name);
 
 	constructor(
 		private readonly snakeService: SnakeService,
 		private readonly roomsService: RoomsService,
 		private readonly roomSettingsService: RoomSettingsService,
+		private readonly lobby: RoomLobbyService,
 	) {}
+
+	onModuleInit() {
+		this.lobby.on('matchStart', (roomId, playerIds) => {
+			void this.runMatch(roomId, playerIds);
+		});
+	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CONNECT)
 	async connectToChat(
@@ -77,43 +89,68 @@ export class SnakeGateway {
 		return { ok: true };
 	}
 
-	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.START_GAME)
-	async startGame(
-		@MessageBody(new ZodValidationPipe(SnakeRoomPayloadSchema))
-		payload: SnakeRoomPayload,
+	private async runMatch(roomId: string, playerIds: string[]) {
+		try {
+			const game = await this.snakeService.startGame(roomId, playerIds);
+
+			game.on('tick', (state: CoreSnakeGameState) => {
+				this.emitGameState(
+					roomId,
+					SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED,
+					state,
+				);
+			});
+			game.on('gameOver', (state: CoreSnakeGameState) => {
+				this.emitGameState(
+					roomId,
+					SNAKE_GAME_SOCKET_EVENTS.GAME_OVER,
+					state,
+				);
+				this.lobby.endMatch(roomId);
+			});
+		} catch (error) {
+			// A room stuck in the running phase could never reach the lobby again.
+			this.lobby.endMatch(roomId);
+			this.logger.error(
+				`Failed to start the game for roomId: ${roomId}`,
+				error,
+			);
+		}
+	}
+
+	private emitGameState(
+		roomId: string,
+		event:
+			| typeof SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED
+			| typeof SNAKE_GAME_SOCKET_EVENTS.GAME_OVER,
+		state: CoreSnakeGameState,
 	) {
-		const game = await this.snakeService.startGame(payload.roomId);
-
-		const onTick = (state: CoreSnakeGameState) => {
-			const gameStatePayload = toSnakeGameStatePayload(state);
-			this.server
-				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.SNAKE_MOVED, gameStatePayload);
-		};
-		const onGameOver = (state: CoreSnakeGameState) => {
-			const gameStatePayload = toSnakeGameStatePayload(state);
-			this.server
-				.to(payload.roomId)
-				.emit(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, gameStatePayload);
-		};
-
-		game.on('tick', onTick);
-		game.on('gameOver', onGameOver);
-
-		return { ok: true, message: 'Game started!' };
+		this.server.to(roomId).emit(event, toSnakeGameStatePayload(state));
 	}
 
 	@SubscribeMessage(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION)
-	changeDirection(
+	async changeDirection(
+		@ConnectedSocket() client: SocketWithAuth,
 		@MessageBody(new ZodValidationPipe(SnakeChangeDirectionPayloadSchema))
 		payload: SnakeChangeDirectionPayload,
 	) {
-		const direction: SnakeDirection = payload.direction;
-		console.log(
-			'🚀 ~ SnakeGateway ~ changeDirection ~ direction:',
-			payload.direction,
+		const userId = requireWsUser(client).sub;
+		const participant = await this.roomsService.findMyParticipant(
+			payload.roomId,
+			userId,
 		);
-		this.snakeService.changeDirection(payload.roomId, direction);
+		if (!participant) {
+			throw DomainError.accessDenied(
+				`User is not a participant of room: ${payload.roomId}`,
+			);
+		}
+
+		const direction: SnakeDirection = payload.direction;
+		this.snakeService.changeDirection(
+			payload.roomId,
+			participant.id,
+			direction,
+		);
 		return { ok: true, message: 'Direction changed!' };
 	}
 

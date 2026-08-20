@@ -4,10 +4,24 @@ import { RoomsController } from './rooms.controller';
 import { RoomsWsGateway } from './ws/rooms-ws.gateway';
 import { PrismaModule } from 'src/database/prisma/prisma.module';
 import { RoomParticipantsService } from './participants/room-participants.service';
+import { RoomPresenceService } from './presence/room-presence.service';
+import { RoomLobbyService } from './lobby/room-lobby.service';
+
 @Module({
 	imports: [PrismaModule],
 	controllers: [RoomsController],
-	providers: [RoomsService, RoomsWsGateway, RoomParticipantsService],
-	exports: [RoomsService, RoomParticipantsService],
+	providers: [
+		RoomsService,
+		RoomsWsGateway,
+		RoomParticipantsService,
+		RoomPresenceService,
+		RoomLobbyService,
+	],
+	exports: [
+		RoomsService,
+		RoomParticipantsService,
+		RoomPresenceService,
+		RoomLobbyService,
+	],
 })
 export class RoomsModule {}

@@ -14,19 +14,42 @@ datasource db {
    provider = "postgresql"
 }
 
+enum OAuthProvider {
+   google
+   discord
+}
+
 model User {
    id        String    @id @default(uuid())
    email     String?   @unique
    name      String?
    username  String    @unique
-   password  String
+   password  String?
    deletedAt DateTime?
+
+   oauthAccounts OAuthAccount[] @relation("UserOAuthAccounts")
 
    participants RoomParticipant[] @relation("UserParticipants")
 
    messages Message[] @relation("MessageSender")
 
    createdAt DateTime @default(now())
+}
+
+/// One row per provider a user can sign in with, so a single account can be
+/// reached through several of them.
+model OAuthAccount {
+   id       String        @id @default(uuid())
+   provider OAuthProvider
+   oauthId  String
+
+   userId String
+   user   User   @relation("UserOAuthAccounts", fields: [userId], references: [id], onDelete: Cascade)
+
+   createdAt DateTime @default(now())
+
+   @@unique([provider, oauthId])
+   @@index([userId])
 }
 
 model Room {
@@ -36,7 +59,7 @@ model Room {
 
    participants RoomParticipant[] @relation("RoomParticipants")
 
-   chat Chat? @relation("RoomChat")
+   chat          Chat?              @relation("RoomChat")
    snakeSettings RoomSnakeSettings?
 
    createdAt DateTime @default(now())
@@ -45,8 +68,9 @@ model Room {
 model RoomSnakeSettings {
    roomId String @id
 
-   fieldWidth Int @default(20)
+   fieldWidth  Int @default(20)
    fieldHeight Int @default(20)
+   foodAmount  Int @default(1)
 
    room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
@@ -58,10 +82,6 @@ model RoomParticipant {
    id      String  @id @default(uuid())
    isReady Boolean @default(false)
 
-   @@unique([roomId, userId])
-   @@index([roomId])
-   @@index([userId])
-
    userId String
    user   User   @relation("UserParticipants", fields: [userId], references: [id])
 
@@ -69,6 +89,10 @@ model RoomParticipant {
    room   Room   @relation("RoomParticipants", fields: [roomId], references: [id], onDelete: Cascade)
 
    createdAt DateTime @default(now())
+
+   @@unique([roomId, userId])
+   @@index([roomId])
+   @@index([userId])
 }
 
 model Chat {

@@ -4,13 +4,13 @@ import {
 	SnakeDirectionSchema,
 	SnakeGameSettingsSchema,
 	SnakeGameStateSchema,
+	SnakePlayerStateSchema,
 	SnakePositionSchema,
 } from "./base.js";
 
 export const SNAKE_GAME_SOCKET_EVENTS = {
 	CONNECT: "snake-game:connect",
 	DISCONNECT: "snake-game:disconnect",
-	START_GAME: "snake-game:start-game",
 	CHANGE_DIRECTION: "snake-game:change-direction",
 	CHANGE_SETTINGS: "snake-game:change-settings",
 	SETTINGS_CHANGED: "snake-game:settings-changed",
@@ -19,24 +19,31 @@ export const SNAKE_GAME_SOCKET_EVENTS = {
 } as const;
 
 export const SnakeRoomPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 });
 
 export const SnakeChangeDirectionPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 	direction: SnakeDirectionSchema,
 });
 
 export const SnakeChangeSettingsPayloadSchema = z.object({
-	roomId: z.string().uuid(),
+	roomId: z.uuid(),
 	settings: SnakeGameSettingsSchema,
 });
 
 export const SnakeSettingsChangedPayloadSchema = SnakeChangeSettingsPayloadSchema;
 
-export { SnakeDirectionEnum, SnakeDirectionSchema, SnakeGameStateSchema, SnakePositionSchema };
+export {
+	SnakeDirectionEnum,
+	SnakeDirectionSchema,
+	SnakeGameStateSchema,
+	SnakePlayerStateSchema,
+	SnakePositionSchema,
+};
 export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
 export type SnakePosition = z.infer<typeof SnakePositionSchema>;
+export type SnakePlayerState = z.infer<typeof SnakePlayerStateSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
 export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;
 export type SnakeRoomPayload = z.infer<typeof SnakeRoomPayloadSchema>;

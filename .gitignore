@@ -36,4 +36,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# terraform: downloaded plugins and state. The lock file is committed on purpose.
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+
 .vscode

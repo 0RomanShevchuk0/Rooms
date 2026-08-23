@@ -40,9 +40,11 @@ resource "google_compute_instance" "app" {
     network    = "default"
     subnetwork = "default"
 
-    # The presence of this block is what gives the instance a public IPv4. The
-    # address is ephemeral, so it is left for GCP to assign.
+    # The presence of this block is what gives the instance a public IPv4.
+    # Pointing it at the reserved address keeps the IP stable across stop/start,
+    # which the DNS record and the CI host secret both depend on.
     access_config {
+      nat_ip       = google_compute_address.app.address
       network_tier = "PREMIUM"
     }
   }

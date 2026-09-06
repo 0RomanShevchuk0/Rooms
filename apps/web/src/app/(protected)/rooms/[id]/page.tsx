@@ -5,12 +5,18 @@ import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presen
 import { useRoomLobby } from "@/features/room-lobby";
 import { useMyRoomParticipantQuery } from "@/entities/room";
 import { NotFoundScreen } from "@/shared/ui/not-found-screen";
+import { ErrorScreen } from "@/shared/ui/error-screen";
 import { RoomRealtimeContent } from "@/widgets/room-realtime-content";
 import { useRoomInvite } from "@/features/join-room";
+import { getHttpStatus } from "@/shared/react-query";
 import { useRoomFromParamsQuery } from "./useRoomFromParamsQuery";
 
+// A room the user may not see is reported as missing rather than forbidden, so
+// a stranger with a room id learns nothing from the difference.
+const HIDDEN_ROOM_STATUSES = [403, 404];
+
 export default function RoomPage() {
-	const { roomId, room, isPending, error } = useRoomFromParamsQuery();
+	const { roomId, room, isPending, isFetching, error, refetch } = useRoomFromParamsQuery();
 	const { isJoining } = useRoomInvite({
 		roomId,
 		roomError: error,
@@ -27,7 +33,19 @@ export default function RoomPage() {
 	if (isPending || isJoining) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
-		return <NotFoundScreen description="Room not found" />;
+		const status = getHttpStatus(error);
+
+		if (status !== undefined && HIDDEN_ROOM_STATUSES.includes(status)) {
+			return <NotFoundScreen description="Room not found" />;
+		}
+
+		return (
+			<ErrorScreen
+				description="Could not load this room. Check your connection and try again."
+				onRetry={() => refetch()}
+				isRetrying={isFetching}
+			/>
+		);
 	}
 
 	return (

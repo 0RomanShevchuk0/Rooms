@@ -10,11 +10,13 @@ export function useRoomByIdQuery({ roomId }: UseRoomByIdQueryProps) {
 	const {
 		data: room,
 		isPending,
+		isFetching,
 		error,
+		refetch,
 	} = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
 		queryFn: () => getRoom(roomId),
 	});
 
-	return { room, isPending, error };
+	return { room, isPending, isFetching, error, refetch };
 }

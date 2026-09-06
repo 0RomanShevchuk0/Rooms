@@ -7,10 +7,14 @@ interface UseRoomByIdQueryProps {
 }
 
 export function useRoomByIdQuery({ roomId }: UseRoomByIdQueryProps) {
-	const { data: room, isPending } = useQuery({
+	const {
+		data: room,
+		isPending,
+		error,
+	} = useQuery({
 		queryKey: queryKeys.rooms.byId(roomId),
 		queryFn: () => getRoom(roomId),
 	});
 
-	return { room, isPending };
+	return { room, isPending, error };
 }

@@ -6,10 +6,16 @@ import { useRoomLobby } from "@/features/room-lobby";
 import { useMyRoomParticipantQuery } from "@/entities/room";
 import { NotFoundScreen } from "@/shared/ui/not-found-screen";
 import { RoomRealtimeContent } from "@/widgets/room-realtime-content";
+import { useRoomInvite } from "@/features/join-room";
 import { useRoomFromParamsQuery } from "./useRoomFromParamsQuery";
 
 export default function RoomPage() {
-	const { roomId, room, isPending } = useRoomFromParamsQuery();
+	const { roomId, room, isPending, error } = useRoomFromParamsQuery();
+	const { isJoining } = useRoomInvite({
+		roomId,
+		roomError: error,
+		hasRoomAccess: Boolean(room),
+	});
 
 	useRoomRealtimeChannels({ roomId, chatId: room?.chat.id });
 	const { onlineParticipantIds } = useRoomPresence({ roomId });
@@ -18,7 +24,7 @@ export default function RoomPage() {
 	const { participantId: ownParticipantId } = useMyRoomParticipantQuery(roomId);
 	const lobby = useRoomLobby({ roomId, ownParticipantId });
 
-	if (isPending) return <FullscreenSpinnerLoader />;
+	if (isPending || isJoining) return <FullscreenSpinnerLoader />;
 
 	if (!room) {
 		return <NotFoundScreen description="Room not found" />;

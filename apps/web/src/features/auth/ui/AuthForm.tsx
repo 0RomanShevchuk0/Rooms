@@ -3,15 +3,22 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Field, FieldContent, FieldError, FieldGroup, FieldTitle } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/shared/ui/input-group";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupButton,
+	InputGroupInput,
+} from "@/shared/ui/input-group";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import type { AuthCredentials } from "@rooms/contracts/auth";
 
 import type { AuthFormType, OAuthProvider } from "../model/types";
 import { ROUTES } from "@/shared/routes";
+import { NEXT_PARAM, sanitizeNextPath, withNextPath } from "@/shared/lib/next-path";
 import { OAuthButtons } from "./OAuthButtons";
 
 const AUTH_FORM_CONTENT: Record<
@@ -69,6 +76,12 @@ export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }
 	const content = AUTH_FORM_CONTENT[type];
 	const isDisabled = (isLoading ?? false) || isSubmitting;
 
+	const searchParams = useSearchParams();
+	const switchHref = withNextPath(
+		content.switchHref,
+		sanitizeNextPath(searchParams.get(NEXT_PARAM)),
+	);
+
 	const handleFormSubmit: SubmitHandler<AuthCredentials> = async (data) => {
 		await onSubmit?.(data);
 	};
@@ -78,7 +91,9 @@ export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }
 			<Card>
 				<CardHeader className="border-b">
 					<CardTitle>{content.title}</CardTitle>
-					{content.description ? <CardDescription>{content.description}</CardDescription> : null}
+					{content.description ? (
+						<CardDescription>{content.description}</CardDescription>
+					) : null}
 				</CardHeader>
 
 				<CardContent>
@@ -115,7 +130,9 @@ export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }
 											type={isPasswordVisible ? "text" : "password"}
 											autoComplete={content.passwordAutocomplete}
 											aria-invalid={!!errors.password}
-											aria-describedby={errors.password ? `${passwordId}-error` : undefined}
+											aria-describedby={
+												errors.password ? `${passwordId}-error` : undefined
+											}
 											disabled={isDisabled}
 											{...register("password", {
 												required: "Password is required",
@@ -123,7 +140,9 @@ export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }
 										/>
 										<InputGroupAddon align="inline-end">
 											<InputGroupButton
-												aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+												aria-label={
+													isPasswordVisible ? "Hide password" : "Show password"
+												}
 												onClick={() => setIsPasswordVisible((v) => !v)}
 												disabled={isDisabled}
 											>
@@ -161,7 +180,7 @@ export function AuthForm({ type = "login", onSubmit, onOAuth, isLoading, error }
 						<p className="text-muted-foreground text-sm text-center">
 							{content.switchText}{" "}
 							<Link
-								href={content.switchHref}
+								href={switchHref}
 								className="text-primary font-medium underline underline-offset-4 hover:opacity-80"
 							>
 								{content.switchLinkLabel}

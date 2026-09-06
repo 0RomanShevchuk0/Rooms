@@ -3,7 +3,7 @@ import { useParams } from "next/navigation";
 
 export function useRoomFromParamsQuery() {
 	const { id: roomId } = useParams<{ id: string }>();
-	const { room, isPending } = useRoomByIdQuery({ roomId });
+	const { room, isPending, error } = useRoomByIdQuery({ roomId });
 
-	return { roomId, room, isPending };
+	return { roomId, room, isPending, error };
 }

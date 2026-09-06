@@ -7,8 +7,9 @@ import toast from "react-hot-toast";
 import axios from "axios";
 import { useState } from "react";
 import { useSession } from "@/entities/session";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ROUTES } from "@/shared/routes";
+import { NEXT_PARAM, sanitizeNextPath } from "@/shared/lib/next-path";
 import { mutationKeys } from "@/shared/react-query";
 
 interface UseAuthProps {
@@ -17,6 +18,7 @@ interface UseAuthProps {
 
 export function useAuth({ type }: UseAuthProps) {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 	const { setAccessToken } = useSession();
 
 	const [formError, setFormError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function useAuth({ type }: UseAuthProps) {
 			setFormError(null);
 			setAccessToken(data.access_token);
 			toast.success(successMessage);
-			router.replace(ROUTES.home);
+			router.replace(sanitizeNextPath(searchParams.get(NEXT_PARAM)) ?? ROUTES.home);
 		},
 		onError: (error) => {
 			const { message, isExpected } = getErrorMessage(error);

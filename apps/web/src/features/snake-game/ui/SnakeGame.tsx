@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import type { RoomLobbyModel } from "@/features/room-lobby";
 import { useSnakeGame } from "../model/useSnakeGame";
+import { SnakeControlsHint } from "./SnakeControlsHint";
 import { SnakeGameOverDialog } from "./SnakeGameOverDialog";
 
 type SnakeFieldSize = SnakeGameSettings["fieldSize"];
@@ -62,14 +63,15 @@ export function SnakeGame({ roomId, snakeFieldSize, ownParticipantId, lobby }: S
 							</div>
 						)}
 					</div>
-					<p className="text-sm text-muted-foreground">
-						{lobby.isGameRunning
-							? "Controls: WASD / arrows."
-							: "Ready up — the game starts once the timer runs out."}
-					</p>
+					{!lobby.isGameRunning && (
+						<p className="text-sm text-muted-foreground">
+							Ready up — the game starts once the timer runs out.
+						</p>
+					)}
 				</CardHeader>
-				<CardContent className="flex items-center justify-center">
+				<CardContent className="flex flex-col items-center gap-4">
 					<div ref={canvasContainerRef} />
+					<SnakeControlsHint />
 				</CardContent>
 			</Card>
 

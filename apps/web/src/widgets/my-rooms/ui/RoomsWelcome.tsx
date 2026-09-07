@@ -13,7 +13,7 @@ const STEPS = [
 	},
 	{
 		title: "Ready up",
-		description: "The match starts once everyone in the room is ready.",
+		description: "The match starts once everyone is ready. Steer with WASD or the arrow keys.",
 	},
 ];
 

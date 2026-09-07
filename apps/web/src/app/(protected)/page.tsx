@@ -1,79 +1,26 @@
 "use client";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
-import { RoomsList } from "@/widgets/rooms-list";
+import { Gamepad2 } from "lucide-react";
+import { MyRooms } from "@/widgets/my-rooms";
 import { UserMenu } from "@/widgets/user-menu";
-import { JoinRoomDialog } from "@/features/join-room";
-import { CreateRoomDialog } from "@/features/create-room";
 
 export default function Page() {
 	return (
 		<main className="min-h-screen bg-background text-foreground">
-			<div className="mx-auto flex w-full max-w-5xl flex-col gap-12 px-6 py-12">
-			<header className="flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="h-10 w-10 rounded-2xl border border-border bg-primary/10" />
-					<div>
-						<p className="text-sm font-semibold">Rooms</p>
-						<p className="text-xs text-muted-foreground">Real-time rooms</p>
-					</div>
-				</div>
-				<UserMenu />
-			</header>
-
-				<section className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-					<div className="flex flex-col gap-4">
-						<h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-							Create a room. Share a link. Start playing.
-						</h1>
-						<p className="max-w-xl text-base text-muted-foreground">
-							Minimal, fast, and focused on real-time play.
-						</p>
-						<div className="flex flex-wrap gap-3">
-							<CreateRoomDialog>
-								<Button>Create room</Button>
-							</CreateRoomDialog>
-							<JoinRoomDialog>
-								<Button variant="outline">Join with code</Button>
-							</JoinRoomDialog>
+			<div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-6 py-10">
+				<header className="flex items-center justify-between gap-4">
+					<div className="flex items-center gap-3">
+						<div className="flex size-10 items-center justify-center rounded-2xl border border-border bg-primary/10 text-primary">
+							<Gamepad2 className="size-5" />
+						</div>
+						<div>
+							<p className="text-sm font-semibold">Rooms</p>
+							<p className="text-xs text-muted-foreground">Real-time rooms</p>
 						</div>
 					</div>
+					<UserMenu />
+				</header>
 
-					<Card className="h-fit border-border/60 lg:sticky lg:top-8">
-						<CardHeader className="space-y-2">
-							<div className="flex items-center justify-between gap-3">
-								<CardTitle className="text-base">Quick start</CardTitle>
-								<Badge variant="outline">Realtime</Badge>
-							</div>
-							<CardDescription>Everything you need to jump in.</CardDescription>
-						</CardHeader>
-						<CardContent className="space-y-3 text-sm">
-							<div className="flex gap-3">
-								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
-									1
-								</span>
-								<p>
-									Click <span className="font-medium">Create room</span> to get a link.
-								</p>
-							</div>
-							<div className="flex gap-3">
-								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
-									2
-								</span>
-								<p>Share it with a friend and join together.</p>
-							</div>
-							<div className="flex gap-3">
-								<span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border bg-primary/10 text-xs font-semibold">
-									3
-								</span>
-								<p>When both participants are ready, the game starts.</p>
-							</div>
-						</CardContent>
-					</Card>
-				</section>
-
-				<RoomsList />
+				<MyRooms />
 			</div>
 		</main>
 	);

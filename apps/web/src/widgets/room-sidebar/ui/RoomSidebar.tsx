@@ -2,7 +2,7 @@ import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { Chat } from "@/features/chat";
 import { SnakeSettingsCards, type RoomSnakeSettingsModel } from "@/features/snake-settings";
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent } from "@/shared/ui/card";
 import { RoomParticipantsList } from "@/widgets/room-participants-list";
 import { useState } from "react";
 
@@ -55,11 +55,7 @@ export function RoomSidebar({
 					<SnakeSettingsCards model={snakeSettingsModel} />
 				</>
 			) : (
-				<Card className="flex flex-col border-border/60 h-[min(72vh,780px)]">
-					<CardHeader className="space-y-2">
-						<CardTitle>Chat</CardTitle>
-						<p className="text-sm text-muted-foreground">Room discussion appears here.</p>
-					</CardHeader>
+				<Card className="flex h-[min(72vh,780px)] flex-col border-border/60">
 					<CardContent className="flex min-h-0 flex-1 flex-col gap-3">
 						<Chat chatId={room.chat.id} />
 					</CardContent>

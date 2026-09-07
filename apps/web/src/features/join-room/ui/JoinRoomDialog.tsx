@@ -7,15 +7,15 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 
 import {
-	AlertDialog,
-	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogCancel,
-	AlertDialogTrigger,
-} from "@/shared/ui/alert-dialog";
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Field, FieldContent, FieldTitle, FieldError } from "@/shared/ui/field";
@@ -75,15 +75,13 @@ export function JoinRoomDialog({ children }: JoinRoomDialogProps) {
 	};
 
 	return (
-		<AlertDialog open={open} onOpenChange={handleOpenChange}>
-			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-			<AlertDialogContent size="sm">
-				<AlertDialogHeader>
-					<AlertDialogTitle>Join a room</AlertDialogTitle>
-					<AlertDialogDescription>
-						Enter the room ID shared with you to join.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
+			<DialogTrigger asChild>{children}</DialogTrigger>
+			<DialogContent size="sm">
+				<DialogHeader>
+					<DialogTitle>Join a room</DialogTitle>
+					<DialogDescription>Enter the room ID shared with you to join.</DialogDescription>
+				</DialogHeader>
 
 				<form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
 					<Field>
@@ -102,16 +100,18 @@ export function JoinRoomDialog({ children }: JoinRoomDialogProps) {
 						</FieldContent>
 					</Field>
 
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={joinMutation.isPending}>
-							Cancel
-						</AlertDialogCancel>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button type="button" variant="outline" disabled={joinMutation.isPending}>
+								Cancel
+							</Button>
+						</DialogClose>
 						<Button type="submit" disabled={joinMutation.isPending}>
 							{joinMutation.isPending ? "Joining..." : "Join room"}
 						</Button>
-					</AlertDialogFooter>
+					</DialogFooter>
 				</form>
-			</AlertDialogContent>
-		</AlertDialog>
+			</DialogContent>
+		</Dialog>
 	);
 }

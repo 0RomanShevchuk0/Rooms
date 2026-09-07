@@ -6,15 +6,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import {
-	AlertDialog,
-	AlertDialogContent,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogCancel,
-	AlertDialogTrigger,
-} from "@/shared/ui/alert-dialog";
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
@@ -86,15 +86,15 @@ export function CreateRoomDialog({ children }: CreateRoomDialogProps) {
 	const isDisabled = createMutation.isPending || !me;
 
 	return (
-		<AlertDialog open={open} onOpenChange={handleOpenChange}>
-			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Create a room</AlertDialogTitle>
-					<AlertDialogDescription>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
+			<DialogTrigger asChild>{children}</DialogTrigger>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Create a room</DialogTitle>
+					<DialogDescription>
 						{"Set up your room. You'll be added as a participant automatically."}
-					</AlertDialogDescription>
-				</AlertDialogHeader>
+					</DialogDescription>
+				</DialogHeader>
 
 				<form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
 					<FieldGroup className="gap-3">
@@ -136,14 +136,18 @@ export function CreateRoomDialog({ children }: CreateRoomDialogProps) {
 						</p>
 					)}
 
-					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDisabled}>Cancel</AlertDialogCancel>
+					<DialogFooter>
+						<DialogClose asChild>
+							<Button type="button" variant="outline" disabled={isDisabled}>
+								Cancel
+							</Button>
+						</DialogClose>
 						<Button type="submit" disabled={isDisabled}>
 							{createMutation.isPending ? "Creating..." : "Create room"}
 						</Button>
-					</AlertDialogFooter>
+					</DialogFooter>
 				</form>
-			</AlertDialogContent>
-		</AlertDialog>
+			</DialogContent>
+		</Dialog>
 	);
 }

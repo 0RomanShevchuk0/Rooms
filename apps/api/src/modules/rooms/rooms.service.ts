@@ -33,6 +33,7 @@ export class RoomsService {
 				}),
 			},
 			include: { participants: { select: roomParticipantWithUserSelect } },
+			orderBy: { createdAt: 'desc' },
 		});
 	}
 

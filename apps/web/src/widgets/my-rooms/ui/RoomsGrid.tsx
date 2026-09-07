@@ -1,9 +1,8 @@
 import type { RoomWithParticipants } from "@rooms/contracts/room";
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { RoomCard } from "@/features/room-card";
 import { CreateRoomDialog } from "@/features/create-room";
-import { ROUTES } from "@/shared/routes";
+import { RoomCardMenu } from "./RoomCardMenu";
 
 interface RoomsGridProps {
 	rooms: RoomWithParticipants[];
@@ -13,13 +12,7 @@ export function RoomsGrid({ rooms }: RoomsGridProps) {
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 			{rooms.map((room) => (
-				<Link
-					key={room.id}
-					href={ROUTES.rooms.room(room.id)}
-					className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-				>
-					<RoomCard room={room} />
-				</Link>
+				<RoomCard key={room.id} room={room} action={<RoomCardMenu roomId={room.id} />} />
 			))}
 
 			<CreateRoomDialog>

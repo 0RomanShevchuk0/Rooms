@@ -5,28 +5,14 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import toast from "react-hot-toast";
 import { buildRoomInviteUrl } from "@/shared/lib/room-invite";
+import { copyToClipboard } from "@/shared/lib/clipboard";
 
 interface InviteRoomDropdownProps {
 	roomId: string;
 }
 
 export function InviteRoomDropdown({ roomId }: InviteRoomDropdownProps) {
-	const copyToClipboard = async (value: string, successMessage: string) => {
-		try {
-			await navigator.clipboard.writeText(value);
-			toast.success(successMessage);
-		} catch {
-			toast.error("Could not copy to clipboard");
-		}
-	};
-
-	const copyRoomId = () => copyToClipboard(roomId, "Room ID copied to clipboard");
-
-	const copyInviteLink = () =>
-		copyToClipboard(buildRoomInviteUrl(roomId), "Invite link copied to clipboard");
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -36,11 +22,19 @@ export function InviteRoomDropdown({ roomId }: InviteRoomDropdownProps) {
 				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="min-w-48">
-				<DropdownMenuItem className="cursor-pointer" onClick={copyInviteLink}>
+				<DropdownMenuItem
+					className="cursor-pointer"
+					onSelect={() =>
+						copyToClipboard(buildRoomInviteUrl(roomId), "Invite link copied to clipboard")
+					}
+				>
 					<LinkIcon className="size-4" />
 					Copy invite link
 				</DropdownMenuItem>
-				<DropdownMenuItem className="cursor-pointer" onClick={copyRoomId}>
+				<DropdownMenuItem
+					className="cursor-pointer"
+					onSelect={() => copyToClipboard(roomId, "Room ID copied to clipboard")}
+				>
 					<Copy className="size-4" />
 					Copy room ID
 				</DropdownMenuItem>

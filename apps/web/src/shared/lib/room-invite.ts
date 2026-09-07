@@ -2,7 +2,6 @@ import { ROUTES } from "@/shared/routes";
 
 export const INVITE_PARAM = "invite";
 
-/** Client-only — reads `window` for the origin. */
 export function buildRoomInviteUrl(roomId: string): string {
 	const url = new URL(ROUTES.rooms.room(roomId), window.location.origin);
 	url.searchParams.set(INVITE_PARAM, roomId);

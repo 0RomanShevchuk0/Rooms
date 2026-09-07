@@ -20,10 +20,13 @@ import { ROUTES } from "@/shared/routes";
 
 interface LeaveRoomDialogProps {
 	roomId: string;
-	children: React.ReactNode;
+	/** Omit to drive the dialog through `open` instead of a trigger element. */
+	children?: React.ReactNode;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 }
 
-export function LeaveRoomDialog({ roomId, children }: LeaveRoomDialogProps) {
+export function LeaveRoomDialog({ roomId, children, open, onOpenChange }: LeaveRoomDialogProps) {
 	const queryClient = useQueryClient();
 	const router = useRouter();
 
@@ -37,13 +40,15 @@ export function LeaveRoomDialog({ roomId, children }: LeaveRoomDialogProps) {
 	});
 
 	return (
-		<AlertDialog>
-			<AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+		<AlertDialog open={open} onOpenChange={onOpenChange}>
+			{children ? <AlertDialogTrigger asChild>{children}</AlertDialogTrigger> : null}
 			<AlertDialogContent size="sm">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Leave room?</AlertDialogTitle>
 					<AlertDialogDescription>
-						{"You'll be removed from the room permanently. You can rejoin later with the room ID."}
+						{
+							"You'll be removed from the room permanently. You can rejoin later with the room ID."
+						}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

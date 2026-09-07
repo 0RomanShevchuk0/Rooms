@@ -21,8 +21,6 @@ export function MyRooms() {
 		);
 	}
 
-	// The first-run screen explains the flow; once there are rooms it only
-	// takes space away from them.
 	if (!rooms?.length) return <RoomsWelcome />;
 
 	return (

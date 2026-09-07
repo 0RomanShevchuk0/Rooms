@@ -1,1 +1,1 @@
-export { InviteRoomDropdown } from "./ui/InviteRoomDropdown";
+export { CopyInviteLinkButton } from "./ui/CopyInviteLinkButton";

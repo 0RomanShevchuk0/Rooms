@@ -1,44 +1,39 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { ArrowLeft, LogOut } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/shared/ui/button";
 import { ROUTES } from "@/shared/routes";
-import { LeaveRoomDialog } from "@/features/leave-room";
-import { InviteRoomDropdown } from "@/features/invite-room";
+import { CopyInviteLinkButton } from "@/features/invite-room";
+import { RoomMenu } from "./RoomMenu";
 
 interface RoomHeaderProps {
 	roomId: string;
 	roomName: string;
+	roomDescription: string | null;
 }
 
-export function RoomHeader({ roomId, roomName }: RoomHeaderProps) {
-	const router = useRouter();
-
+export function RoomHeader({ roomId, roomName, roomDescription }: RoomHeaderProps) {
 	return (
 		<header className="flex flex-wrap items-center justify-between gap-4">
-			<div>
-				<p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Room</p>
+			<div className="min-w-0">
 				<h1 className="text-2xl font-semibold">{roomName}</h1>
+				{roomDescription ? (
+					<p className="mt-1 line-clamp-2 max-w-prose text-sm text-muted-foreground">
+						{roomDescription}
+					</p>
+				) : null}
 			</div>
 			<div className="flex items-center gap-2">
-				<Button
-					variant="ghost"
-					size="sm"
-					className="text-muted-foreground"
-					onClick={() => router.push(ROUTES.home)}
-				>
-					<ArrowLeft className="size-4" />
-					Back
+				<Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
+					<Link href={ROUTES.home}>
+						<ArrowLeft className="size-4" />
+						Back
+					</Link>
 				</Button>
-				<InviteRoomDropdown roomId={roomId} />
-				<LeaveRoomDialog roomId={roomId}>
-					<Button variant="destructive" size="sm">
-						<LogOut className="size-4" />
-						Leave room
-					</Button>
-				</LeaveRoomDialog>
+				<CopyInviteLinkButton roomId={roomId} />
+				<RoomMenu roomId={roomId} />
 			</div>
 		</header>
 	);

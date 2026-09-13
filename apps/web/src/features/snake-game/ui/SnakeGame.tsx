@@ -42,7 +42,7 @@ export function SnakeGame({
 	return (
 		<>
 			<Card className="border-border/60">
-				<CardHeader className="space-y-2">
+				<CardHeader>
 					<div className="flex flex-wrap items-center justify-between gap-3">
 						<CardTitle>Snake</CardTitle>
 
@@ -71,14 +71,16 @@ export function SnakeGame({
 							{action}
 						</div>
 					</div>
-					{!lobby.isGameRunning && (
-						<p className="text-sm text-muted-foreground">
-							Ready up — the game starts once the timer runs out.
-						</p>
-					)}
 				</CardHeader>
 				<CardContent className="flex flex-col items-center gap-4">
-					<div ref={canvasContainerRef} />
+					{/* Square, as wide as the column allows but never taller than what is
+					    left of the viewport under the room and card chrome. `min-h-0` lets it
+					    shrink again: Konva's inner div carries an explicit pixel height that
+					    would otherwise hold the old size open. */}
+					<div
+						ref={canvasContainerRef}
+						className="aspect-square min-h-0 w-[min(100%,calc(100dvh-17rem))]"
+					/>
 					<SnakeControlsHint />
 				</CardContent>
 			</Card>

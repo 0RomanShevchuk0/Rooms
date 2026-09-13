@@ -1,4 +1,4 @@
-import { SnakeCanvasRenderer } from "../core";
+import { SnakeCanvasRenderer, type SnakeCanvasSize } from "../core";
 import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { codeDirectionMap } from "./constansts";
@@ -35,6 +35,14 @@ function createDefaultGameState(roomId: string): SnakeGameRoomState {
 function getOwnSnakeLength(gameState: SnakeGameState, ownParticipantId: string | null) {
 	const ownSnake = gameState.snakes.find((snake) => snake.participantId === ownParticipantId);
 	return ownSnake?.segments.length ?? 0;
+}
+
+function readCanvasSize(container: HTMLElement): SnakeCanvasSize {
+	// Whole pixels keep the 1px grid strokes crisp.
+	return {
+		width: Math.floor(container.clientWidth),
+		height: Math.floor(container.clientHeight),
+	};
 }
 
 function isEditableTarget(target: EventTarget | null): target is HTMLElement {
@@ -86,14 +94,19 @@ export function useSnakeGame({
 
 		const snakeGame = new SnakeCanvasRenderer({
 			container: canvasContainer,
-			width: 500,
-			height: 500,
+			size: readCanvasSize(canvasContainer),
 			fieldSize: {
 				width: snakeFieldWidth,
 				height: snakeFieldHeight,
 			},
 			ownParticipantId,
 		});
+
+		const resizeObserver = new ResizeObserver(() => {
+			const size = readCanvasSize(canvasContainer);
+			if (size.width > 0 && size.height > 0) snakeGame.resize(size);
+		});
+		resizeObserver.observe(canvasContainer);
 
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
 			setCurrentRoomState((state) => ({
@@ -135,6 +148,7 @@ export function useSnakeGame({
 
 			window.removeEventListener("keydown", handleDirectionChange);
 
+			resizeObserver.disconnect();
 			snakeGame.destroy();
 		};
 	}, [

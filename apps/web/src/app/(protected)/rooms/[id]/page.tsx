@@ -50,7 +50,7 @@ export default function RoomPage() {
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
-			<div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10">
+			<div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-6">
 				<RoomHeader roomId={roomId} roomName={room.name} roomDescription={room.description} />
 
 				<RoomRealtimeContent

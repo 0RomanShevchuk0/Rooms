@@ -8,14 +8,18 @@ import Konva from "konva";
 
 type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 
+export interface SnakeCanvasSize {
+	width: number;
+	height: number;
+}
+
 const OWN_SNAKE_COLOR = "cornflowerblue";
 const OTHER_SNAKE_COLORS = ["mediumseagreen", "orchid", "goldenrod", "darkorange"];
 const DEAD_SNAKE_OPACITY = 0.35;
 
 interface SnakeCanvasEngineConfig {
 	container: HTMLDivElement;
-	width: number;
-	height: number;
+	size: SnakeCanvasSize;
 	fieldSize: SnakeFieldSize;
 	ownParticipantId: string | null;
 }
@@ -23,44 +27,46 @@ interface SnakeCanvasEngineConfig {
 export class SnakeCanvasRenderer {
 	private stage: Konva.Stage;
 	private layer: Konva.Layer;
-	private snakeSegments: Konva.Rect[];
-	private foodRects: Konva.Rect[];
+	private grid: Konva.Group;
+	private snakeSegments: Konva.Rect[] = [];
+	private foodRects: Konva.Rect[] = [];
+	private lastState: SnakeGameState | null = null;
 	private fieldSize: SnakeFieldSize;
 	private ownParticipantId: string | null;
-	private cellSize: number;
-	private gridOffsetX: number;
-	private gridOffsetY: number;
+	private cellSize = 0;
+	private gridOffsetX = 0;
+	private gridOffsetY = 0;
 
-	constructor({ container, width, height, fieldSize, ownParticipantId }: SnakeCanvasEngineConfig) {
-		this.stage = new Konva.Stage({
-			container,
-			width,
-			height,
-		});
-
+	constructor({ container, size, fieldSize, ownParticipantId }: SnakeCanvasEngineConfig) {
+		this.stage = new Konva.Stage({ container, ...size });
 		this.layer = new Konva.Layer();
 		this.stage.add(this.layer);
 
 		this.fieldSize = fieldSize;
 		this.ownParticipantId = ownParticipantId;
-		this.cellSize = Math.min(
-			this.stage.width() / this.fieldSize.width,
-			this.stage.height() / this.fieldSize.height,
-		);
 
-		const gridWidth = this.fieldSize.width * this.cellSize;
-		const gridHeight = this.fieldSize.height * this.cellSize;
-		this.gridOffsetX = (this.stage.width() - gridWidth) / 2;
-		this.gridOffsetY = (this.stage.height() - gridHeight) / 2;
+		this.grid = this.buildGrid();
+		this.layer.add(this.grid);
+	}
 
-		const grid = this.generateGrid();
-		this.layer.add(grid);
+	resize(size: SnakeCanvasSize) {
+		this.stage.size(size);
 
-		this.snakeSegments = [];
-		this.foodRects = [];
+		this.grid.destroy();
+		this.grid = this.buildGrid();
+		this.layer.add(this.grid);
+		this.grid.moveToBottom();
+
+		if (this.lastState) {
+			this.render(this.lastState);
+		} else {
+			this.layer.batchDraw();
+		}
 	}
 
 	render(state: SnakeGameState) {
+		this.lastState = state;
+
 		this.snakeSegments.forEach((segment) => segment.destroy());
 		this.foodRects.forEach((foodRect) => foodRect.destroy());
 
@@ -90,7 +96,7 @@ export class SnakeCanvasRenderer {
 		snake: SnakePlayerState,
 		snakeIndex: number,
 	) {
-		const snakeRect = new Konva.Rect({
+		return new Konva.Rect({
 			x: this.gridOffsetX + position.x * this.cellSize,
 			y: this.gridOffsetY + position.y * this.cellSize,
 			width: this.cellSize,
@@ -98,8 +104,6 @@ export class SnakeCanvasRenderer {
 			fill: this.resolveSnakeColor(snake, snakeIndex),
 			opacity: snake.alive ? 1 : DEAD_SNAKE_OPACITY,
 		});
-
-		return snakeRect;
 	}
 
 	private resolveSnakeColor(snake: SnakePlayerState, snakeIndex: number) {
@@ -111,30 +115,40 @@ export class SnakeCanvasRenderer {
 	}
 
 	private createFood(position: SnakePosition) {
-		const foodRect = new Konva.Rect({
+		return new Konva.Rect({
 			x: this.gridOffsetX + position.x * this.cellSize,
 			y: this.gridOffsetY + position.y * this.cellSize,
 			width: this.cellSize,
 			height: this.cellSize,
 			fill: "tomato",
 		});
-
-		return foodRect;
 	}
 
-	private generateGrid() {
+	/** Recomputes the cell size for the current stage and draws the grid for it. */
+	private buildGrid() {
+		this.cellSize = Math.min(
+			this.stage.width() / this.fieldSize.width,
+			this.stage.height() / this.fieldSize.height,
+		);
+
+		const gridWidth = this.fieldSize.width * this.cellSize;
+		const gridHeight = this.fieldSize.height * this.cellSize;
+		this.gridOffsetX = (this.stage.width() - gridWidth) / 2;
+		this.gridOffsetY = (this.stage.height() - gridHeight) / 2;
+
 		const grid = new Konva.Group();
 		for (let row = 0; row < this.fieldSize.height; row++) {
 			for (let col = 0; col < this.fieldSize.width; col++) {
-				const cell = new Konva.Rect({
-					x: this.gridOffsetX + col * this.cellSize,
-					y: this.gridOffsetY + row * this.cellSize,
-					width: this.cellSize,
-					height: this.cellSize,
-					stroke: "#ddd",
-					strokeWidth: 1,
-				});
-				grid.add(cell);
+				grid.add(
+					new Konva.Rect({
+						x: this.gridOffsetX + col * this.cellSize,
+						y: this.gridOffsetY + row * this.cellSize,
+						width: this.cellSize,
+						height: this.cellSize,
+						stroke: "#ddd",
+						strokeWidth: 1,
+					}),
+				);
 			}
 		}
 

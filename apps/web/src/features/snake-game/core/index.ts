@@ -1,1 +1,1 @@
-export { SnakeCanvasRenderer } from "./snakeCanvasRenderer";
+export { SnakeCanvasRenderer, type SnakeCanvasSize } from "./snakeCanvasRenderer";

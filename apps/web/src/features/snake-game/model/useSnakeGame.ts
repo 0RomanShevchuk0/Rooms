@@ -28,7 +28,7 @@ function createDefaultGameState(roomId: string): SnakeGameRoomState {
 	return {
 		roomId,
 		gameOverState: null,
-		snakeLength: 1,
+		snakeLength: 0,
 	};
 }
 

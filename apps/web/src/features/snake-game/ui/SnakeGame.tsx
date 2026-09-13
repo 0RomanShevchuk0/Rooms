@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { SnakeGameSettings } from "@rooms/contracts/snake-game";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
@@ -13,9 +14,16 @@ interface SnakeGameProps {
 	snakeFieldSize: SnakeFieldSize;
 	ownParticipantId: string | null;
 	lobby: RoomLobbyModel;
+	action?: ReactNode;
 }
 
-export function SnakeGame({ roomId, snakeFieldSize, ownParticipantId, lobby }: SnakeGameProps) {
+export function SnakeGame({
+	roomId,
+	snakeFieldSize,
+	ownParticipantId,
+	lobby,
+	action,
+}: SnakeGameProps) {
 	const { canvasContainerRef, snakeLength, gameOverState, closeGameOverModal } = useSnakeGame({
 		roomId,
 		snakeFieldSize,
@@ -35,33 +43,33 @@ export function SnakeGame({ roomId, snakeFieldSize, ownParticipantId, lobby }: S
 		<>
 			<Card className="border-border/60">
 				<CardHeader className="space-y-2">
-					<div className="flex items-center justify-between gap-4">
-						<div>
-							<CardTitle>Snake</CardTitle>
-							<p className="text-sm text-muted-foreground">Length: {snakeLength}</p>
-						</div>
+					<div className="flex flex-wrap items-center justify-between gap-3">
+						<CardTitle>Snake</CardTitle>
 
-						{lobby.isGameRunning ? (
-							<Button disabled>In Progress</Button>
-						) : (
-							<div className="flex items-center gap-3">
-								{isGathering && (
-									<p className="text-sm text-muted-foreground">
-										Starting in {lobby.windowSecondsLeft}s
-									</p>
-								)}
-								<Button
-									variant={lobby.isOwnReady ? "outline" : "default"}
-									disabled={!canPlay}
-									onClick={() => lobby.setReady(!lobby.isOwnReady)}
-								>
-									{lobby.isOwnReady ? "Not Ready" : "Ready"}
-								</Button>
-								{isGathering && lobby.isOwnReady && (
-									<Button onClick={lobby.startNow}>Start Now</Button>
-								)}
-							</div>
-						)}
+						<div className="flex items-center gap-3">
+							{lobby.isGameRunning ? (
+								<Button disabled>In Progress</Button>
+							) : (
+								<>
+									{isGathering && (
+										<p className="text-sm text-muted-foreground">
+											Starting in {lobby.windowSecondsLeft}s
+										</p>
+									)}
+									<Button
+										variant={lobby.isOwnReady ? "outline" : "default"}
+										disabled={!canPlay}
+										onClick={() => lobby.setReady(!lobby.isOwnReady)}
+									>
+										{lobby.isOwnReady ? "Not Ready" : "Ready"}
+									</Button>
+									{isGathering && lobby.isOwnReady && (
+										<Button onClick={lobby.startNow}>Start Now</Button>
+									)}
+								</>
+							)}
+							{action}
+						</div>
 					</div>
 					{!lobby.isGameRunning && (
 						<p className="text-sm text-muted-foreground">

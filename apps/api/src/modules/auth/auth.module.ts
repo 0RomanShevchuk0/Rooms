@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
@@ -14,15 +13,9 @@ import { OAuthStateService } from './oauth-state.service';
 	imports: [
 		UsersModule,
 		PasswordsModule,
-		JwtModule.registerAsync({
-			imports: [ConfigModule],
-			inject: [ConfigService],
-			useFactory: (config: ConfigService) => ({
-				global: true,
-				secret: config.getOrThrow<string>('JWT_SECRET'),
-				signOptions: { expiresIn: '2h' },
-			}),
-		}),
+		// Secrets and lifetimes are passed per call in AuthService, since the
+		// access and refresh tokens use different ones.
+		JwtModule.register({ global: true }),
 	],
 	controllers: [AuthController],
 	providers: [

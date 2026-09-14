@@ -1,0 +1,89 @@
+import { create } from "zustand";
+import toast from "react-hot-toast";
+import { api } from "@/shared/api";
+import { useSession } from "@/entities/session";
+import { createSocket, type AppSocket } from "../createSocket";
+import { SYSTEM_SOCKET_EVENTS } from "../socket-events";
+import { getWsErrorCode, getWsErrorMessage } from "../ws-errors";
+
+export interface SocketStoreState {
+	socket: AppSocket;
+	connected: boolean;
+	connect: () => void;
+	disconnect: () => void;
+}
+
+const UNAUTHORIZED_MESSAGE = "Unauthorized";
+const UNAUTHORIZED_CODE = "UNAUTHORIZED";
+
+export function createSocketStore(namespace: string) {
+	return create<SocketStoreState>((set, get) => {
+		const socket = createSocket(namespace, { autoConnect: false });
+
+		const setAuthToken = (token: string | null) => {
+			socket.auth = { token };
+		};
+
+		useSession.subscribe((state, previous) => {
+			if (state.accessToken !== previous.accessToken) {
+				setAuthToken(state.accessToken);
+			}
+		});
+
+		let hasRetriedWithFreshToken = false;
+
+		const recoverFromUnauthorized = async () => {
+			if (hasRetriedWithFreshToken) {
+				useSession.getState().clearSession();
+				return;
+			}
+			hasRetriedWithFreshToken = true;
+
+			socket.disconnect();
+
+			const token = await api.refreshAccessToken();
+			if (!token) {
+				useSession.getState().clearSession();
+				return;
+			}
+
+			setAuthToken(token);
+			socket.connect();
+		};
+
+		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT, () => {
+			hasRetriedWithFreshToken = false;
+			set({ connected: true });
+		});
+		socket.on(SYSTEM_SOCKET_EVENTS.DISCONNECT, () => set({ connected: false }));
+		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT_ERROR, (error: Error) => {
+			if (error.message === UNAUTHORIZED_MESSAGE) {
+				void recoverFromUnauthorized();
+			}
+		});
+		socket.on(SYSTEM_SOCKET_EVENTS.EXCEPTION, (payload: unknown) => {
+			if (getWsErrorCode(payload) === UNAUTHORIZED_CODE) {
+				void recoverFromUnauthorized();
+				return;
+			}
+
+			toast.error(`Error: ${getWsErrorMessage(payload)}`);
+		});
+
+		return {
+			socket,
+			connected: false,
+			connect: () => {
+				const current = get().socket;
+				if (current.connected) return;
+
+				setAuthToken(useSession.getState().accessToken);
+				current.connect();
+			},
+			disconnect: () => {
+				const current = get().socket;
+				if (current.connected) current.disconnect();
+			},
+		};
+	});
+}

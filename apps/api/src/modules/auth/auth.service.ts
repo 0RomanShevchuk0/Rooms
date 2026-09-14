@@ -12,6 +12,9 @@ import { OAUTH_ERROR_CODES } from '@rooms/contracts/auth';
 import { DiscordTokenResponse, DiscordUser } from './types/discord-oauth.type';
 import { OAuthCallbackError } from './oauth-callback.error';
 
+const ACCESS_TOKEN_TTL = '2h';
+const REFRESH_TOKEN_TTL = '7d';
+
 @Injectable()
 export class AuthService {
 	constructor(
@@ -29,11 +32,11 @@ export class AuthService {
 		const [accessToken, refreshToken] = await Promise.all([
 			this.jwtService.signAsync(payload, {
 				secret: accessSecret,
-				expiresIn: '2h',
+				expiresIn: ACCESS_TOKEN_TTL,
 			}),
 			this.jwtService.signAsync(payload, {
 				secret: refreshSecret,
-				expiresIn: '7d',
+				expiresIn: REFRESH_TOKEN_TTL,
 			}),
 		]);
 

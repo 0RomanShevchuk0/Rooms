@@ -90,7 +90,8 @@ class ApiInstance {
 		this.refreshHandler = handler;
 	}
 
-	private async refreshAccessToken(): Promise<string | null> {
+	/** Deduplicated: concurrent callers share one refresh request. */
+	async refreshAccessToken(): Promise<string | null> {
 		if (!this.refreshHandler) {
 			return null;
 		}

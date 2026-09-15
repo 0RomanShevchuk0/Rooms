@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { RequireGuest } from "@/entities/session";
 
 export default function RootLayout({
@@ -6,5 +7,9 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	return <RequireGuest>{children}</RequireGuest>;
+	return (
+		<RequireGuest>
+			<Suspense fallback={null}>{children}</Suspense>
+		</RequireGuest>
+	);
 }

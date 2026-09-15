@@ -2,13 +2,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { refreshTokens } from "../api/refresh-tokens";
 import { useSession } from "./session.store";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { mutationKeys } from "@/shared/react-query";
 
 export function useRefreshToken() {
-	const [isInitialized, setIsInitialized] = useState(false);
 	const refreshStartedRef = useRef(false);
-	const { accessToken, setAccessToken } = useSession();
+	const { accessToken, isInitialized, setAccessToken, markInitialized } = useSession();
 
 	const refreshTokenMutation = useMutation({
 		mutationKey: mutationKeys.session.refreshToken(),
@@ -22,7 +21,7 @@ export function useRefreshToken() {
 		}
 
 		if (accessToken) {
-			setIsInitialized(true);
+			markInitialized();
 			return;
 		}
 
@@ -38,12 +37,10 @@ export function useRefreshToken() {
 					setAccessToken(data.access_token);
 				}
 			} finally {
-				setIsInitialized(true);
+				markInitialized();
 			}
 		};
 
 		refreshToken();
-	}, [refreshTokenMutation, setAccessToken, accessToken, isInitialized]);
-
-	return { isInitialized };
+	}, [refreshTokenMutation, setAccessToken, markInitialized, accessToken, isInitialized]);
 }

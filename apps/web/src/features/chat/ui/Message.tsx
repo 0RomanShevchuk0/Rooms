@@ -1,37 +1,33 @@
 import { getClientMessageStatus, type ClientMessage } from "@/entities/message";
-
-import { format, isToday, isYesterday } from "date-fns";
+import { cn } from "@/shared/lib/utils";
+import { format } from "date-fns";
 
 interface MessageProps {
 	message: ClientMessage;
+	isOwn: boolean;
 }
 
-export function Message({ message }: MessageProps) {
-	const messageDate = message.createdAt ? new Date(message.createdAt) : new Date();
+export function Message({ message, isOwn }: MessageProps) {
 	const status = getClientMessageStatus(message);
-	const isSending = status === "sending";
-	const isFailed = status === "failed";
-
-	const getFromattedDate = () => {
-		if (isToday(messageDate)) {
-			return format(messageDate, "HH:mm");
-		}
-		if (isYesterday(messageDate)) {
-			return `Yesterday, at ${format(messageDate, "HH:mm")}`;
-		}
-		return format(messageDate, "dd.MM.yyyy HH:mm");
-	};
 
 	return (
-		<div className="mb-2">
-			<div className="flex items-center gap-2 text-muted-foreground">
-				<strong className="text-md">{message.sender.username}</strong>
-				<span className="text-xs">{getFromattedDate()}</span>
-				{isSending ? <span className="text-xs">Sending...</span> : null}
-				{isFailed ? <span className="text-xs text-destructive">Failed to send</span> : null}
-			</div>
-
-			<div className={isFailed ? "text-destructive" : undefined}>{message.content}</div>
+		<div
+			className={cn(
+				"flex gap-2 text-sm leading-6",
+				status === "sending" && "opacity-60",
+				status === "failed" && "text-destructive",
+			)}
+		>
+			<span className="shrink-0 text-xs leading-6 text-muted-foreground tabular-nums">
+				{format(new Date(message.createdAt), "HH:mm")}
+			</span>
+			<span className={cn("shrink-0 font-semibold", isOwn && "text-primary")}>
+				{message.sender.username}
+			</span>
+			<span className="min-w-0 wrap-break-word whitespace-pre-wrap">
+				{message.content}
+				{status === "failed" && <span className="ml-2 text-xs">· failed to send</span>}
+			</span>
 		</div>
 	);
 }

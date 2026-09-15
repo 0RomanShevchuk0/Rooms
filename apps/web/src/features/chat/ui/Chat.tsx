@@ -80,6 +80,7 @@ export function Chat({ chatId }: ChatProps) {
 		<div className="h-full flex flex-col content-between gap-2">
 			<ChatMessagesList
 				messages={displayedMessages}
+				ownUserId={user?.id ?? null}
 				isInitialLoading={isInitialLoading}
 				isFetchingNextPage={isFetchingNextPage}
 				chatContainerRef={chatContainerRef}

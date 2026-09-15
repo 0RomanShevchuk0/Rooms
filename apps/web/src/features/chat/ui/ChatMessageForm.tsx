@@ -8,11 +8,7 @@ interface ChatMessageFormProps {
 	onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export function ChatMessageForm({
-	message,
-	onMessageChange,
-	onSubmit,
-}: ChatMessageFormProps) {
+export function ChatMessageForm({ message, onMessageChange, onSubmit }: ChatMessageFormProps) {
 	return (
 		<form className="flex gap-1" onSubmit={onSubmit}>
 			<Input

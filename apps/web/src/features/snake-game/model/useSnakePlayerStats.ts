@@ -7,6 +7,7 @@ import { SNAKE_GAME_SOCKET_EVENTS, type SnakeGameState } from "@rooms/contracts/
 export interface SnakePlayerStat {
 	length: number;
 	alive: boolean;
+	color: string;
 }
 
 export type SnakePlayerStats = Record<string, SnakePlayerStat>;
@@ -19,7 +20,7 @@ function toPlayerStats(gameState: SnakeGameState): SnakePlayerStats {
 	return Object.fromEntries(
 		gameState.snakes.map((snake) => [
 			snake.participantId,
-			{ length: snake.segments.length, alive: snake.alive },
+			{ length: snake.segments.length, alive: snake.alive, color: snake.color },
 		]),
 	);
 }

@@ -1,6 +1,6 @@
 import type { RoomWithParticipantsAndChat } from "@rooms/contracts/room";
 import { Chat } from "@/features/chat";
-import { SnakeGame, SnakePlayersStrip, useSnakePlayerStats } from "@/features/snake-game";
+import { SnakeGame, SnakePlayersBoard, useSnakePlayerStats } from "@/features/snake-game";
 import { SnakeSettingsDialog, useRoomSnakeSettings } from "@/features/snake-settings";
 import type { RoomLobbyModel } from "@/features/room-lobby";
 import { Card, CardContent } from "@/shared/ui/card";
@@ -36,7 +36,7 @@ export function RoomRealtimeContent({
 			/>
 
 			<aside className="flex min-h-0 flex-col gap-4">
-				<SnakePlayersStrip
+				<SnakePlayersBoard
 					participants={room.participants}
 					onlineParticipantIds={onlineParticipantIds}
 					readyParticipantIds={lobby.readyParticipantIds}

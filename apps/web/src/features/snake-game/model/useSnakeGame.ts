@@ -99,7 +99,6 @@ export function useSnakeGame({
 				width: snakeFieldWidth,
 				height: snakeFieldHeight,
 			},
-			ownParticipantId,
 		});
 
 		const resizeObserver = new ResizeObserver(() => {

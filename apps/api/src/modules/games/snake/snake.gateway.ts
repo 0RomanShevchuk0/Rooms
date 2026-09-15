@@ -68,14 +68,9 @@ export class SnakeGateway implements OnModuleInit {
 		payload: SnakeRoomPayload,
 	) {
 		const userId = requireWsUser(client).sub;
-		console.log('🚀 ~ SnakeGateway ~ connectToChat ~ userId:', userId);
 		await this.roomsService.findByIdForUserOrThrow(payload.roomId, userId);
 
 		await client.join(payload.roomId);
-		console.log(
-			'🚀 ~ SnakeGateway ~ connectToChat ~ roomId:',
-			payload.roomId,
-		);
 		return { ok: true };
 	}
 

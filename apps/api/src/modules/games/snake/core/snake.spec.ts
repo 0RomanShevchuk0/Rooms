@@ -10,6 +10,7 @@ function createSnake(
 ) {
 	return new Snake({
 		fieldSize: FIELD_SIZE,
+		color: 'test-color',
 		initialDirection: direction,
 		initialSegments: segments,
 	});

@@ -10,7 +10,7 @@ import {
 } from './rooms.types';
 import { DEFAULT_SNAKE_GAME_SETTINGS } from './room-settings/room-settings.constants';
 import {
-	roomParticipantWithUserSelect,
+	roomParticipantsInclude,
 	type RoomParticipantWithUser,
 } from './participants/room-participants.select';
 import { RoomParticipantsService } from './participants/room-participants.service';
@@ -32,7 +32,7 @@ export class RoomsService {
 					participants: { some: { userId: filters.userId } },
 				}),
 			},
-			include: { participants: { select: roomParticipantWithUserSelect } },
+			include: { participants: roomParticipantsInclude },
 			orderBy: { createdAt: 'desc' },
 		});
 	}
@@ -41,7 +41,7 @@ export class RoomsService {
 		return this.prisma.room.findUnique({
 			where: { id },
 			include: {
-				participants: { select: roomParticipantWithUserSelect },
+				participants: roomParticipantsInclude,
 				chat: true,
 				snakeSettings: true,
 			},
@@ -145,7 +145,7 @@ export class RoomsService {
 				},
 			},
 			include: {
-				participants: { select: roomParticipantWithUserSelect },
+				participants: roomParticipantsInclude,
 				chat: true,
 				snakeSettings: true,
 			},
@@ -186,7 +186,7 @@ export class RoomsService {
 		return this.prisma.room.update({
 			where: { id },
 			data: updateRoomDto,
-			include: { participants: { select: roomParticipantWithUserSelect } },
+			include: { participants: roomParticipantsInclude },
 		});
 	}
 

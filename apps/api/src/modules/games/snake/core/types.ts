@@ -17,6 +17,7 @@ export type Position = {
 
 export interface SnakePlayerState {
 	participantId: string;
+	color: string;
 	direction: SnakeDirection;
 	segments: Position[];
 	alive: boolean;

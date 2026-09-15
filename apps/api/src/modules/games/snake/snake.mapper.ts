@@ -7,6 +7,7 @@ export function toSnakeGameStatePayload(
 	return {
 		snakes: state.snakes.map((snake) => ({
 			participantId: snake.participantId,
+			color: snake.color,
 			direction: snake.direction,
 			segments: snake.segments.map((segment) => ({
 				x: segment.x,

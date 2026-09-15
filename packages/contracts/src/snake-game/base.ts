@@ -6,8 +6,7 @@ export const SnakeDirectionEnum = {
 	LEFT: "left",
 	RIGHT: "right",
 } as const;
-export type SnakeDirectionEnum =
-	(typeof SnakeDirectionEnum)[keyof typeof SnakeDirectionEnum];
+export type SnakeDirectionEnum = (typeof SnakeDirectionEnum)[keyof typeof SnakeDirectionEnum];
 
 export const SnakeDirectionSchema = z.enum([
 	SnakeDirectionEnum.UP,
@@ -33,6 +32,8 @@ export const SnakeGameSettingsSchema = z.object({
 
 export const SnakePlayerStateSchema = z.object({
 	participantId: z.uuid(),
+	/** Assigned by the server, so every client draws the same snake the same way. */
+	color: z.string(),
 	direction: SnakeDirectionSchema,
 	segments: z.array(SnakePositionSchema),
 	alive: z.boolean(),

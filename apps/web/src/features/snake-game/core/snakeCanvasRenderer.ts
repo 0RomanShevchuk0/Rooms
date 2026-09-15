@@ -13,15 +13,12 @@ export interface SnakeCanvasSize {
 	height: number;
 }
 
-const OWN_SNAKE_COLOR = "cornflowerblue";
-const OTHER_SNAKE_COLORS = ["mediumseagreen", "orchid", "goldenrod", "darkorange"];
 const DEAD_SNAKE_OPACITY = 0.35;
 
 interface SnakeCanvasEngineConfig {
 	container: HTMLDivElement;
 	size: SnakeCanvasSize;
 	fieldSize: SnakeFieldSize;
-	ownParticipantId: string | null;
 }
 
 export class SnakeCanvasRenderer {
@@ -32,18 +29,16 @@ export class SnakeCanvasRenderer {
 	private foodRects: Konva.Rect[] = [];
 	private lastState: SnakeGameState | null = null;
 	private fieldSize: SnakeFieldSize;
-	private ownParticipantId: string | null;
 	private cellSize = 0;
 	private gridOffsetX = 0;
 	private gridOffsetY = 0;
 
-	constructor({ container, size, fieldSize, ownParticipantId }: SnakeCanvasEngineConfig) {
+	constructor({ container, size, fieldSize }: SnakeCanvasEngineConfig) {
 		this.stage = new Konva.Stage({ container, ...size });
 		this.layer = new Konva.Layer();
 		this.stage.add(this.layer);
 
 		this.fieldSize = fieldSize;
-		this.ownParticipantId = ownParticipantId;
 
 		this.grid = this.buildGrid();
 		this.layer.add(this.grid);
@@ -70,9 +65,9 @@ export class SnakeCanvasRenderer {
 		this.snakeSegments.forEach((segment) => segment.destroy());
 		this.foodRects.forEach((foodRect) => foodRect.destroy());
 
-		this.snakeSegments = state.snakes.flatMap((snake, snakeIndex) =>
+		this.snakeSegments = state.snakes.flatMap((snake) =>
 			snake.segments.map((segment) => {
-				const snakeSegmentRect = this.createSnakeSegment(segment, snake, snakeIndex);
+				const snakeSegmentRect = this.createSnakeSegment(segment, snake);
 				this.layer.add(snakeSegmentRect);
 				return snakeSegmentRect;
 			}),
@@ -91,27 +86,15 @@ export class SnakeCanvasRenderer {
 		this.stage.destroy();
 	}
 
-	private createSnakeSegment(
-		position: SnakePosition,
-		snake: SnakePlayerState,
-		snakeIndex: number,
-	) {
+	private createSnakeSegment(position: SnakePosition, snake: SnakePlayerState) {
 		return new Konva.Rect({
 			x: this.gridOffsetX + position.x * this.cellSize,
 			y: this.gridOffsetY + position.y * this.cellSize,
 			width: this.cellSize,
 			height: this.cellSize,
-			fill: this.resolveSnakeColor(snake, snakeIndex),
+			fill: snake.color,
 			opacity: snake.alive ? 1 : DEAD_SNAKE_OPACITY,
 		});
-	}
-
-	private resolveSnakeColor(snake: SnakePlayerState, snakeIndex: number) {
-		if (snake.participantId === this.ownParticipantId) {
-			return OWN_SNAKE_COLOR;
-		}
-
-		return OTHER_SNAKE_COLORS[snakeIndex % OTHER_SNAKE_COLORS.length];
 	}
 
 	private createFood(position: SnakePosition) {

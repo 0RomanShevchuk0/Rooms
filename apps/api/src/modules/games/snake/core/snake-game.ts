@@ -10,6 +10,7 @@ import {
 	type SnakeGameSettings,
 	type SnakeGameState,
 } from './types';
+import { colorForSlot, MOCK_PLAYER_COLOR } from './colors';
 import { Snake } from './snake';
 import { FoodManager } from './food-manager';
 import type { Food } from './food';
@@ -74,7 +75,12 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 			this.snakes.set(
 				participantId,
-				new Snake({ fieldSize, initialDirection, initialSegments }),
+				new Snake({
+					fieldSize,
+					color: colorForSlot(index),
+					initialDirection,
+					initialSegments,
+				}),
 			);
 		});
 
@@ -84,6 +90,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 
 			this.mockPlayerSnake = new Snake({
 				fieldSize,
+				color: MOCK_PLAYER_COLOR,
 				initialDirection: MOCK_PLAYER_INITIAL_DIRECTION,
 				initialSegments: createMockPlayerSegments(fieldSize, row),
 			});
@@ -236,6 +243,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 			gameOver: this.gameOver,
 			snakes: [...this.snakes].map(([participantId, snake]) => ({
 				participantId,
+				color: snake.color,
 				direction: snake.direction,
 				segments: snake.segments,
 				alive: snake.alive,

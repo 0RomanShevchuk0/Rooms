@@ -1,3 +1,3 @@
 export { SnakeGame } from "./ui/SnakeGame";
-export { SnakePlayersStrip } from "./ui/SnakePlayersStrip";
+export { SnakePlayersBoard } from "./ui/SnakePlayersBoard";
 export { useSnakePlayerStats } from "./model/useSnakePlayerStats";

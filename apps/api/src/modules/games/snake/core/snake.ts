@@ -4,18 +4,26 @@ import { FieldSize, Position } from './types';
 
 interface SnakeProps {
 	fieldSize: FieldSize;
+	color: string;
 	initialDirection: SnakeDirection;
 	initialSegments: Position[];
 }
 
 export class Snake {
 	private readonly fieldSize: FieldSize;
+	readonly color: string;
 	segments: Position[];
 	direction: SnakeDirection;
 	alive = true;
 
-	constructor({ fieldSize, initialDirection, initialSegments }: SnakeProps) {
+	constructor({
+		fieldSize,
+		color,
+		initialDirection,
+		initialSegments,
+	}: SnakeProps) {
 		this.fieldSize = fieldSize;
+		this.color = color;
 		this.segments = initialSegments;
 		this.direction = initialDirection;
 	}

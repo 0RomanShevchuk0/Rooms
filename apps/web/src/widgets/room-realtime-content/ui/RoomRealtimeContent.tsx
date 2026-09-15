@@ -32,6 +32,7 @@ export function RoomRealtimeContent({
 				snakeFieldSize={snakeSettingsModel.snakeSettings.fieldSize}
 				ownParticipantId={ownParticipantId}
 				lobby={lobby}
+				onlineParticipantIds={onlineParticipantIds}
 				action={<SnakeSettingsDialog model={snakeSettingsModel} />}
 			/>
 

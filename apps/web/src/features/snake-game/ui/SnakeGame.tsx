@@ -6,6 +6,7 @@ import type { RoomLobbyModel } from "@/features/room-lobby";
 import { useSnakeGame } from "../model/useSnakeGame";
 import { SnakeControlsHint } from "./SnakeControlsHint";
 import { SnakeGameOverDialog } from "./SnakeGameOverDialog";
+import { SnakeLobbyOverlay } from "./SnakeLobbyOverlay";
 
 type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 
@@ -14,6 +15,7 @@ interface SnakeGameProps {
 	snakeFieldSize: SnakeFieldSize;
 	ownParticipantId: string | null;
 	lobby: RoomLobbyModel;
+	onlineParticipantIds: Set<string>;
 	action?: ReactNode;
 }
 
@@ -22,6 +24,7 @@ export function SnakeGame({
 	snakeFieldSize,
 	ownParticipantId,
 	lobby,
+	onlineParticipantIds,
 	action,
 }: SnakeGameProps) {
 	const { canvasContainerRef, snakeLength, gameOverState, closeGameOverModal } = useSnakeGame({
@@ -51,11 +54,6 @@ export function SnakeGame({
 								<Button disabled>In Progress</Button>
 							) : (
 								<>
-									{isGathering && (
-										<p className="text-sm text-muted-foreground">
-											Starting in {lobby.windowSecondsLeft}s
-										</p>
-									)}
 									<Button
 										variant={lobby.isOwnReady ? "outline" : "default"}
 										disabled={!canPlay}
@@ -77,10 +75,16 @@ export function SnakeGame({
 					    left of the viewport under the room and card chrome. `min-h-0` lets it
 					    shrink again: Konva's inner div carries an explicit pixel height that
 					    would otherwise hold the old size open. */}
-					<div
-						ref={canvasContainerRef}
-						className="aspect-square min-h-0 w-[min(100%,calc(100dvh-17rem))]"
-					/>
+					<div className="relative aspect-square min-h-0 w-[min(100%,calc(100dvh-17rem))]">
+						<div ref={canvasContainerRef} className="size-full" />
+						{!lobby.isGameRunning && (
+							<SnakeLobbyOverlay
+								readyCount={lobby.readyParticipantIds.size}
+								onlineCount={onlineParticipantIds.size}
+								windowSecondsLeft={lobby.windowSecondsLeft}
+							/>
+						)}
+					</div>
 					<SnakeControlsHint />
 				</CardContent>
 			</Card>

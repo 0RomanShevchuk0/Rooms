@@ -9,6 +9,7 @@ import { toMatchResults } from "../model/matchResults";
 import { SnakeControlsHint } from "./SnakeControlsHint";
 import { SnakeGameOverDialog } from "./SnakeGameOverDialog";
 import { SnakeLobbyOverlay } from "./SnakeLobbyOverlay";
+import { SnakeTouchControls } from "./SnakeTouchControls";
 
 type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 
@@ -31,7 +32,7 @@ export function SnakeGame({
 	onlineParticipantIds,
 	action,
 }: SnakeGameProps) {
-	const { canvasContainerRef, gameOverState, closeGameOverModal } = useSnakeGame({
+	const { canvasContainerRef, changeDirection, gameOverState, closeGameOverModal } = useSnakeGame({
 		roomId,
 		snakeFieldSize,
 		ownParticipantId,
@@ -94,7 +95,16 @@ export function SnakeGame({
 							/>
 						)}
 					</div>
-					<SnakeControlsHint />
+					{/* Touch devices get the d-pad, everyone else the key hint. */}
+					<div className="hidden pointer-coarse:block">
+						<SnakeTouchControls
+							onDirection={changeDirection}
+							disabled={!lobby.isGameRunning}
+						/>
+					</div>
+					<div className="pointer-coarse:hidden">
+						<SnakeControlsHint />
+					</div>
 				</CardContent>
 			</Card>
 

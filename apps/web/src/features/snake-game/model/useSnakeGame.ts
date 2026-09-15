@@ -5,6 +5,7 @@ import { codeDirectionMap } from "./constansts";
 import {
 	SNAKE_GAME_SOCKET_EVENTS,
 	type SnakeChangeDirectionPayload,
+	type SnakeDirection,
 	type SnakeGameSettings,
 	type SnakeGameState,
 } from "@rooms/contracts/snake-game";
@@ -73,10 +74,20 @@ export function useSnakeGame({
 		[roomId],
 	);
 	const isGameRunningRef = useRef(isGameRunning);
-	const snakeFieldWidth = snakeFieldSize.width;
-	const snakeFieldHeight = snakeFieldSize.height;
 
 	const { socket: snakeGameSocket } = useSnakeGameSocket();
+
+	const changeDirection = useCallback(
+		(direction: SnakeDirection) => {
+			if (!isGameRunningRef.current) return;
+
+			const payload: SnakeChangeDirectionPayload = { direction, roomId };
+			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION, payload);
+		},
+		[roomId, snakeGameSocket],
+	);
+	const snakeFieldWidth = snakeFieldSize.width;
+	const snakeFieldHeight = snakeFieldSize.height;
 
 	useEffect(() => {
 		isGameRunningRef.current = isGameRunning;
@@ -116,14 +127,12 @@ export function useSnakeGame({
 		snakeGameSocket.on(SNAKE_GAME_SOCKET_EVENTS.GAME_OVER, handleGameOver);
 
 		const handleDirectionChange = (event: KeyboardEvent) => {
-			if (!isGameRunningRef.current) return;
 			if (isEditableTarget(event.target)) return;
 
 			const direction = codeDirectionMap[event.code];
 			if (direction) {
 				event.preventDefault();
-				const payload: SnakeChangeDirectionPayload = { direction, roomId };
-				snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_DIRECTION, payload);
+				changeDirection(direction);
 			}
 		};
 
@@ -146,6 +155,7 @@ export function useSnakeGame({
 		snakeFieldHeight,
 		ownParticipantId,
 		setCurrentRoomState,
+		changeDirection,
 	]);
 
 	// The final frame stays on the field while the results are up; a clean
@@ -157,6 +167,7 @@ export function useSnakeGame({
 
 	return {
 		canvasContainerRef,
+		changeDirection,
 		// The last match's result has nothing to say over a running one.
 		gameOverState: isGameRunning ? null : currentRoomState.gameOverState,
 		closeGameOverModal,

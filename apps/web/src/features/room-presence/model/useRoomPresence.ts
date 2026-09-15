@@ -22,20 +22,29 @@ export function useRoomPresence({ roomId }: UseRoomPresenceProps) {
 
 	useEffect(() => {
 		const onJoined = (data: RoomParticipantJoinedPayload) => {
-			queryClient.setQueryData<RoomWithParticipantsAndChat>(queryKeys.rooms.byId(roomId), (old) => {
-				if (!old) return old;
-				if (old.participants.some((p) => p.id === data.participant.id)) return old;
-				return { ...old, participants: [...old.participants, data.participant] };
-			});
+			queryClient.setQueryData<RoomWithParticipantsAndChat>(
+				queryKeys.rooms.byId(roomId),
+				(old) => {
+					if (!old) return old;
+					if (old.participants.some((p) => p.id === data.participant.id)) return old;
+					return { ...old, participants: [...old.participants, data.participant] };
+				},
+			);
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 
 		const onLeft = (data: RoomPresencePayload) => {
-			queryClient.setQueryData<RoomWithParticipantsAndChat>(queryKeys.rooms.byId(roomId), (old) => {
-				if (!old) return old;
-				if (!old.participants.some((p) => p.id === data.participantId)) return old;
-				return { ...old, participants: old.participants.filter((p) => p.id !== data.participantId) };
-			});
+			queryClient.setQueryData<RoomWithParticipantsAndChat>(
+				queryKeys.rooms.byId(roomId),
+				(old) => {
+					if (!old) return old;
+					if (!old.participants.some((p) => p.id === data.participantId)) return old;
+					return {
+						...old,
+						participants: old.participants.filter((p) => p.id !== data.participantId),
+					};
+				},
+			);
 			setOnlineParticipantIds(new Set(data.onlineParticipantIds));
 		};
 

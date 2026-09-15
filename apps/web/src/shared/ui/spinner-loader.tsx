@@ -9,7 +9,11 @@ type SpinnerProps = {
 	"aria-label"?: string;
 };
 
-function SpinnerLoader({ className, size = 24, "aria-label": ariaLabel = "Loading" }: SpinnerProps) {
+function SpinnerLoader({
+	className,
+	size = 24,
+	"aria-label": ariaLabel = "Loading",
+}: SpinnerProps) {
 	return (
 		<Loader
 			aria-label={ariaLabel}
@@ -20,7 +24,11 @@ function SpinnerLoader({ className, size = 24, "aria-label": ariaLabel = "Loadin
 	);
 }
 
-function FullWidthSpinnerLoader({ className, size = 24, "aria-label": ariaLabel = "Loading" }: SpinnerProps) {
+function FullWidthSpinnerLoader({
+	className,
+	size = 24,
+	"aria-label": ariaLabel = "Loading",
+}: SpinnerProps) {
 	return (
 		<div className="flex w-full items-center justify-center">
 			<Loader

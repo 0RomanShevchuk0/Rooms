@@ -8,7 +8,6 @@ import { getWsErrorCode, getWsErrorMessage } from "../ws-errors";
 
 export interface SocketStoreState {
 	socket: AppSocket;
-	connected: boolean;
 	/** Dropped without being asked to and trying to get back. */
 	isReconnecting: boolean;
 	connect: () => void;
@@ -59,10 +58,10 @@ export function createSocketStore(namespace: string) {
 
 		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT, () => {
 			hasRetriedWithFreshToken = false;
-			set({ connected: true, isReconnecting: false });
+			set({ isReconnecting: false });
 		});
 		socket.on(SYSTEM_SOCKET_EVENTS.DISCONNECT, (reason: string) => {
-			set({ connected: false, isReconnecting: reason !== MANUAL_DISCONNECT_REASON });
+			set({ isReconnecting: reason !== MANUAL_DISCONNECT_REASON });
 		});
 		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT_ERROR, (error: Error) => {
 			if (error.message === UNAUTHORIZED_MESSAGE) {
@@ -80,7 +79,6 @@ export function createSocketStore(namespace: string) {
 
 		return {
 			socket,
-			connected: false,
 			isReconnecting: false,
 			connect: () => {
 				const current = get().socket;

@@ -91,28 +91,37 @@ export function useRoomSnakeSettings({
 	const snakeSettings =
 		currentRoomState.snakeSettingsOverride ?? initialSettings ?? DEFAULT_SNAKE_GAME_SETTINGS;
 
-	const setSettings = useCallback((settings: SnakeGameSettings) => {
-		const payload: SnakeChangeSettingsPayload = {
-			roomId,
-			settings,
-		};
+	const setSettings = useCallback(
+		(settings: SnakeGameSettings) => {
+			const payload: SnakeChangeSettingsPayload = {
+				roomId,
+				settings,
+			};
 
-		snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_SETTINGS, payload);
-	}, [roomId, snakeGameSocket]);
+			snakeGameSocket.emit(SNAKE_GAME_SOCKET_EVENTS.CHANGE_SETTINGS, payload);
+		},
+		[roomId, snakeGameSocket],
+	);
 
-	const setFieldSize = useCallback((fieldSize: SnakeFieldSize) => {
-		setSettings({
-			fieldSize,
-			foodAmount: snakeSettings.foodAmount,
-		});
-	}, [setSettings, snakeSettings.foodAmount]);
+	const setFieldSize = useCallback(
+		(fieldSize: SnakeFieldSize) => {
+			setSettings({
+				fieldSize,
+				foodAmount: snakeSettings.foodAmount,
+			});
+		},
+		[setSettings, snakeSettings.foodAmount],
+	);
 
-	const setFoodAmount = useCallback((foodAmount: SnakeFoodAmount) => {
-		setSettings({
-			fieldSize: snakeSettings.fieldSize,
-			foodAmount,
-		});
-	}, [setSettings, snakeSettings.fieldSize]);
+	const setFoodAmount = useCallback(
+		(foodAmount: SnakeFoodAmount) => {
+			setSettings({
+				fieldSize: snakeSettings.fieldSize,
+				foodAmount,
+			});
+		},
+		[setSettings, snakeSettings.fieldSize],
+	);
 
 	return {
 		snakeSettings,

@@ -1,6 +1,7 @@
 "use client";
 import { FullscreenSpinnerLoader } from "@/shared/ui/spinner-loader";
 import { RoomHeader } from "@/widgets/room-header";
+import { ConnectionBanner } from "@/widgets/connection-banner";
 import { useRoomPresence, useRoomRealtimeChannels } from "@/features/room-presence";
 import { useRoomLobby } from "@/features/room-lobby";
 import { useMyRoomParticipantQuery } from "@/entities/room";
@@ -50,6 +51,7 @@ export default function RoomPage() {
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
+			<ConnectionBanner />
 			<div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-6">
 				<RoomHeader roomId={roomId} roomName={room.name} roomDescription={room.description} />
 

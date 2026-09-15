@@ -9,9 +9,13 @@ import { getWsErrorCode, getWsErrorMessage } from "../ws-errors";
 export interface SocketStoreState {
 	socket: AppSocket;
 	connected: boolean;
+	/** Dropped without being asked to and trying to get back. */
+	isReconnecting: boolean;
 	connect: () => void;
 	disconnect: () => void;
 }
+
+const MANUAL_DISCONNECT_REASON = "io client disconnect";
 
 const UNAUTHORIZED_MESSAGE = "Unauthorized";
 const UNAUTHORIZED_CODE = "UNAUTHORIZED";
@@ -39,7 +43,9 @@ export function createSocketStore(namespace: string) {
 			}
 			hasRetriedWithFreshToken = true;
 
+			// Our own disconnect, but from the user's side this is still an outage.
 			socket.disconnect();
+			set({ isReconnecting: true });
 
 			const token = await api.refreshAccessToken();
 			if (!token) {
@@ -53,9 +59,11 @@ export function createSocketStore(namespace: string) {
 
 		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT, () => {
 			hasRetriedWithFreshToken = false;
-			set({ connected: true });
+			set({ connected: true, isReconnecting: false });
 		});
-		socket.on(SYSTEM_SOCKET_EVENTS.DISCONNECT, () => set({ connected: false }));
+		socket.on(SYSTEM_SOCKET_EVENTS.DISCONNECT, (reason: string) => {
+			set({ connected: false, isReconnecting: reason !== MANUAL_DISCONNECT_REASON });
+		});
 		socket.on(SYSTEM_SOCKET_EVENTS.CONNECT_ERROR, (error: Error) => {
 			if (error.message === UNAUTHORIZED_MESSAGE) {
 				void recoverFromUnauthorized();
@@ -73,6 +81,7 @@ export function createSocketStore(namespace: string) {
 		return {
 			socket,
 			connected: false,
+			isReconnecting: false,
 			connect: () => {
 				const current = get().socket;
 				if (current.connected) return;

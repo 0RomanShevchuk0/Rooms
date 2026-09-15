@@ -21,20 +21,13 @@ interface UseSnakeGameProps {
 interface SnakeGameRoomState {
 	roomId: string;
 	gameOverState: SnakeGameState | null;
-	snakeLength: number;
 }
 
 function createDefaultGameState(roomId: string): SnakeGameRoomState {
 	return {
 		roomId,
 		gameOverState: null,
-		snakeLength: 0,
 	};
-}
-
-function getOwnSnakeLength(gameState: SnakeGameState, ownParticipantId: string | null) {
-	const ownSnake = gameState.snakes.find((snake) => snake.participantId === ownParticipantId);
-	return ownSnake?.segments.length ?? 0;
 }
 
 function readCanvasSize(container: HTMLElement): SnakeCanvasSize {
@@ -63,6 +56,7 @@ export function useSnakeGame({
 	isGameRunning,
 }: UseSnakeGameProps) {
 	const canvasContainerRef = useRef<HTMLDivElement>(null);
+	const rendererRef = useRef<SnakeCanvasRenderer | null>(null);
 	const [roomState, setRoomState] = useState<SnakeGameRoomState>(() =>
 		createDefaultGameState(roomId),
 	);
@@ -101,6 +95,8 @@ export function useSnakeGame({
 			},
 		});
 
+		rendererRef.current = snakeGame;
+
 		const resizeObserver = new ResizeObserver(() => {
 			const size = readCanvasSize(canvasContainer);
 			if (size.width > 0 && size.height > 0) snakeGame.resize(size);
@@ -108,19 +104,11 @@ export function useSnakeGame({
 		resizeObserver.observe(canvasContainer);
 
 		const handleSnakeMoved = (gameState: SnakeGameState) => {
-			setCurrentRoomState((state) => ({
-				...state,
-				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
-			}));
 			snakeGame.render(gameState);
 		};
 
 		const handleGameOver = (gameState: SnakeGameState) => {
-			setCurrentRoomState((state) => ({
-				...state,
-				snakeLength: getOwnSnakeLength(gameState, ownParticipantId),
-				gameOverState: gameState,
-			}));
+			setCurrentRoomState((state) => ({ ...state, gameOverState: gameState }));
 			snakeGame.render(gameState);
 		};
 
@@ -148,6 +136,7 @@ export function useSnakeGame({
 			window.removeEventListener("keydown", handleDirectionChange);
 
 			resizeObserver.disconnect();
+			rendererRef.current = null;
 			snakeGame.destroy();
 		};
 	}, [
@@ -159,13 +148,15 @@ export function useSnakeGame({
 		setCurrentRoomState,
 	]);
 
+	// The final frame stays on the field while the results are up; a clean
+	// board afterwards, so the next lobby does not show last match's snakes.
 	const closeGameOverModal = () => {
 		setCurrentRoomState((state) => ({ ...state, gameOverState: null }));
+		rendererRef.current?.clear();
 	};
 
 	return {
 		canvasContainerRef,
-		snakeLength: currentRoomState.snakeLength,
 		// The last match's result has nothing to say over a running one.
 		gameOverState: isGameRunning ? null : currentRoomState.gameOverState,
 		closeGameOverModal,

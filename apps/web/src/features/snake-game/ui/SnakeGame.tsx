@@ -1,9 +1,11 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
+import type { RoomParticipant } from "@rooms/contracts/room";
 import type { SnakeGameSettings } from "@rooms/contracts/snake-game";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import type { RoomLobbyModel } from "@/features/room-lobby";
 import { useSnakeGame } from "../model/useSnakeGame";
+import { toMatchResults } from "../model/matchResults";
 import { SnakeControlsHint } from "./SnakeControlsHint";
 import { SnakeGameOverDialog } from "./SnakeGameOverDialog";
 import { SnakeLobbyOverlay } from "./SnakeLobbyOverlay";
@@ -15,6 +17,7 @@ interface SnakeGameProps {
 	snakeFieldSize: SnakeFieldSize;
 	ownParticipantId: string | null;
 	lobby: RoomLobbyModel;
+	participants: RoomParticipant[];
 	onlineParticipantIds: Set<string>;
 	action?: ReactNode;
 }
@@ -24,15 +27,21 @@ export function SnakeGame({
 	snakeFieldSize,
 	ownParticipantId,
 	lobby,
+	participants,
 	onlineParticipantIds,
 	action,
 }: SnakeGameProps) {
-	const { canvasContainerRef, snakeLength, gameOverState, closeGameOverModal } = useSnakeGame({
+	const { canvasContainerRef, gameOverState, closeGameOverModal } = useSnakeGame({
 		roomId,
 		snakeFieldSize,
 		ownParticipantId,
 		isGameRunning: lobby.isGameRunning,
 	});
+
+	const results = useMemo(
+		() => (gameOverState ? toMatchResults(gameOverState, participants, ownParticipantId) : []),
+		[gameOverState, participants, ownParticipantId],
+	);
 
 	const isGathering = lobby.windowSecondsLeft !== null;
 	const canPlay = ownParticipantId !== null;
@@ -91,7 +100,7 @@ export function SnakeGame({
 
 			<SnakeGameOverDialog
 				open={Boolean(gameOverState)}
-				finalSnakeLength={snakeLength}
+				results={results}
 				onClose={closeGameOverModal}
 				onPlayAgain={playAgain}
 			/>

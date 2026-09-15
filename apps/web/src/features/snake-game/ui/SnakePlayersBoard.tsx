@@ -1,6 +1,6 @@
 import type { RoomParticipant } from "@rooms/contracts/room";
-import { cn } from "@/shared/lib/utils";
 import type { SnakePlayerStat, SnakePlayerStats } from "../model/useSnakePlayerStats";
+import { SnakePlayerRow } from "./SnakePlayerRow";
 
 interface SnakePlayersBoardProps {
 	participants: RoomParticipant[];
@@ -59,35 +59,19 @@ export function SnakePlayersBoard({
 				const isDimmed = isGameRunning ? stat !== undefined && !stat.alive : !isOnline;
 
 				return (
-					<div
+					<SnakePlayerRow
 						key={participant.id}
-						className={cn(
-							"grid h-10.5 grid-cols-[4px_1fr_auto] items-center gap-3 border-t border-border/60 pr-3.5",
-							isOwn && "bg-primary/5",
-							isDimmed && "opacity-55",
-						)}
+						name={participant.user.username}
+						color={isGameRunning ? stat?.color : undefined}
+						isOwn={isOwn}
+						isDimmed={isDimmed}
 					>
-						<span
-							aria-hidden
-							className="self-stretch"
-							style={{ backgroundColor: isGameRunning ? stat?.color : undefined }}
-						/>
-
-						<span className="flex min-w-0 items-center gap-2 font-medium">
-							<span className="truncate">{participant.user.username}</span>
-							{isOwn && (
-								<span className="shrink-0 rounded-full bg-primary/10 px-1.5 text-[11px] font-semibold text-primary">
-									you
-								</span>
-							)}
-						</span>
-
 						{isGameRunning ? (
 							<MatchCell stat={stat} />
 						) : (
 							<LobbyCell isOnline={isOnline} isReady={isReady} />
 						)}
-					</div>
+					</SnakePlayerRow>
 				);
 			})}
 		</div>

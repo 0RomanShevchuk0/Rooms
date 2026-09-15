@@ -82,6 +82,15 @@ export class SnakeCanvasRenderer {
 		this.layer.batchDraw();
 	}
 
+	clear() {
+		this.lastState = null;
+		this.snakeSegments.forEach((segment) => segment.destroy());
+		this.foodRects.forEach((foodRect) => foodRect.destroy());
+		this.snakeSegments = [];
+		this.foodRects = [];
+		this.layer.batchDraw();
+	}
+
 	destroy() {
 		this.stage.destroy();
 	}

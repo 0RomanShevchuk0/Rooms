@@ -29,6 +29,9 @@ jobs:
          - name: generate prisma client
            run: npm exec -w @rooms/api -- prisma generate
 
+         - name: Format check
+           run: npm run format:check
+
          - name: Typecheck API
            run: npm exec -w @rooms/api -- tsc --noEmit -p tsconfig.json
 
@@ -40,3 +43,11 @@ jobs:
 
          - name: Lint Web
            run: npm run -w @rooms/web lint
+
+         - name: Test API
+           run: npm test -w @rooms/api
+
+         # Type and lint checks miss what only a real build catches, such as a
+         # page failing to prerender.
+         - name: Build Web
+           run: npm run -w @rooms/web build

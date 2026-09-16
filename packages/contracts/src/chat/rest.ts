@@ -17,6 +17,4 @@ export const GetChatMessagesResponseSchema = PaginatedMessagesResponseSchema;
 export type GetChatMessagesQuery = z.infer<typeof GetChatMessagesQuerySchema>;
 export type GetChatByIdParams = z.infer<typeof GetChatByIdParamsSchema>;
 export type GetChatByIdResponse = z.infer<typeof GetChatByIdResponseSchema>;
-export type GetChatMessagesResponse = z.infer<
-	typeof GetChatMessagesResponseSchema
->;
+export type GetChatMessagesResponse = z.infer<typeof GetChatMessagesResponseSchema>;

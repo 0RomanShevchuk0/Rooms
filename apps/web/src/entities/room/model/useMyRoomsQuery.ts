@@ -3,7 +3,11 @@ import { queryKeys } from "@/shared/react-query";
 import { useQuery } from "@tanstack/react-query";
 
 export function useMyRoomsQuery() {
-	const { data: rooms, isPending, isError } = useQuery({
+	const {
+		data: rooms,
+		isPending,
+		isError,
+	} = useQuery({
 		queryKey: queryKeys.rooms.my(),
 		queryFn: getMyRooms,
 	});

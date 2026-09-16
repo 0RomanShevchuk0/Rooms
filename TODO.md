@@ -1,15 +1,18 @@
 ## Issues & Missing
 
 ### Security
+
 - [] No rate limiting on API and sockets
 - [ ] Refresh token revocation/rotation: store token state server-side and invalidate on logout
 
 ### Code Quality
+
 - [ ] No tests (unit or e2e)
 - [ ] No tests for Room WS presence edge cases (multi-tab/device, repeated CONNECT, HTTP leave with active socket)
 - [ ] Test Winston logger flow for snake settings errors
 
 ### Infrastructure
+
 - [ ] Set per-container memory limits in `docker-compose.prod.yml`. The host has 1 GB and no limits are set, so a leak in one service gets a random neighbour killed by the OOM killer instead of the culprit
 - [ ] Add a 2 GB swap file and persist it in `/etc/fstab`. Idle usage is ~244 MiB of 955 MiB, so this is headroom for deploys and traffic spikes, not a current shortage
 - [ ] Tag images with the commit SHA instead of `latest`, so the running version is identifiable and rollback is possible
@@ -18,6 +21,7 @@
 - [ ] Update OAuth callback URLs to the real domain now that HTTPS is live
 
 ### Features
+
 - [ ] OAuth
 
 ### Fix Google OAuth callback to use frontend proxy

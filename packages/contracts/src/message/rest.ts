@@ -28,6 +28,4 @@ export const PaginatedMessagesResponseSchema = z.object({
 export type Message = z.infer<typeof MessageSchema>;
 export type MessageWithSender = z.infer<typeof MessageWithSenderSchema>;
 export type GetMessageByIdParams = z.infer<typeof GetMessageByIdParamsSchema>;
-export type PaginatedMessagesResponse = z.infer<
-	typeof PaginatedMessagesResponseSchema
->;
+export type PaginatedMessagesResponse = z.infer<typeof PaginatedMessagesResponseSchema>;

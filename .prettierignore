@@ -25,3 +25,6 @@
 # lockfiles
 **/package-lock.json
 
+
+# local tool state
+.claude/

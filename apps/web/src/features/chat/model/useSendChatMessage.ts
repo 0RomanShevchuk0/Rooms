@@ -7,11 +7,7 @@ import {
 	type ChatSendMessagePayload,
 } from "@rooms/contracts/chat";
 import type { WsErrorResponse } from "@rooms/contracts/ws";
-import {
-	getWsErrorMessage,
-	getWsValidationIssues,
-	isWsErrorResponse,
-} from "@/shared/lib/realtime";
+import { getWsErrorMessage, getWsValidationIssues, isWsErrorResponse } from "@/shared/lib/realtime";
 import toast from "react-hot-toast";
 
 type ChatSender = ClientMessage["sender"] & { id: string };

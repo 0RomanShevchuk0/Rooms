@@ -9,7 +9,11 @@ interface UseChatScrollProps {
 
 const SCROLL_THRESHOLD = 100;
 
-export function useChatScrollToBottom({ messages, chatContainerRef, shouldScrollToBottomRef }: UseChatScrollProps) {
+export function useChatScrollToBottom({
+	messages,
+	chatContainerRef,
+	shouldScrollToBottomRef,
+}: UseChatScrollProps) {
 	useLayoutEffect(() => {
 		if (!chatContainerRef?.current) return;
 

@@ -40,11 +40,7 @@ export const OAuthErrorCodeSchema = z.enum([
 
 export type AuthCredentials = z.infer<typeof AuthCredentialsSchema>;
 export type AuthTokenResponse = z.infer<typeof AuthTokenResponseSchema>;
-export type AuthRefreshTokensErrorResponse = z.infer<
-	typeof AuthRefreshTokensErrorResponseSchema
->;
-export type AuthRefreshTokensResponse = z.infer<
-	typeof AuthRefreshTokensResponseSchema
->;
+export type AuthRefreshTokensErrorResponse = z.infer<typeof AuthRefreshTokensErrorResponseSchema>;
+export type AuthRefreshTokensResponse = z.infer<typeof AuthRefreshTokensResponseSchema>;
 export type AuthLogoutResponse = z.infer<typeof AuthLogoutResponseSchema>;
 export type OAuthErrorCode = z.infer<typeof OAuthErrorCodeSchema>;

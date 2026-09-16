@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface UseMeQueryProps {
 	enabled?: boolean;
-};
+}
 
 export function useMeQuery({ enabled = true }: UseMeQueryProps = {}) {
 	const { data: user } = useQuery({

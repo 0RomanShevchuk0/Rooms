@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-	RoomIdSchema,
-	RoomParticipantIdSchema,
-} from "./base.js";
+import { RoomIdSchema, RoomParticipantIdSchema } from "./base.js";
 import { PublicUserSchema } from "../user/rest.js";
 
 export const ROOM_SOCKET_EVENTS = {
@@ -63,27 +60,18 @@ export const RoomParticipantPayloadSchema = z.object({
 	user: RoomParticipantUserPayloadSchema,
 });
 
-export const RoomParticipantJoinedPayloadSchema =
-	RoomPresencePayloadSchema.extend({
-		participant: RoomParticipantPayloadSchema,
-	});
+export const RoomParticipantJoinedPayloadSchema = RoomPresencePayloadSchema.extend({
+	participant: RoomParticipantPayloadSchema,
+});
 
 export const RoomParticipantLeftPayloadSchema = RoomPresencePayloadSchema;
 
 export type RoomConnectPayload = z.infer<typeof RoomConnectPayloadSchema>;
 export type RoomPresencePayload = z.infer<typeof RoomPresencePayloadSchema>;
-export type RoomParticipantUserPayload = z.infer<
-	typeof RoomParticipantUserPayloadSchema
->;
-export type RoomParticipantPayload = z.infer<
-	typeof RoomParticipantPayloadSchema
->;
-export type RoomParticipantJoinedPayload = z.infer<
-	typeof RoomParticipantJoinedPayloadSchema
->;
-export type RoomParticipantLeftPayload = z.infer<
-	typeof RoomParticipantLeftPayloadSchema
->;
+export type RoomParticipantUserPayload = z.infer<typeof RoomParticipantUserPayloadSchema>;
+export type RoomParticipantPayload = z.infer<typeof RoomParticipantPayloadSchema>;
+export type RoomParticipantJoinedPayload = z.infer<typeof RoomParticipantJoinedPayloadSchema>;
+export type RoomParticipantLeftPayload = z.infer<typeof RoomParticipantLeftPayloadSchema>;
 export type RoomPhase = z.infer<typeof RoomPhaseSchema>;
 export type RoomLobbyStatePayload = z.infer<typeof RoomLobbyStatePayloadSchema>;
 export type RoomSetReadyPayload = z.infer<typeof RoomSetReadyPayloadSchema>;

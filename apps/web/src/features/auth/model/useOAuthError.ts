@@ -1,6 +1,10 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { OAUTH_ERROR_CODES, OAuthErrorCodeSchema, type OAuthErrorCode } from "@rooms/contracts/auth";
+import {
+	OAUTH_ERROR_CODES,
+	OAuthErrorCodeSchema,
+	type OAuthErrorCode,
+} from "@rooms/contracts/auth";
 
 import { OAuthProvider } from "./types";
 

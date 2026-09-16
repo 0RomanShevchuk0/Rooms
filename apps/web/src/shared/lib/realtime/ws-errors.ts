@@ -35,9 +35,7 @@ export function getWsErrorCode(payload: unknown): string | undefined {
 	return undefined;
 }
 
-export function getWsValidationIssues(
-	payload: unknown,
-): DomainWsValidationIssue[] {
+export function getWsValidationIssues(payload: unknown): DomainWsValidationIssue[] {
 	if (!isWsErrorResponse(payload)) {
 		return [];
 	}

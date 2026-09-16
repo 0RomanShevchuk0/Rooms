@@ -1,7 +1,4 @@
-import type {
-	GetChatMessagesQuery,
-	GetChatMessagesResponse,
-} from "@rooms/contracts/chat";
+import type { GetChatMessagesQuery, GetChatMessagesResponse } from "@rooms/contracts/chat";
 import { api } from "@/shared/api";
 
 export type GetMessagesParams = {

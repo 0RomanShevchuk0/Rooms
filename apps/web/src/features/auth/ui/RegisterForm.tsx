@@ -1,9 +1,10 @@
 "use client";
 import { useAuth } from "../model/useAuth";
-import { startOAuth } from "../model/startOAuth";
+import { useStartOAuth } from "../model/startOAuth";
 import { AuthForm } from "./AuthForm";
 
 export function RegisterForm() {
+	const startOAuth = useStartOAuth();
 	const { handleAuth, isLoading, error } = useAuth({ type: "register" });
 	return (
 		<AuthForm

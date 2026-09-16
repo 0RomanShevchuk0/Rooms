@@ -1,10 +1,11 @@
 "use client";
 import { useAuth } from "../model/useAuth";
 import { useOAuthError } from "../model/useOAuthError";
-import { startOAuth } from "../model/startOAuth";
+import { useStartOAuth } from "../model/startOAuth";
 import { AuthForm } from "./AuthForm";
 
 export function LoginForm() {
+	const startOAuth = useStartOAuth();
 	const { handleAuth, isLoading, error } = useAuth({ type: "login" });
 	const oauthError = useOAuthError();
 

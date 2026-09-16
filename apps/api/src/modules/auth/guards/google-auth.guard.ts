@@ -1,8 +1,9 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { OAuthProvider } from 'generated/prisma/enums';
 import { OAuthStateService } from '../oauth-state.service';
+import { OAuthReturnToService } from '../oauth-return-to.service';
 
 /**
  * Starts the Google flow. `passport-oauth2` forwards a string `state` option
@@ -11,12 +12,21 @@ import { OAuthStateService } from '../oauth-state.service';
  */
 @Injectable()
 export class GoogleAuthGuard extends AuthGuard('google') {
-	constructor(private readonly oauthState: OAuthStateService) {
+	constructor(
+		private readonly oauthState: OAuthStateService,
+		private readonly oauthReturnTo: OAuthReturnToService,
+	) {
 		super();
 	}
 
+	// Passport redirects to Google from inside the guard, before any handler
+	// runs, so this is the last place to look at the incoming request.
 	getAuthenticateOptions(context: ExecutionContext) {
-		const response = context.switchToHttp().getResponse<Response>();
+		const http = context.switchToHttp();
+		const request = http.getRequest<Request>();
+		const response = http.getResponse<Response>();
+
+		this.oauthReturnTo.remember(request, response);
 
 		return { state: this.oauthState.issue(response, OAuthProvider.google) };
 	}

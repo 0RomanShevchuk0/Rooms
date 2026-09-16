@@ -19,6 +19,7 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GoogleCallbackGuard } from './guards/google-callback.guard';
 import { OAuthStateService } from './oauth-state.service';
+import { OAuthReturnToService } from './oauth-return-to.service';
 import { OAuthCallbackErrorFilter } from './oauth-callback-error.filter';
 import {
 	OAuthCallbackError,
@@ -40,6 +41,7 @@ export class AuthController {
 		private readonly authService: AuthService,
 		private readonly configService: ConfigService,
 		private readonly oauthState: OAuthStateService,
+		private readonly oauthReturnTo: OAuthReturnToService,
 	) {}
 
 	private setAuthCookies(
@@ -117,12 +119,17 @@ export class AuthController {
 	}
 
 	// OAuth routes
-	private async completeOAuthLogin(user: AuthUser, res: Response) {
+	private async completeOAuthLogin(
+		user: AuthUser,
+		req: Request,
+		res: Response,
+	) {
 		const tokens = await this.authService.login(user);
 		this.setAuthCookies(res, tokens);
 
 		const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
-		res.redirect(clientUrl);
+		const returnTo = this.oauthReturnTo.consume(req, res) ?? '/';
+		res.redirect(new URL(returnTo, clientUrl).toString());
 	}
 
 	@Get('google')
@@ -134,13 +141,18 @@ export class AuthController {
 	@UseGuards(GoogleCallbackGuard)
 	async googleOauthCallback(
 		@CurrentUser() user: AuthUser,
+		@Req() req: Request,
 		@Res({ passthrough: true }) res: Response,
 	) {
-		await this.completeOAuthLogin(user, res);
+		await this.completeOAuthLogin(user, req, res);
 	}
 
 	@Get('discord')
-	discordOauth(@Res({ passthrough: true }) res: Response) {
+	discordOauth(
+		@Req() req: Request,
+		@Res({ passthrough: true }) res: Response,
+	) {
+		this.oauthReturnTo.remember(req, res);
 		const state = this.oauthState.issue(res, OAuthProvider.discord);
 		const url = this.authService.getDiscordAuthorizationUrl(state);
 
@@ -166,6 +178,6 @@ export class AuthController {
 
 		const user = await this.authService.loginWithDiscord(query.code);
 
-		await this.completeOAuthLogin(user, res);
+		await this.completeOAuthLogin(user, req, res);
 	}
 }

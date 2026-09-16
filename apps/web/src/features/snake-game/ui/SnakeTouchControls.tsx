@@ -36,7 +36,7 @@ const BUTTONS = [
 
 export function SnakeTouchControls({ onDirection, disabled }: SnakeTouchControlsProps) {
 	return (
-		<div className="grid grid-cols-3 grid-rows-3 gap-1.5" aria-label="Snake controls">
+		<div className="grid grid-cols-3 grid-rows-3 gap-1" aria-label="Snake controls">
 			{BUTTONS.map(({ direction, label, Icon, cell }) => (
 				<button
 					key={direction}
@@ -50,11 +50,11 @@ export function SnakeTouchControls({ onDirection, disabled }: SnakeTouchControls
 						onDirection(direction);
 					}}
 					className={cn(
-						"flex size-14 touch-manipulation items-center justify-center rounded-xl border border-border bg-muted/50 text-foreground select-none active:bg-primary/15 disabled:opacity-40",
+						"flex size-20 touch-manipulation items-center justify-center rounded-xl border border-border bg-muted/50 text-foreground select-none active:bg-primary/15 disabled:opacity-40",
 						cell,
 					)}
 				>
-					<Icon className="size-6" />
+					<Icon className="size-8" />
 				</button>
 			))}
 		</div>

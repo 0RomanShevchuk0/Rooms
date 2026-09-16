@@ -19,7 +19,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import { Field, FieldContent, FieldTitle, FieldError, FieldGroup } from "@/shared/ui/field";
-import { createRoom } from "@/entities/room/api";
+import { createRoom } from "@/entities/room";
 import { getMe } from "@/entities/user";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";

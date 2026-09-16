@@ -14,7 +14,7 @@ import {
 	AlertDialogTrigger,
 	AlertDialogAction,
 } from "@/shared/ui/alert-dialog";
-import { leaveRoom } from "@/entities/room/api";
+import { leaveRoom } from "@/entities/room";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 

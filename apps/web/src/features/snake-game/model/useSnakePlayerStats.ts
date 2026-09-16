@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
+import { useSnakeGameSocket } from "@/shared/lib/realtime";
 import { SNAKE_GAME_SOCKET_EVENTS, type SnakeGameState } from "@rooms/contracts/snake-game";
 
 export interface SnakePlayerStat {

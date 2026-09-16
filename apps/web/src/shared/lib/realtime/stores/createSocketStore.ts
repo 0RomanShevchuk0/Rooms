@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { api } from "@/shared/api";
-import { useSession } from "@/entities/session";
 import { createSocket, type AppSocket } from "../createSocket";
 import { SYSTEM_SOCKET_EVENTS } from "../socket-events";
 import { getWsErrorCode, getWsErrorMessage } from "../ws-errors";
+import { getSocketAuth } from "../socket-auth";
 
 export interface SocketStoreState {
 	socket: AppSocket;
@@ -27,17 +27,20 @@ export function createSocketStore(namespace: string) {
 			socket.auth = { token };
 		};
 
-		useSession.subscribe((state, previous) => {
-			if (state.accessToken !== previous.accessToken) {
-				setAuthToken(state.accessToken);
-			}
-		});
+		// Subscribed on first connect rather than at module load: the session
+		// layer configures socket auth after these stores are created.
+		let isFollowingSession = false;
+		const followSession = () => {
+			if (isFollowingSession) return;
+			isFollowingSession = true;
+			getSocketAuth().subscribe(setAuthToken);
+		};
 
 		let hasRetriedWithFreshToken = false;
 
 		const recoverFromUnauthorized = async () => {
 			if (hasRetriedWithFreshToken) {
-				useSession.getState().clearSession();
+				getSocketAuth().onUnauthorized();
 				return;
 			}
 			hasRetriedWithFreshToken = true;
@@ -48,7 +51,7 @@ export function createSocketStore(namespace: string) {
 
 			const token = await api.refreshAccessToken();
 			if (!token) {
-				useSession.getState().clearSession();
+				getSocketAuth().onUnauthorized();
 				return;
 			}
 
@@ -84,7 +87,8 @@ export function createSocketStore(namespace: string) {
 				const current = get().socket;
 				if (current.connected) return;
 
-				setAuthToken(useSession.getState().accessToken);
+				followSession();
+				setAuthToken(getSocketAuth().getToken());
 				current.connect();
 			},
 			disconnect: () => {

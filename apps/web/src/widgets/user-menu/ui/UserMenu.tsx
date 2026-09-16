@@ -15,7 +15,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { useMeQuery } from "@/entities/user/model/useMeQuery";
+import { useMeQuery } from "@/entities/user";
 import { getUserInitial } from "@/shared/lib/user";
 
 export function UserMenu() {

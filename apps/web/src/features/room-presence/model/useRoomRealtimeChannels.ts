@@ -3,7 +3,7 @@
 import { SYSTEM_SOCKET_EVENTS, useChatSocket, useRoomsSocket } from "@/shared/lib/realtime";
 import { useMyRoomParticipantQuery } from "@/entities/room";
 import { useEffect } from "react";
-import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
+import { useSnakeGameSocket } from "@/shared/lib/realtime";
 import type { ChatConnectionPayload } from "@rooms/contracts/chat";
 import { CHAT_SOCKET_EVENTS } from "@rooms/contracts/chat";
 import { ROOM_SOCKET_EVENTS, type RoomConnectPayload } from "@rooms/contracts/room";

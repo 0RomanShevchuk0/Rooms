@@ -5,7 +5,7 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { joinRoom } from "@/entities/room/api";
+import { joinRoom } from "@/entities/room";
 import { mutationKeys, queryKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 import { INVITE_PARAM, isInviteForRoom } from "@/shared/lib/room-invite";

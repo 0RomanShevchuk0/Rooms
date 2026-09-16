@@ -1,5 +1,5 @@
 import type { ClientMessage } from "@/entities/message";
-import type { AppSocket } from "@/shared/lib/realtime/createSocket";
+import type { AppSocket } from "@/shared/lib/realtime";
 import {
 	CHAT_SOCKET_EVENTS,
 	ChatMessagePayloadSchema,
@@ -11,7 +11,7 @@ import {
 	getWsErrorMessage,
 	getWsValidationIssues,
 	isWsErrorResponse,
-} from "@/shared/lib/realtime/ws-errors";
+} from "@/shared/lib/realtime";
 import toast from "react-hot-toast";
 
 type ChatSender = ClientMessage["sender"] & { id: string };

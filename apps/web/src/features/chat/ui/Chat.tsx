@@ -1,6 +1,6 @@
 import { useChatSocket } from "@/shared/lib/realtime";
 import { useMemo, useRef, useState } from "react";
-import { useMeQuery } from "@/entities/user/model/useMeQuery";
+import { useMeQuery } from "@/entities/user";
 import { useMessagesSocket } from "../model/useMessagesSocket";
 import { useMessages } from "../model/useMessages";
 import { usePendingMessages } from "../model/usePendingMessages";

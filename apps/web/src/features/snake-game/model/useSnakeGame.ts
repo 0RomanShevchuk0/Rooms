@@ -1,5 +1,5 @@
 import { SnakeCanvasRenderer, type SnakeCanvasSize } from "../core";
-import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
+import { useSnakeGameSocket } from "@/shared/lib/realtime";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { codeDirectionMap } from "./constansts";
 import {

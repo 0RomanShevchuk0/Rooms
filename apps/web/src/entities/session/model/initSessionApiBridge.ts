@@ -1,4 +1,5 @@
 import { api } from "@/shared/api";
+import { configureSocketAuth } from "@/shared/lib/realtime";
 import { useSession } from "./session.store";
 import { refreshTokens } from "../api/refresh-tokens";
 
@@ -14,6 +15,15 @@ export function initSessionApiBridge() {
 
 	api.onUnauthorized(() => {
 		useSession.setState({ accessToken: null });
+	});
+
+	configureSocketAuth({
+		getToken: () => useSession.getState().accessToken,
+		subscribe: (listener) =>
+			useSession.subscribe((state, previous) => {
+				if (state.accessToken !== previous.accessToken) listener(state.accessToken);
+			}),
+		onUnauthorized: () => useSession.getState().clearSession(),
 	});
 
 	api.setRefreshHandler(async () => {

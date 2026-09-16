@@ -6,7 +6,7 @@ import {
 	type SnakeGameSettings,
 	type SnakeSettingsChangedPayload,
 } from "@rooms/contracts/snake-game";
-import { useSnakeGameSocket } from "@/shared/lib/realtime/stores/snake-game-socket";
+import { useSnakeGameSocket } from "@/shared/lib/realtime";
 import { useCallback, useEffect, useState } from "react";
 import {
 	DEFAULT_SNAKE_GAME_SETTINGS,

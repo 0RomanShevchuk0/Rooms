@@ -19,7 +19,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Field, FieldContent, FieldTitle, FieldError } from "@/shared/ui/field";
-import { joinRoom } from "@/entities/room/api";
+import { joinRoom } from "@/entities/room";
 import { queryKeys, mutationKeys } from "@/shared/react-query";
 import { ROUTES } from "@/shared/routes";
 

@@ -16,9 +16,8 @@ Only Caddy publishes ports. The application containers and the database are reac
 
 ```
 infra/
-├── main.tf              provider, versions, project
-├── instance.tf          the VM
-├── address.tf           reserved external IPv4
+├── main.tf              provider, versions, project, shared locals
+├── instances.tf         one block per region: reserved address + machine
 ├── secret.tf            Secret Manager API and the secret container
 ├── service-account.tf   the VM identity and its single permission
 ├── startup.sh           first-boot provisioning
@@ -35,7 +34,7 @@ State is local and gitignored: it records resource values in clear text.
 2. install git, jq and Docker
 3. clone the repository into `/opt/rooms`
 4. request an access token from the metadata server
-5. read the environment file from Secret Manager and write it with mode `600`
+5. read the shared environment file from Secret Manager, append the machine's own domain, and write it with mode `600`
 6. `docker compose up -d`
 
 No credential is stored on the machine. The metadata server issues a token for the attached service account purely because the request originates inside that instance:
@@ -56,21 +55,21 @@ Terraform manages only the secret container. The value is added out of band, sin
 gcloud secrets versions add rooms-env --data-file=-
 ```
 
+One secret serves every machine, so it holds only what they share — and nothing that is not actually secret. The domain is neither: it differs per machine and is public anyway, so it travels as instance metadata and the startup script appends `DOMAIN` and `PUBLIC_URL` to the downloaded file. Nothing is overwritten; each source owns its own keys. Anything else that varies per region belongs in the map at the top of `instances.tf`.
+
+`docker-compose.prod.yml` derives `ALLOWED_ORIGINS`, `CLIENT_URL` and both OAuth callback URLs from `PUBLIC_URL`, so setting that one value is enough. Callback URLs still have to be registered per domain in the Google and Discord consoles.
+
 ## Notes
 
 Things that are not obvious from the configuration alone.
-
-**`key_revocation_action_type` looks like a default but is not.** Removing it from `instance.tf` is marked `forces replacement`, and the plan will offer to destroy the instance.
 
 **A startup script only runs on first boot.** Editing it and applying rebuilds the machine; there is no other way to apply a new one. `sudo google_metadata_script_runner startup` re-runs it in place for debugging, but only a rebuild is an honest test.
 
 **`terraform plan -generate-config-out` produces a snapshot, not a blueprint.** The generated block pins the current ephemeral IP, one exact image build and the existing disk. Useful for import, wrong for recreating.
 
-**Permissions are checked twice.** OAuth scopes decide what a token may reach at all, then IAM decides rights on the resource. The instance still runs on the default service account, whose scopes exclude Secret Manager.
+**Permissions are checked twice.** OAuth scopes decide what a token may reach at all, then IAM decides rights on the resource. Both machines run on `rooms-app` with the `cloud-platform` scope, so IAM alone governs what they can do.
 
-**The external address was ephemeral.** Stopping the instance changed it and broke both the DNS record and the CI host secret. It is now reserved — promoted from the address already in use, so the value did not change a second time.
-
-**The VM predates this configuration.** It was created by hand and adopted with an `import` block, which is why its resource block carries fields a fresh definition would not need.
+**Addresses are reserved before the machines exist.** The first instance had an ephemeral address; stopping it changed the IP and broke both the DNS record and the CI host secret. Every address is now a `google_compute_address` the instance references, so stop/start cannot change it.
 
 ## Commands
 

@@ -25,7 +25,7 @@ if [ -d /opt/rooms/.git ]; then
    echo "rooms repo already present, skipping clone"
 else
    echo "cloning rooms repo..."
-   git clone -b dev https://github.com/0RomanShevchuk0/Rooms.git /opt/rooms
+   git clone -b main https://github.com/0RomanShevchuk0/Rooms.git /opt/rooms
 fi
 
 METADATA=http://metadata.google.internal/computeMetadata/v1
@@ -44,6 +44,12 @@ echo "fetching the environment file from Secret Manager..."
 curl -sf -H "Authorization: Bearer $TOKEN" \
    "https://secretmanager.googleapis.com/v1/projects/$PROJECT/secrets/rooms-env/versions/latest:access" \
    | jq -r .payload.data | base64 -d > /opt/rooms/.env
+
+# The secret carries what every machine shares. The domain is not a secret and
+# differs per machine, so it comes from instance metadata instead.
+DOMAIN=$(curl -sf -H "$HEADER" "$METADATA/instance/attributes/domain")
+echo "DOMAIN=$DOMAIN" >> /opt/rooms/.env
+echo "PUBLIC_URL=https://$DOMAIN" >> /opt/rooms/.env
 
 # Contains the database password and the JWT secrets.
 chmod 600 /opt/rooms/.env

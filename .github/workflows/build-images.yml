@@ -55,9 +55,11 @@ jobs:
            run: |
               ssh -i ~/.ssh/deploy_key "${{ secrets.ROOMS_SSH_USER }}@${{ secrets.ROOMS_SSH_HOST }}" '
                  set -eu
-                 cd ~/Rooms
-                 git pull --ff-only
-                 docker compose pull
-                 docker compose up -d
-                 docker image prune -f
+                 # /opt/rooms is cloned by startup.sh as root before the login
+                 # user exists, hence the fixed path and sudo throughout.
+                 cd /opt/rooms
+                 sudo git pull --ff-only
+                 sudo docker compose pull
+                 sudo docker compose up -d
+                 sudo docker image prune -f
               '

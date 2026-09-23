@@ -17,3 +17,12 @@ provider "google" {
   region  = "us-central1"
   zone    = "us-central1-a"
 }
+
+locals {
+  # Personal keys only. The production instance still carries the expired
+  # google-ssh entries the console added; they are left alone to avoid drift.
+  ssh_keys = join("\n", [
+    "roman:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKf+y7GLsfjDQhgMDkychm5id/xlLz4SLRAlYMwighVn roman",
+    "roman:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE7XctIcZtCNV3DhxbN2D7HDfmySBpCpGWiiEzWW8yfG roman",
+  ])
+}

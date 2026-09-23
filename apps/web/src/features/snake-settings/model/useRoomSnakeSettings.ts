@@ -12,6 +12,7 @@ import {
 	DEFAULT_SNAKE_GAME_SETTINGS,
 	type SnakeFieldSize,
 	type SnakeFoodAmount,
+	type SnakeSpeed,
 } from "./constants";
 
 interface UseRoomSnakeSettingsProps {
@@ -30,6 +31,7 @@ export interface RoomSnakeSettingsActions {
 	setSettings: (settings: SnakeGameSettings) => void;
 	setFieldSize: (fieldSize: SnakeFieldSize) => void;
 	setFoodAmount: (foodAmount: SnakeFoodAmount) => void;
+	setSpeed: (speed: SnakeSpeed) => void;
 }
 
 export interface RoomSnakeSettingsModel {
@@ -105,22 +107,23 @@ export function useRoomSnakeSettings({
 
 	const setFieldSize = useCallback(
 		(fieldSize: SnakeFieldSize) => {
-			setSettings({
-				fieldSize,
-				foodAmount: snakeSettings.foodAmount,
-			});
+			setSettings({ ...snakeSettings, fieldSize });
 		},
-		[setSettings, snakeSettings.foodAmount],
+		[setSettings, snakeSettings],
 	);
 
 	const setFoodAmount = useCallback(
 		(foodAmount: SnakeFoodAmount) => {
-			setSettings({
-				fieldSize: snakeSettings.fieldSize,
-				foodAmount,
-			});
+			setSettings({ ...snakeSettings, foodAmount });
 		},
-		[setSettings, snakeSettings.fieldSize],
+		[setSettings, snakeSettings],
+	);
+
+	const setSpeed = useCallback(
+		(speed: SnakeSpeed) => {
+			setSettings({ ...snakeSettings, speed });
+		},
+		[setSettings, snakeSettings],
 	);
 
 	return {
@@ -130,6 +133,7 @@ export function useRoomSnakeSettings({
 			setSettings,
 			setFieldSize,
 			setFoodAmount,
+			setSpeed,
 		},
 	};
 }

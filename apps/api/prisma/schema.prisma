@@ -68,9 +68,10 @@ model Room {
 model RoomSnakeSettings {
    roomId String @id
 
-   fieldWidth  Int @default(20)
-   fieldHeight Int @default(20)
-   foodAmount  Int @default(1)
+   fieldWidth  Int        @default(20)
+   fieldHeight Int        @default(20)
+   foodAmount  Int        @default(1)
+   speed       Int        @default(4)
 
    room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 

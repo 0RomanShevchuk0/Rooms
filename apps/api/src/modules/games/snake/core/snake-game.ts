@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events';
+import { DEFAULT_SNAKE_SPEED } from '@rooms/contracts/snake-game';
 import {
 	directionOpposites,
 	SNAKE_DIRECTION,
@@ -21,6 +22,8 @@ import {
 	MOCK_PLAYER_ID,
 	MOCK_PLAYER_INITIAL_DIRECTION,
 } from './mock-player';
+
+const SPEED_TICK_MS = [200, 170, 145, 120, 100, 82, 68] as const;
 
 type SnakeGameEvents = {
 	tick: [state: SnakeGameState];
@@ -253,15 +256,9 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 	}
 
 	private resolveTickMs(): number {
-		const fallbackTickMs = 140;
-		const minTickMs = 60;
-		const maxTickMs = 300;
-		const parsedTickMs = Number.parseInt(process.env.SNAKE_TICK_MS ?? '', 10);
-
-		if (!Number.isFinite(parsedTickMs)) {
-			return fallbackTickMs;
-		}
-
-		return Math.min(maxTickMs, Math.max(minTickMs, parsedTickMs));
+		return (
+			SPEED_TICK_MS[this.settings.speed - 1] ??
+			SPEED_TICK_MS[DEFAULT_SNAKE_SPEED - 1]
+		);
 	}
 }

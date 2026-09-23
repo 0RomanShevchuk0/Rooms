@@ -8,6 +8,7 @@ export type FieldSize = {
 export type SnakeGameSettings = {
 	foodAmount: number;
 	fieldSize: FieldSize;
+	speed: number;
 };
 
 export type Position = {

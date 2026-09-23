@@ -6,6 +6,7 @@ type RoomSnakeSettingsEntity =
 			fieldWidth: number;
 			fieldHeight: number;
 			foodAmount: number;
+			speed: number;
 	  }
 	| null
 	| undefined;
@@ -23,5 +24,6 @@ export function toSnakeGameSettings(
 		},
 		foodAmount:
 			settings?.foodAmount ?? DEFAULT_SNAKE_GAME_SETTINGS.foodAmount,
+		speed: settings?.speed ?? DEFAULT_SNAKE_GAME_SETTINGS.speed,
 	};
 }

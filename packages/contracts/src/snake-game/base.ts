@@ -25,9 +25,17 @@ export const SnakeFieldSizeSchema = z.object({
 	height: z.number().int().min(6).max(80),
 });
 
+export const SNAKE_SPEED_LEVELS = 7;
+export const DEFAULT_SNAKE_SPEED = 4;
+
+/** A level rather than milliseconds: the server owns the timing, so a client
+ *  cannot ask for a one-millisecond game. */
+export const SnakeSpeedSchema = z.number().int().min(1).max(SNAKE_SPEED_LEVELS);
+
 export const SnakeGameSettingsSchema = z.object({
 	fieldSize: SnakeFieldSizeSchema,
 	foodAmount: z.number().int().min(1),
+	speed: SnakeSpeedSchema,
 });
 
 export const SnakePlayerStateSchema = z.object({

@@ -14,8 +14,10 @@ import type { RoomSnakeSettingsModel } from "../model/useRoomSnakeSettings";
 import {
 	SNAKE_FIELD_SIZE_PRESETS,
 	SNAKE_FOOD_AMOUNT_PRESETS,
+	SNAKE_SPEED_PRESETS,
 	parseFoodAmountPresetValue,
 	parsePresetValue,
+	parseSpeedPresetValue,
 	toPresetValue,
 } from "../model/constants";
 import { SnakeSettingSelect } from "./SnakeSettingSelect";
@@ -41,6 +43,15 @@ export function SnakeSettingsDialog({ model }: SnakeSettingsDialogProps) {
 		}
 
 		model.actions.setFoodAmount(parsedFoodAmount);
+	};
+
+	const handleSpeedChange = (presetValue: string) => {
+		const parsedSpeed = parseSpeedPresetValue(presetValue);
+		if (!parsedSpeed) {
+			return;
+		}
+
+		model.actions.setSpeed(parsedSpeed);
 	};
 
 	return (
@@ -85,6 +96,18 @@ export function SnakeSettingsDialog({ model }: SnakeSettingsDialogProps) {
 						disabled={model.isGameInProgress}
 						onValueChange={handleFoodAmountChange}
 						options={SNAKE_FOOD_AMOUNT_PRESETS.map((preset) => ({
+							value: String(preset),
+							label: String(preset),
+						}))}
+					/>
+
+					<SnakeSettingSelect
+						label="Speed"
+						value={String(model.snakeSettings.speed)}
+						placeholder="Select speed"
+						disabled={model.isGameInProgress}
+						onValueChange={handleSpeedChange}
+						options={SNAKE_SPEED_PRESETS.map((preset) => ({
 							value: String(preset),
 							label: String(preset),
 						}))}

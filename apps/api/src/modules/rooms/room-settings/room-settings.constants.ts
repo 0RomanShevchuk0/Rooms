@@ -1,4 +1,7 @@
-import type { SnakeGameSettings } from '@rooms/contracts/snake-game';
+import {
+	DEFAULT_SNAKE_SPEED,
+	type SnakeGameSettings,
+} from '@rooms/contracts/snake-game';
 
 export const DEFAULT_SNAKE_GAME_SETTINGS: SnakeGameSettings = {
 	fieldSize: {
@@ -6,4 +9,5 @@ export const DEFAULT_SNAKE_GAME_SETTINGS: SnakeGameSettings = {
 		height: 20,
 	},
 	foodAmount: 1,
+	speed: DEFAULT_SNAKE_SPEED,
 };

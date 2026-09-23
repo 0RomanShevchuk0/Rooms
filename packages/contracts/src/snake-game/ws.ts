@@ -6,6 +6,9 @@ import {
 	SnakeGameStateSchema,
 	SnakePlayerStateSchema,
 	SnakePositionSchema,
+	SnakeSpeedSchema,
+	DEFAULT_SNAKE_SPEED,
+	SNAKE_SPEED_LEVELS,
 } from "./base.js";
 
 export const SNAKE_GAME_SOCKET_EVENTS = {
@@ -40,11 +43,15 @@ export {
 	SnakeGameStateSchema,
 	SnakePlayerStateSchema,
 	SnakePositionSchema,
+	SnakeSpeedSchema,
+	DEFAULT_SNAKE_SPEED,
+	SNAKE_SPEED_LEVELS,
 };
 export type SnakeDirection = z.infer<typeof SnakeDirectionSchema>;
 export type SnakePosition = z.infer<typeof SnakePositionSchema>;
 export type SnakePlayerState = z.infer<typeof SnakePlayerStateSchema>;
 export type SnakeGameState = z.infer<typeof SnakeGameStateSchema>;
+export type SnakeSpeed = z.infer<typeof SnakeSpeedSchema>;
 export type SnakeGameSettings = z.infer<typeof SnakeGameSettingsSchema>;
 export type SnakeRoomPayload = z.infer<typeof SnakeRoomPayloadSchema>;
 export type SnakeChangeDirectionPayload = z.infer<typeof SnakeChangeDirectionPayloadSchema>;

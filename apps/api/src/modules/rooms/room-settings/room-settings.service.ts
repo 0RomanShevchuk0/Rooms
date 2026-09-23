@@ -17,6 +17,7 @@ export class RoomSettingsService {
 				fieldWidth: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.width,
 				fieldHeight: DEFAULT_SNAKE_GAME_SETTINGS.fieldSize.height,
 				foodAmount: DEFAULT_SNAKE_GAME_SETTINGS.foodAmount,
+				speed: DEFAULT_SNAKE_GAME_SETTINGS.speed,
 			},
 		});
 
@@ -33,12 +34,14 @@ export class RoomSettingsService {
 				fieldWidth: settings.fieldSize.width,
 				fieldHeight: settings.fieldSize.height,
 				foodAmount: settings.foodAmount,
+				speed: settings.speed,
 			},
 			create: {
 				roomId,
 				fieldWidth: settings.fieldSize.width,
 				fieldHeight: settings.fieldSize.height,
 				foodAmount: settings.foodAmount,
+				speed: settings.speed,
 			},
 		});
 

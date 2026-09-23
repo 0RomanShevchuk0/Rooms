@@ -1,7 +1,12 @@
-import type { SnakeGameSettings } from "@rooms/contracts/snake-game";
+import {
+	DEFAULT_SNAKE_SPEED,
+	SNAKE_SPEED_LEVELS,
+	type SnakeGameSettings,
+} from "@rooms/contracts/snake-game";
 
 export type SnakeFieldSize = SnakeGameSettings["fieldSize"];
 export type SnakeFoodAmount = SnakeGameSettings["foodAmount"];
+export type SnakeSpeed = SnakeGameSettings["speed"];
 
 export const DEFAULT_SNAKE_GAME_SETTINGS: SnakeGameSettings = {
 	fieldSize: {
@@ -9,6 +14,7 @@ export const DEFAULT_SNAKE_GAME_SETTINGS: SnakeGameSettings = {
 		height: 20,
 	},
 	foodAmount: 1,
+	speed: DEFAULT_SNAKE_SPEED,
 };
 
 export const SNAKE_FIELD_SIZE_PRESETS = [
@@ -23,6 +29,17 @@ export const SNAKE_FIELD_SIZE_PRESETS = [
 export const SNAKE_FOOD_AMOUNT_PRESETS = [
 	1, 2, 3, 5, 6, 7, 8, 9,
 ] as const satisfies readonly SnakeFoodAmount[];
+
+export const SNAKE_SPEED_PRESETS = Array.from(
+	{ length: SNAKE_SPEED_LEVELS },
+	(_, index) => index + 1,
+) satisfies readonly SnakeSpeed[];
+
+export const parseSpeedPresetValue = (presetValue: string): SnakeSpeed | null => {
+	const parsedSpeed = Number(presetValue);
+
+	return SNAKE_SPEED_PRESETS.includes(parsedSpeed) ? parsedSpeed : null;
+};
 
 export const toPresetValue = (fieldSize: SnakeFieldSize) =>
 	`${fieldSize.width}x${fieldSize.height}`;

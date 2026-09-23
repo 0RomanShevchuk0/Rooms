@@ -1,10 +1,16 @@
 import { SnakeGame } from './snake-game';
 import { MOCK_PLAYER_ID, MOCK_PLAYER_SNAKE_LENGTH } from './mock-player';
+import { DEFAULT_SNAKE_SPEED } from '@rooms/contracts/snake-game';
 import { SNAKE_DIRECTION } from './direction';
 import type { SnakeGameState } from './types';
 
 const ALICE = 'participant-alice';
-const SETTINGS = { fieldSize: { width: 20, height: 20 }, foodAmount: 1 };
+const SETTINGS = {
+	fieldSize: { width: 20, height: 20 },
+	foodAmount: 1,
+	speed: DEFAULT_SNAKE_SPEED,
+};
+// Matches what the server maps the default speed level to.
 const TICK_MS = 120;
 
 function createGame(participantIds = [ALICE]) {
@@ -35,7 +41,6 @@ function snakeOf(state: SnakeGameState, participantId: string) {
 describe('SnakeGame with the mock player', () => {
 	beforeEach(() => {
 		jest.useFakeTimers();
-		process.env.SNAKE_TICK_MS = String(TICK_MS);
 	});
 
 	afterEach(() => {
@@ -81,7 +86,11 @@ describe('SnakeGame with the mock player', () => {
 	it('keeps itself alive on a field with barely any room', () => {
 		const game = new SnakeGame({
 			participantIds: [ALICE],
-			settings: { fieldSize: { width: 8, height: 8 }, foodAmount: 1 },
+			settings: {
+				fieldSize: { width: 8, height: 8 },
+				foodAmount: 1,
+				speed: DEFAULT_SNAKE_SPEED,
+			},
 		});
 		const states: SnakeGameState[] = [];
 		game.on('tick', (state) => states.push(structuredClone(state)));

@@ -2,6 +2,8 @@ import { directionPositions } from './constants';
 import { directionOpposites, SnakeDirection } from './direction';
 import { FieldSize, Position } from './types';
 
+const MAX_QUEUED_TURNS = 2;
+
 interface SnakeProps {
 	fieldSize: FieldSize;
 	color: string;
@@ -15,6 +17,7 @@ export class Snake {
 	segments: Position[];
 	direction: SnakeDirection;
 	alive = true;
+	private queuedTurns: SnakeDirection[] = [];
 
 	constructor({
 		fieldSize,
@@ -32,11 +35,35 @@ export class Snake {
 		this.alive = false;
 	}
 
+	/**
+	 * Turns wait for the tick, so two quick presses cannot fold the snake
+	 * back onto itself.
+	 */
 	changeDirection(newDirection: SnakeDirection) {
-		if (directionOpposites[newDirection] === this.direction) {
-			return;
+		this.queuedTurns.push(newDirection);
+		if (this.queuedTurns.length > MAX_QUEUED_TURNS) {
+			this.queuedTurns.shift();
 		}
-		this.direction = newDirection;
+	}
+
+	/**
+	 * The latest press wins, which lets a misclick be taken back. When it
+	 * cannot be taken yet, the earlier one goes first and the latest waits a
+	 * tick, so a quick "right, down" still ends up heading down.
+	 */
+	applyQueuedTurn() {
+		const latest = this.queuedTurns.at(-1);
+		const earlier = this.queuedTurns.at(-2);
+
+		if (latest && this.canTurnTo(latest)) {
+			this.direction = latest;
+			this.queuedTurns = [];
+		} else if (earlier && this.canTurnTo(earlier)) {
+			this.direction = earlier;
+			this.queuedTurns.shift();
+		} else {
+			this.queuedTurns = [];
+		}
 	}
 
 	move(position: Position, ateFood: boolean) {
@@ -68,6 +95,13 @@ export class Snake {
 			this.checkOtherSnakeCollision(position, otherSnake),
 		);
 		return isFieldCollision || isSelfCollision || isOtherSnakeCollision;
+	}
+
+	private canTurnTo(direction: SnakeDirection): boolean {
+		return (
+			direction !== this.direction &&
+			directionOpposites[direction] !== this.direction
+		);
 	}
 
 	private checkOtherSnakeCollision(

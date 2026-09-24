@@ -170,6 +170,7 @@ export class SnakeGame extends EventEmitter<SnakeGameEvents> {
 		);
 
 		const moves = aliveSnakes.map((snake) => {
+			snake.applyQueuedTurn();
 			const nextHead = snake.calculateNextPosition();
 			const eatenFood = this.foodManager.findFoodByPosition(nextHead);
 			const otherSnakes = aliveSnakes.filter(

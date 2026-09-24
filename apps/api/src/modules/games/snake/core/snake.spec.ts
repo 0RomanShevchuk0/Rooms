@@ -111,3 +111,64 @@ describe('Snake collisions', () => {
 		});
 	});
 });
+
+describe('Snake turns', () => {
+	const { UP, DOWN, LEFT, RIGHT } = SNAKE_DIRECTION;
+	const headingUp = () => createSnake([{ x: 5, y: 5 }], UP);
+
+	function turnsOverTicks(snake: Snake, ticks: number): SnakeDirection[] {
+		return Array.from({ length: ticks }, () => {
+			snake.applyQueuedTurn();
+			return snake.direction;
+		});
+	}
+
+	it('waits for the tick', () => {
+		const snake = headingUp();
+		snake.changeDirection(RIGHT);
+
+		expect(snake.direction).toBe(UP);
+		expect(turnsOverTicks(snake, 1)).toEqual([RIGHT]);
+	});
+
+	// Used to turn right and then straight back down within one tick.
+	it('never folds back within one tick', () => {
+		const snake = headingUp();
+		snake.changeDirection(RIGHT);
+		snake.changeDirection(DOWN);
+
+		expect(turnsOverTicks(snake, 2)).toEqual([RIGHT, DOWN]);
+	});
+
+	it('takes the latest press back over a misclick', () => {
+		const snake = headingUp();
+		snake.changeDirection(LEFT);
+		snake.changeDirection(RIGHT);
+
+		expect(turnsOverTicks(snake, 2)).toEqual([RIGHT, RIGHT]);
+	});
+
+	it('steps aside and carries on', () => {
+		const snake = headingUp();
+		snake.changeDirection(RIGHT);
+		snake.changeDirection(UP);
+
+		expect(turnsOverTicks(snake, 2)).toEqual([RIGHT, UP]);
+	});
+
+	it('ignores a straight reversal', () => {
+		const snake = headingUp();
+		snake.changeDirection(DOWN);
+
+		expect(turnsOverTicks(snake, 2)).toEqual([UP, UP]);
+	});
+
+	it('keeps only the two latest presses', () => {
+		const snake = headingUp();
+		snake.changeDirection(LEFT);
+		snake.changeDirection(RIGHT);
+		snake.changeDirection(DOWN);
+
+		expect(turnsOverTicks(snake, 2)).toEqual([RIGHT, DOWN]);
+	});
+});

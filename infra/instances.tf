@@ -5,8 +5,7 @@ locals {
   # machine_type is optional per entry and falls back below, so an entry only
   # spells out what differs from the rest.
   instances = {
-    us = { region = "us-central1", zone = "us-central1-a", domain = "rooms-rs.duckdns.org" }
-    eu = { region = "europe-west1", zone = "europe-west1-b", domain = "rooms-rs-eu.duckdns.org" }
+    eu = { region = "europe-west1", zone = "europe-west1-b", domain = "rooms-rs.duckdns.org" }
   }
 }
 
@@ -16,6 +15,8 @@ resource "google_compute_address" "app" {
 
   name   = "rooms-${each.key}-ip"
   region = each.value.region
+
+  depends_on = [google_project_service.compute]
 }
 
 # Provisioned entirely by startup.sh: Docker, the repository, the environment

@@ -3,6 +3,8 @@
 resource "google_service_account" "app" {
   account_id   = "rooms-app"
   display_name = "Rooms application VM"
+
+  depends_on = [google_project_service.iam]
 }
 
 # The only permission it gets: read this one secret. Not "read secrets", not

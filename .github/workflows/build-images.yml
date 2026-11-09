@@ -47,7 +47,6 @@ jobs:
          fail-fast: false
          matrix:
             host:
-               - ${{ vars.ROOMS_HOST_US }}
                - ${{ vars.ROOMS_HOST_EU }}
 
       steps:

@@ -13,9 +13,9 @@ terraform {
 # Application Default Credentials written by
 # `gcloud auth application-default login`, so no secret ends up in this file.
 provider "google" {
-  project = "rooms-503509"
-  region  = "us-central1"
-  zone    = "us-central1-a"
+  project = "rooms-514219"
+  region  = "europe-west1"
+  zone    = "europe-west1-b"
 }
 
 locals {
